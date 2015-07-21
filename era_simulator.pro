@@ -126,39 +126,17 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
           file1 = file0+'.nc'
           
           IF(is_file(file0) AND (NOT is_file(file1))) THEN BEGIN
-            PRINT,' *** converting: '+file0
-            SPAWN,'cdo -f nc copy '+file0+' '+file1
+            PRINT,' *** Converting: ' + file0
+            SPAWN,'cdo -f nc copy ' + file0 + ' ' + file1
           ENDIF
           
 
           IF(is_file(file1)) THEN BEGIN
 
             ; -- read netCDF file
-            PRINT,' *** processing '+file1
-            fileID = NCDF_OPEN(file1)
-            ; pressure level [Pa]
-            varID=NCDF_VARID(fileID,'lev')    & NCDF_VARGET,fileID,varID,plevel
-            ; longitude
-            varID=NCDF_VARID(fileID,'lon')    & NCDF_VARGET,fileID,varID,lon 
-            ; latitude
-            varID=NCDF_VARID(fileID,'lat')    & NCDF_VARGET,fileID,varID,lat
-            ; liquid water content
-            varID=NCDF_VARID(fileID,'var246') & NCDF_VARGET,fileID,varID,lwc 
-            ; ice water content
-            varID=NCDF_VARID(fileID,'var247') & NCDF_VARGET,fileID,varID,iwc
-            ; cloud cover
-            varID=NCDF_VARID(fileID,'var248') & NCDF_VARGET,fileID,varID,cc
-            ; geopotential height
-            varID=NCDF_VARID(fileID,'var129') & NCDF_VARGET,fileID,varID,geop
-            ; temperature
-            varID=NCDF_VARID(fileID,'var130') & NCDF_VARGET,fileID,varID,temp
-            NCDF_CLOSE,(fileID)
-            
-
-            ; -- pressure increment between 2 layer in the atmosphere
-            dpres = plevel[1:N_ELEMENTS(plevel)-1] - $
-                    plevel[0:N_ELEMENTS(plevel)-2]
-            
+            PRINT,' *** Processing: '+file1
+            READ_ERA_NCFILE, file1, plevel, dpres, lon, lat, $
+                             lwc, iwc, cc, geop, temp
 
             IF(counti EQ 0) THEN BEGIN
 
