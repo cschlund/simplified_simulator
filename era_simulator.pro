@@ -110,11 +110,14 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
       counti = 0
 
       ff = FINDFILE(era_path+year+month+'/'+'*'+year+month+'*plev')
+      numff = N_ELEMENTS(ff)
 
-      IF KEYWORD_SET(verbose) THEN BEGIN
-          PRINT, ' *** Number of files for ', year, ' and month ', month, $
-                 ' ===> ', N_ELEMENTS(ff)
-      ENDIF
+      PRINT, ''
+      PRINT, '------------------------------------------'
+      PRINT, ' *** ',STRTRIM(numff,2), $
+             ' Number of files for ', year, '/', month
+      PRINT, '------------------------------------------'
+      PRINT, ''
       
 
       IF(N_ELEMENTS(ff) GT 1) THEN BEGIN
@@ -134,9 +137,10 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
           IF(is_file(file1)) THEN BEGIN
 
             ; -- read netCDF file
-            PRINT,' *** Processing: '+file1
+            PRINT,' *** ',STRTRIM(counti,2),'.File: -> ',file1
             READ_ERA_NCFILE, file1, plevel, dpres, lon, lat, $
                              lwc, iwc, cc, geop, temp
+
 
             IF(counti EQ 0) THEN BEGIN
 
@@ -191,11 +195,12 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                               cfc_tmp_sat
 
             IF KEYWORD_SET(verbose) THEN BEGIN
-              PRINT, ' *** MINMAX(SAT minus ERA):'
+              PRINT, ' *** MINMAX( SAT minus ERA ):'
               PRINT, '     IWP : ', minmax(iwp_tmp_sat-iwp_tmp_era)
               PRINT, '     LWP : ', minmax(lwp_tmp_sat-lwp_tmp_era)
               PRINT, '     CFC : ', minmax(cfc_tmp_sat-cfc_tmp_era)
             ENDIF
+
 
             ; model grid means
             SUMUP_CLOUD_PARAMS, cph_era, ctt_era, cth_era, ctp_era, $
@@ -225,18 +230,18 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
 
           ENDIF ;end of IF(is_file(file1))
 
+
           IF KEYWORD_SET(verbose) THEN BEGIN
-            PRINT, ' *** counti vs. numb_raw: ', counti, numb_raw
-            PRINT, ' *** MINMAX(satellite grid mean):'
-            PRINT, '     IWP : ', minmax(iwp_sat/numb_raw)
-            PRINT, '     LWP : ', minmax(lwp_sat/numb_raw)
-            PRINT, '     CFC : ', minmax(cfc_sat/numb_raw)
-            PRINT, ' *** MINMAX(model grid mean):'
-            PRINT, '     IWP : ', minmax(iwp_era/numb_raw)
-            PRINT, '     LWP : ', minmax(lwp_era/numb_raw)
-            PRINT, '     CFC : ', minmax(cfc_era/numb_raw)
+            PRINT, ' *** MINMAX( grid mean )'
+            PRINT, '     IWP sat: ', minmax(iwp_sat/numb_raw)
+            PRINT, '     LWP sat: ', minmax(lwp_sat/numb_raw)
+            PRINT, '     CFC sat: ', minmax(cfc_sat/numb_raw)
+            PRINT, '     IWP era: ', minmax(iwp_era/numb_raw)
+            PRINT, '     LWP era: ', minmax(lwp_era/numb_raw)
+            PRINT, '     CFC era: ', minmax(cfc_era/numb_raw)
             PRINT, ''
           ENDIF
+          stop
 
 
         ;-----------------------------------------------------------------------

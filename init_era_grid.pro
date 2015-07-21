@@ -25,9 +25,9 @@ PRO INIT_ERA_GRID, varin, lonin, latin, $
     FOR loi=0,xdim-1 DO longrd[loi,*]=lonin[loi]-180.
     FOR lai=0,ydim-1 DO latgrd[*,lai]=latin[lai]
 
-    IF KEYWORD_SET(ver) THEN BEGIN
-        PRINT, ' *** MINMAX of longitude & latitude'
-        PRINT, minmax(longrd), minmax(latgrd)
-    ENDIF
+    ;IF KEYWORD_SET(ver) THEN BEGIN
+    ;    PRINT, ' *** MINMAX of longitude & latitude'
+    ;    PRINT, minmax(longrd), minmax(latgrd)
+    ;ENDIF
 
 END
