@@ -1,6 +1,6 @@
 ;+
 ; NAME:
-;   ERA_SIMULATOR_V2
+;   ERA_SIMULATOR
 ;
 ; PURPOSE:
 ;   Calculates monthly means of cloud parameters based on ERA-Interim reanalysis
@@ -15,7 +15,7 @@
 ;
 ;
 ; CALLING SEQUENCE:
-;   era_simulator_v2
+;   era_simulator
 ;
 ; MODIFICATION HISTORY:
 ;   Written by Dr. Martin Stengel, 2014; 
@@ -46,7 +46,7 @@
 ;   had liquid cloud top (vice verca for IWP)
 ; - …
 ;*******************************************************************************
-PRO ERA_SIMULATOR_V2, help=help, mapdata=mapdata, verbose=verbose
+PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
 ;*******************************************************************************
 
   IF KEYWORD_SET(help) THEN BEGIN
@@ -104,13 +104,12 @@ PRO ERA_SIMULATOR_V2, help=help, mapdata=mapdata, verbose=verbose
   FOR ii1=0,nyy-1 DO BEGIN
     FOR jj1=0,nmonths-1 DO BEGIN
     
-      year=RANGE_YY[ii1]
-      month=RANGE_MM[jj1]
+      year  = RANGE_YY[ii1]
+      month = RANGE_MM[jj1]
       
-      counti=0
-      
+      counti = 0
 
-      ff=FINDFILE(era_path+year+month+'/'+'*'+year+month+'*plev')
+      ff = FINDFILE(era_path+year+month+'/'+'*'+year+month+'*plev')
 
       IF KEYWORD_SET(verbose) THEN BEGIN
           PRINT, ' *** Number of files for ', year, ' and month ', month, $
@@ -123,8 +122,8 @@ PRO ERA_SIMULATOR_V2, help=help, mapdata=mapdata, verbose=verbose
 
         FOR fidx=0,N_ELEMENTS(ff)-1,1 DO BEGIN ;loop over files
         
-          file0=ff[fidx]
-          file1=file0+'.nc'
+          file0 = ff[fidx]
+          file1 = file0+'.nc'
           
           IF(is_file(file0) AND (NOT is_file(file1))) THEN BEGIN
             PRINT,' *** converting: '+file0
@@ -303,9 +302,12 @@ PRO ERA_SIMULATOR_V2, help=help, mapdata=mapdata, verbose=verbose
 
 
         ; delete arrays
-        DELVAR, cph_era, ctt_era, cth_era, ctp_era, lwp_era, iwp_era, cfc_era,$
-                cph_sat, ctt_sat, cth_sat, ctp_sat, lwp_sat, iwp_sat, cfc_sat,$
-                ctp_hist_era, ctp_hist_sat
+        DELVAR, cph_era, ctt_era, cth_era, ctp_era, $
+                lwp_era, iwp_era, cfc_era,$
+                cph_sat, ctt_sat, cth_sat, ctp_sat, $
+                lwp_sat, iwp_sat, cfc_sat,$
+                ctp_hist_era, ctp_hist_sat, $
+                numb_tmp, numb_raw, counti
 
 
       ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
