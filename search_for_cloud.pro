@@ -50,12 +50,12 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         IF(z LT zdim-2) THEN BEGIN
           lwp_tmp[where_cot] = (total(lwp_lay[*,*,z:*],3))[where_cot]
           iwp_tmp[where_cot] = (total(iwp_lay[*,*,z:*],3))[where_cot]
-          cfc_tmp[where_cot] = (max(cc[*,*,z:*],dimension=3))[where_cot]
+          cfc_tmp[where_cot] = (0. > ( (max(cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
         ; upper most layer
         ENDIF ELSE BEGIN
           lwp_tmp[where_cot] = (lwp_lay[*,*,z])[where_cot]
           iwp_tmp[where_cot] = (iwp_lay[*,*,z])[where_cot]
-          cfc_tmp[where_cot] = (cc[*,*,z])[where_cot]
+          cfc_tmp[where_cot] = (0. > ( (cc[*,*,z])[where_cot] ) < 1.0 )
         ENDELSE
         
       ENDIF
