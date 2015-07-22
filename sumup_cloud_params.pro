@@ -58,4 +58,6 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     ;PRINT, '     MINMAX(ctt_mean/numb): ', minmax(ctt_mean/numb)
     ;PRINT, '     MINMAX(numb):          ', minmax(numb)
 
+    numb_tmp[*,*] = 0
+
 END

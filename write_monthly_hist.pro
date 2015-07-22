@@ -6,7 +6,8 @@
 PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
                         xdim, ydim, zdim, dim_ctp, lon, lat, $
                         ctp_limits_final1d, ctp_limits_final2d, $
-                        ctp_hist_era, ctp_hist_sat
+                        ctp_hist_era, ctp_hist_sat, $
+                        ctp_hist_inc_era, ctp_hist_inc_sat
 
 
     dim_time   = 1
@@ -52,6 +53,8 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'ctp_bnds', [dim_b_id,dim_p_id], /FLOAT)
     vid  = NCDF_VARDEF(id, 'ctp_hist_era', [dim_x_id,dim_y_id,dim_p_id,time_id], /LONG)
     vid  = NCDF_VARDEF(id, 'ctp_hist_sat', [dim_x_id,dim_y_id,dim_p_id,time_id], /LONG)
+    vid  = NCDF_VARDEF(id, 'ctp_hist_inc_era', [dim_x_id,dim_y_id,dim_p_id,time_id], /LONG)
+    vid  = NCDF_VARDEF(id, 'ctp_hist_inc_sat', [dim_x_id,dim_y_id,dim_p_id,time_id], /LONG)
     
     NCDF_CONTROL, id, /ENDEF
 
@@ -62,6 +65,8 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
     NCDF_VARPUT, id, 'ctp_bnds',erg_plev_bnds
     NCDF_VARPUT, id, 'ctp_hist_era',ctp_hist_era
     NCDF_VARPUT, id, 'ctp_hist_sat',ctp_hist_sat
+    NCDF_VARPUT, id, 'ctp_hist_inc_era',ctp_hist_inc_era
+    NCDF_VARPUT, id, 'ctp_hist_inc_sat',ctp_hist_inc_sat
     NCDF_CLOSE, id
 
 END

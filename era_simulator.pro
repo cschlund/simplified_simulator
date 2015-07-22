@@ -48,7 +48,7 @@
 ;   had liquid cloud top (vice verca for IWP)
 ; - …
 ;*******************************************************************************
-PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
+PRO ERA_SIMULATOR, help=help, verbose=verbose
 ;*******************************************************************************
 
   IF KEYWORD_SET(help) THEN BEGIN
@@ -118,19 +118,35 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                 INIT_ERA_GRID, lwc, lon, lat, $ 
                                lon2d, lat2d, xdim, ydim, zdim, verbose
 
-                ; -- initialize mean arrays: model (era) grid means
+                ; -- initialize mean arrays
+
+                ; model (era) GRID mean
                 INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                  cph_era, ctt_era, cth_era, $
                                  ctp_era, lwp_era, iwp_era, $
                                  cfc_era, ctp_hist_era, numb_era, $
                                  numb_tmp, numb_raw
 
-                ; -- initialize mean arrays: satellite grid means
+                ; satellite GRID mean
                 INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                  cph_sat, ctt_sat, cth_sat, $
                                  ctp_sat, lwp_sat, iwp_sat, $
                                  cfc_sat, ctp_hist_sat, numb_sat, $
                                  numb_tmp, numb_raw
+
+                ; model (era) INCLOUD mean
+                INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
+                                 cph_inc_era, ctt_inc_era, cth_inc_era, $
+                                 ctp_inc_era, lwp_inc_era, iwp_inc_era, $
+                                 cfc_inc_era, ctp_hist_inc_era, $
+                                 numb_inc_era, numb_tmp, numb_raw
+
+                ; satellite INCLOUD means
+                INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
+                                 cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
+                                 ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
+                                 cfc_inc_sat, ctp_hist_inc_sat, $
+                                 numb_inc_sat, numb_tmp, numb_raw
 
             ENDIF
             counti++
@@ -142,12 +158,21 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
 
 
             ; -- get liquid & ice COTs
+
+            ; GRID mean
             CWP_COT_PER_LAYER, lwc, iwc, dpres, xdim, ydim, zdim, $
                                liq_cot_lay, ice_cot_lay, $
                                lwp_lay, iwp_lay
 
+            ; INCLOUD mean
+            CWP_COT_PER_LAYER, lwc_inc, iwc_inc, dpres, xdim, ydim, zdim, $
+                               liq_cot_lay_inc, ice_cot_lay_inc, $
+                               lwp_lay_inc, iwp_lay_inc
+
                            
-            ; -- get ERA cloud parameters using cot_thv_era
+            ; -- get cloud parameters using COT threshold
+
+            ; model GRID mean
             SEARCH_FOR_CLOUD, liq_cot_lay, ice_cot_lay, cot_thv_era, $
                               xdim, ydim, zdim, geop, temp, $
                               lwp_lay, iwp_lay, plevel, cc, $
@@ -155,7 +180,7 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                               cph_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                               cfc_tmp_era
 
-            ; -- get SAT cloud parameters using cot_thv_sat
+            ; satellite GRID mean
             SEARCH_FOR_CLOUD, liq_cot_lay, ice_cot_lay, cot_thv_sat, $
                               xdim, ydim, zdim, geop, temp, $
                               lwp_lay, iwp_lay, plevel, cc, $
@@ -163,15 +188,38 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                               cph_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                               cfc_tmp_sat
 
-            IF KEYWORD_SET(verbose) THEN BEGIN
-              PRINT, ' *** MINMAX( SAT minus ERA ):'
-              PRINT, '     IWP : ', minmax(iwp_tmp_sat-iwp_tmp_era)
-              PRINT, '     LWP : ', minmax(lwp_tmp_sat-lwp_tmp_era)
-              PRINT, '     CFC : ', minmax(cfc_tmp_sat-cfc_tmp_era)
-            ENDIF
+            ; model INCLOUD mean
+            SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_era, $
+                              xdim, ydim, zdim, geop, temp, $
+                              lwp_lay_inc, iwp_lay_inc, plevel, cc, $
+                              ctp_tmp_inc_era, cth_tmp_inc_era, ctt_tmp_inc_era, $
+                              cph_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
+                              cfc_tmp_inc_era
+
+            ; satellite INCLOUD mean
+            SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
+                              xdim, ydim, zdim, geop, temp, $
+                              lwp_lay_inc, iwp_lay_inc, plevel, cc, $
+                              ctp_tmp_inc_sat, cth_tmp_inc_sat, ctt_tmp_inc_sat, $
+                              cph_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
+                              cfc_tmp_inc_sat
 
 
-            ; model grid means
+            ;IF KEYWORD_SET(verbose) THEN BEGIN
+            ;  PRINT, ' *** GRID mean MINMAX( SAT minus ERA ):'
+            ;  PRINT, '     IWP : ', minmax(iwp_tmp_sat-iwp_tmp_era)
+            ;  PRINT, '     LWP : ', minmax(lwp_tmp_sat-lwp_tmp_era)
+            ;  PRINT, '     CFC : ', minmax(cfc_tmp_sat-cfc_tmp_era)
+            ;  PRINT, ' *** INCLOUD mean MINMAX( SAT minus ERA ):'
+            ;  PRINT, '     IWP : ', minmax(iwp_tmp_inc_sat-iwp_tmp_inc_era)
+            ;  PRINT, '     LWP : ', minmax(lwp_tmp_inc_sat-lwp_tmp_inc_era)
+            ;  PRINT, '     CFC : ', minmax(cfc_tmp_inc_sat-cfc_tmp_inc_era)
+            ;ENDIF
+
+
+            ; -- sum up cloud parameters
+
+            ; model GRID mean
             SUMUP_CLOUD_PARAMS, cph_era, ctt_era, cth_era, ctp_era, $
                                 lwp_era, iwp_era, cfc_era, $
                                 cph_tmp_era, ctt_tmp_era, cth_tmp_era, $
@@ -179,13 +227,30 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                                 cfc_tmp_era, ctp_hist_era, numb_era, $
                                 numb_tmp, ctp_limits_final2d, dim_ctp
 
-            ; satellite grid means
+            ; satellite GRID mean
             SUMUP_CLOUD_PARAMS, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                                 lwp_sat, iwp_sat, cfc_sat, $
                                 cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, $
                                 ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                 cfc_tmp_sat, ctp_hist_sat, numb_sat, $
                                 numb_tmp, ctp_limits_final2d, dim_ctp
+
+            ; model INCLOUD mean
+            SUMUP_CLOUD_PARAMS, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
+                                lwp_inc_era, iwp_inc_era, cfc_inc_era, $
+                                cph_tmp_inc_era, ctt_tmp_inc_era, cth_tmp_inc_era, $
+                                ctp_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
+                                cfc_tmp_inc_era, ctp_hist_inc_era, numb_inc_era, $
+                                numb_tmp, ctp_limits_final2d, dim_ctp
+
+            ; satellite INCLOUD mean
+            SUMUP_CLOUD_PARAMS, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
+                                lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, $
+                                cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $
+                                ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
+                                cfc_tmp_inc_sat, ctp_hist_inc_sat, numb_inc_sat, $
+                                numb_tmp, ctp_limits_final2d, dim_ctp
+
 
             numb_raw++
 
@@ -194,20 +259,35 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
             DELVAR, cph_tmp_era, ctt_tmp_era, cth_tmp_era, ctp_tmp_era, $
                     lwp_tmp_era, iwp_tmp_era, cfc_tmp_era, $
                     cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, ctp_tmp_sat, $
-                    lwp_tmp_sat, iwp_tmp_sat, cfc_tmp_sat
+                    lwp_tmp_sat, iwp_tmp_sat, cfc_tmp_sat, $ 
+                    cph_tmp_inc_era, ctt_tmp_inc_era, cth_tmp_inc_era, $ 
+                    ctp_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $ 
+                    cfc_tmp_inc_era, $ 
+                    cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $ 
+                    ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $ 
+                    cfc_tmp_inc_sat
 
 
           ENDIF ;end of IF(is_file(file1))
 
 
           IF KEYWORD_SET(verbose) THEN BEGIN
-            PRINT, ' *** MINMAX( grid mean )'
-            PRINT, '     IWP sat: ', minmax(iwp_sat/numb_raw)
-            PRINT, '     LWP sat: ', minmax(lwp_sat/numb_raw)
-            PRINT, '     CFC sat: ', minmax(cfc_sat/numb_raw)
-            PRINT, '     IWP era: ', minmax(iwp_era/numb_raw)
-            PRINT, '     LWP era: ', minmax(lwp_era/numb_raw)
-            PRINT, '     CFC era: ', minmax(cfc_era/numb_raw)
+            PRINT, ' *** MINMAX( grid mean ) ********************'
+            PRINT, '     IWP Sat: ', minmax(iwp_sat/numb_raw)
+            PRINT, '     LWP Sat: ', minmax(lwp_sat/numb_raw)
+            PRINT, '     CFC Sat: ', minmax(cfc_sat/numb_raw)
+            PRINT, '     ----------------------------------------'
+            PRINT, '     IWP Era: ', minmax(iwp_era/numb_raw)
+            PRINT, '     LWP Era: ', minmax(lwp_era/numb_raw)
+            PRINT, '     CFC Era: ', minmax(cfc_era/numb_raw)
+            PRINT, ' *** MINMAX( incloud mean ) *****************'
+            PRINT, '     IWP Sat: ', minmax(iwp_inc_sat/numb_raw)
+            PRINT, '     LWP Sat: ', minmax(lwp_inc_sat/numb_raw)
+            PRINT, '     CFC Sat: ', minmax(cfc_inc_sat/numb_raw)
+            PRINT, '     ----------------------------------------'
+            PRINT, '     IWP Era: ', minmax(iwp_inc_era/numb_raw)
+            PRINT, '     LWP Era: ', minmax(lwp_inc_era/numb_raw)
+            PRINT, '     CFC Era: ', minmax(cfc_inc_era/numb_raw)
             PRINT, ''
           ENDIF
 
@@ -216,23 +296,25 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
         ENDFOR ;end of file loop
         ;-----------------------------------------------------------------------
 
+        ; -- calculate averages
 
-        ; model grid mean averages 
+        ; model GRID mean 
         CALC_PARAMS_AVERAGES, cph_era, ctt_era, cth_era, ctp_era, $
                               lwp_era, iwp_era, cfc_era, numb_era, numb_raw
 
-        ; satellite grid mean averages 
+        ; satellite GRID mean 
         CALC_PARAMS_AVERAGES, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                               lwp_sat, iwp_sat, cfc_sat, numb_sat, numb_raw
 
+        ; model INCLOUD mean 
+        CALC_PARAMS_AVERAGES, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
+                              lwp_inc_era, iwp_inc_era, cfc_inc_era, numb_inc_era, $
+                              numb_raw
 
-        ; visualize data
-        IF KEYWORD_SET(mapdata) THEN BEGIN
-            map_image, ctt_era, lat2d, lon2d, ctable=33, $
-                       limit=[-90,-180,90,180], min=200, max=300
-            map_image, ctt_sat, lat2d, lon2d, ctable=33, $
-                       limit=[-90,-180,90,180], min=200, max=300
-        ENDIF
+        ; satellite INCLOUD mean 
+        CALC_PARAMS_AVERAGES, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
+                              lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, numb_inc_sat, $
+                              numb_raw
 
 
         PRINT,' *** counti (number of files read): ', counti
@@ -243,21 +325,35 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                             cph_era, ctt_era, cth_era, ctp_era,  $
                             lwp_era, iwp_era, cfc_era, numb_era, $
                             cph_sat, ctt_sat, cth_sat, ctp_sat,  $
-                            lwp_sat, iwp_sat, cfc_sat, numb_sat
+                            lwp_sat, iwp_sat, cfc_sat, numb_sat, $
+                            cph_inc_era, ctt_inc_era, cth_inc_era, $
+                            ctp_inc_era, lwp_inc_era, iwp_inc_era, $
+                            cfc_inc_era, numb_inc_era, $
+                            cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
+                            ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
+                            cfc_inc_sat, numb_inc_sat
 
         ; write monthly histogram netCDF file
         WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
                             xdim, ydim, zdim, dim_ctp, lon, lat, $
                             ctp_limits_final1d, ctp_limits_final2d, $
-                            ctp_hist_era, ctp_hist_sat
+                            ctp_hist_era, ctp_hist_sat, $
+                            ctp_hist_inc_era, ctp_hist_inc_sat
 
 
-        ; delete arrays
+        ; delete final arrays before next cycle starts
         DELVAR, cph_era, ctt_era, cth_era, ctp_era, $
                 lwp_era, iwp_era, cfc_era,$
                 cph_sat, ctt_sat, cth_sat, ctp_sat, $
                 lwp_sat, iwp_sat, cfc_sat,$
                 ctp_hist_era, ctp_hist_sat, $
+                cph_inc_era, ctt_inc_era, cth_inc_era, $
+                ctp_inc_era, lwp_inc_era, iwp_inc_era, $
+                cfc_inc_era, numb_inc_era, $
+                cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
+                ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
+                cfc_inc_sat, numb_inc_sat, $
+                ctp_hist_inc_era, ctp_hist_inc_sat, $
                 numb_tmp, numb_raw, counti
 
 
