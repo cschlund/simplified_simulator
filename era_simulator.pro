@@ -271,27 +271,6 @@ PRO ERA_SIMULATOR, help=help, verbose=verbose
           ENDIF ;end of IF(is_file(file1))
 
 
-          IF KEYWORD_SET(verbose) THEN BEGIN
-            PRINT, ' *** MINMAX( grid mean ) ********************'
-            PRINT, '     IWP Sat: ', minmax(iwp_sat/numb_raw)
-            PRINT, '     LWP Sat: ', minmax(lwp_sat/numb_raw)
-            PRINT, '     CFC Sat: ', minmax(cfc_sat/numb_raw)
-            PRINT, '     ----------------------------------------'
-            PRINT, '     IWP Era: ', minmax(iwp_era/numb_raw)
-            PRINT, '     LWP Era: ', minmax(lwp_era/numb_raw)
-            PRINT, '     CFC Era: ', minmax(cfc_era/numb_raw)
-            PRINT, ' *** MINMAX( incloud mean ) *****************'
-            PRINT, '     IWP Sat: ', minmax(iwp_inc_sat/numb_raw)
-            PRINT, '     LWP Sat: ', minmax(lwp_inc_sat/numb_raw)
-            PRINT, '     CFC Sat: ', minmax(cfc_inc_sat/numb_raw)
-            PRINT, '     ----------------------------------------'
-            PRINT, '     IWP Era: ', minmax(iwp_inc_era/numb_raw)
-            PRINT, '     LWP Era: ', minmax(lwp_inc_era/numb_raw)
-            PRINT, '     CFC Era: ', minmax(cfc_inc_era/numb_raw)
-            PRINT, ''
-          ENDIF
-
-
         ;-----------------------------------------------------------------------
         ENDFOR ;end of file loop
         ;-----------------------------------------------------------------------
@@ -315,6 +294,27 @@ PRO ERA_SIMULATOR, help=help, verbose=verbose
         CALC_PARAMS_AVERAGES, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
                               lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, numb_inc_sat, $
                               numb_raw
+
+
+        IF KEYWORD_SET(verbose) THEN BEGIN
+          PRINT, ' *** MINMAX( grid mean ) ********************'
+          PRINT, '     IWP Sat: ', minmax(lwp_sat)
+          PRINT, '     LWP Sat: ', minmax(iwp_sat)
+          PRINT, '     CFC Sat: ', minmax(cfs_sat)
+          PRINT, '     ----------------------------------------'
+          PRINT, '     IWP Era: ', minmax(lwp_era)
+          PRINT, '     LWP Era: ', minmax(iwp_era)
+          PRINT, '     CFC Era: ', minmax(cfc_era)
+          PRINT, ' *** MINMAX( incloud mean ) *****************'
+          PRINT, '     IWP Sat: ', minmax(lwp_inc_sat)
+          PRINT, '     LWP Sat: ', minmax(iwp_inc_sat)
+          PRINT, '     CFC Sat: ', minmax(cfc_inc_sat)
+          PRINT, '     ----------------------------------------'
+          PRINT, '     IWP Era: ', minmax(lwp_inc_era)
+          PRINT, '     LWP Era: ', minmax(iwp_inc_era)
+          PRINT, '     CFC Era: ', minmax(cfc_inc_era)
+          PRINT, ''
+        ENDIF
 
 
         PRINT,' *** counti (number of files read): ', counti
