@@ -60,9 +60,12 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
   
 
   ; -- import settings
-  CONFIG_ERA_SIMULATOR, era_path, out_path, $
-                        years_list, nyears, months_list, nmonths, $
-                        dim_ctp, ctp_limits_final1d, ctp_limits_final2d
+
+  CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
+                        months_list, nmonths, dim_ctp, $
+                        ctp_limits_final1d, ctp_limits_final2d, $
+                        cot_thv_era, cot_thv_sat, crit_str
+
 
   ; -- loop over years and months
 
@@ -129,12 +132,6 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
 
             ENDIF
             counti++
-
-
-            ; -- set COT thresholds
-            cot_thv_era=0.01 ; model = 0.01, e.g. ERA = original input data
-            cot_thv_sat=1.0  ; satellite, e.g. Cloud_cci calipso cloud mask
-            crit_str='cot_thv_'+strtrim(cot_thv_sat,1)
 
 
             ; -- get liquid & ice COTs
