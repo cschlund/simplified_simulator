@@ -59,53 +59,18 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
   ENDIF
   
 
-  ;-- input and output paths
-  
-  out_base = 'MM_conny_v2/'
-  era_path = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/MARS_data/ERA_simulator/'
-  path_out = '/cmsaf/cmsaf-cld6/cschlund/cloud_cci/ERA_simulator/'+out_base
-  
-
-  ;-- Set list of years to be processed
-  
-  ;RANGE_YY = ['1979','1980',$
-  ;           '1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',$
-  ;           '1991','1992','1993','1994','1995','1996','1997','1998','1999','2000',$
-  ;           '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',$
-  ;           '2011','2012','2013','2014']
-  RANGE_YY = ['2008']
-  nyy = N_ELEMENTS(RANGE_YY)
-  
-
-  ;-- Set list of month to be processed
-  
-  ;RANGE_MM = ['01','02','03','04','05','06','07','08','09','10','11','12']
-  RANGE_MM = ['01']
-  nmonths = N_ELEMENTS(RANGE_MM)
-  
-
-  ;-- Set cloud top pressure limits for 1D and 2D output, same as in Cloud_cci
-  
-  ctp_limits_final1d = [1.0, 90.0, 180.0, 245.0, 310.0, 375.0, 440.0, 500.0, $
-                        560.0, 620.0, 680.0, 740.0, 800.0, 950., 1100.0]
-  ctp_limits_final2d = FLTARR(2,N_ELEMENTS(ctp_limits_final1d)-1)
-  
-  FOR gu=0,N_ELEMENTS(ctp_limits_final2d[0,*])-1 DO BEGIN
-    ctp_limits_final2d[0,gu] = ctp_limits_final1d[gu]
-    ctp_limits_final2d[1,gu] = ctp_limits_final1d[gu+1]
-  ENDFOR
-  
-  dim_ctp = N_ELEMENTS(ctp_limits_final1d)-1
-  
-  
+  ; -- import settings
+  CONFIG_ERA_SIMULATOR, era_path, out_path, $
+                        years_list, nyears, months_list, nmonths, $
+                        dim_ctp, ctp_limits_final1d, ctp_limits_final2d
 
   ; -- loop over years and months
 
-  FOR ii1=0,nyy-1 DO BEGIN
+  FOR ii1=0,nyears-1 DO BEGIN
     FOR jj1=0,nmonths-1 DO BEGIN
     
-      year  = RANGE_YY[ii1]
-      month = RANGE_MM[jj1]
+      year  = years_list[ii1]
+      month = months_list[jj1]
       
       counti = 0
 
@@ -270,7 +235,7 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
         PRINT,' *** counti (number of files read): ', counti
 
         ; write monthly global mean netCDF file
-        WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
+        WRITE_MONTHLY_MEAN, out_path, year, month, crit_str, $
                             xdim, ydim, zdim, lon, lat, $
                             cph_era, ctt_era, cth_era, ctp_era,  $
                             lwp_era, iwp_era, cfc_era, numb_era, $
@@ -278,7 +243,7 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
                             lwp_sat, iwp_sat, cfc_sat, numb_sat
 
         ; write monthly histogram netCDF file
-        WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
+        WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
                             xdim, ydim, zdim, dim_ctp, lon, lat, $
                             ctp_limits_final1d, ctp_limits_final2d, $
                             ctp_hist_era, ctp_hist_sat

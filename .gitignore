@@ -1,0 +1,16 @@
+# Ignore following files
+config_era_simulator.pro
+*~
+*test*
+*log
+*eps
+*png
+*jpeg
+*jpg
+*EPS
+*PNG
+*JPEG
+*JPG
+*nc
+*txt
+
