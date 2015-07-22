@@ -21,6 +21,8 @@
 ;   Written by Dr. Martin Stengel, 2014; 
 ;     grid_mean arrays as output; for comparison with model results
 ;   C. Schlundt, Juli 2015: program modifications - subroutines added
+;   C. Schlundt, Juli 2015: incloud_mean arrays added
+;                           (LWP and IWP weighted with CFC)
 ;
 ;*******************************************************************************
 ; Simulator NOTES:
@@ -132,6 +134,11 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
 
             ENDIF
             counti++
+
+
+            ; -- lwc and iwc weighted by cc
+            INCLOUD_CALC, lwc, iwc, cc, xdim, ydim, zdim, $
+                          lwc_inc, iwc_inc
 
 
             ; -- get liquid & ice COTs
