@@ -206,7 +206,6 @@ PRO ERA_SIMULATOR, help=help, mapdata=mapdata, verbose=verbose
             PRINT, '     CFC era: ', minmax(cfc_era/numb_raw)
             PRINT, ''
           ENDIF
-          stop
 
 
         ;-----------------------------------------------------------------------
