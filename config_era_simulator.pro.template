@@ -18,10 +18,12 @@ PRO CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
     ;-- input and output paths
     
     ; era simulator output directory
-    out_base = 'MM_conny_v2/'
+    out_base = 'v3-1_MM_erainterim_output_incloud_bugfix/'
     pwd_base = '/cmsaf/cmsaf-cld6/cschlund/cloud_cci/ERA_simulator/'
     out_path = pwd_base + out_base
-    
+    validres = VALID_DIR( out_path )
+    IF(validres EQ 0) THEN creatres = CREATE_DIR( out_path )
+
     ; ERA-Interim input files
     era_base = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/'
     era_path = era_base  + 'MARS_data/ERA_simulator/'
@@ -60,8 +62,16 @@ PRO CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
     
     ; -- set COT thresholds for cloudy/clear decisions
 
-    cot_thv_era = 0.01 ; model = 0.01, e.g. ERA = original input data
-    cot_thv_sat = 1.0  ; satellite, e.g. Cloud_cci calipso cloud mask
+    ; model = 0.01, e.g. ERA = original input data
+    cot_thv_era = 0.01 
+
+    ; satellite sensitivity threshold
+    IF KEYWORD_SET(cot_thv_sat) THEN BEGIN
+	cot_thv_sat = cot_thv_sat
+    ENDIF ELSE BEGIN
+	cot_thv_sat = 1.0
+    ENDELSE
+
     crit_str    = 'cot_thv_'+strtrim(cot_thv_sat,1)
 
 END
