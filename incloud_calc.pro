@@ -36,8 +36,8 @@ PRO INCLOUD_CALC, lwc, iwc, cc, xdim, ydim, zdim, $
         iwc_2dtmp = REFORM(iwc[*,*,z])
         cfc_2dtmp = REFORM(cc[*,*,z])
 
-        lwc_inc_tmp[zidx] = lwc_2dtmp[zidx] * cfc_2dtmp[zidx]
-        iwc_inc_tmp[zidx] = iwc_2dtmp[zidx] * cfc_2dtmp[zidx]
+        lwc_inc_tmp[zidx] = lwc_2dtmp[zidx] / cfc_2dtmp[zidx]
+        iwc_inc_tmp[zidx] = iwc_2dtmp[zidx] / cfc_2dtmp[zidx]
 
         lwc_inc[*,*,z] = lwc_inc_tmp[*,*]
         iwc_inc[*,*,z] = iwc_inc_tmp[*,*]

@@ -300,7 +300,7 @@ PRO ERA_SIMULATOR, help=help, verbose=verbose
           PRINT, ' *** MINMAX( grid mean ) ********************'
           PRINT, '     IWP Sat: ', minmax(lwp_sat)
           PRINT, '     LWP Sat: ', minmax(iwp_sat)
-          PRINT, '     CFC Sat: ', minmax(cfs_sat)
+          PRINT, '     CFC Sat: ', minmax(cfc_sat)
           PRINT, '     ----------------------------------------'
           PRINT, '     IWP Era: ', minmax(lwp_era)
           PRINT, '     LWP Era: ', minmax(iwp_era)
