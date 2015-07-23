@@ -58,7 +58,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
                           ctp_limits_final1d, ctp_limits_final2d, $
                           cot_thv_era, cot_thv_sat, crit_str
     
-    stop
+
     ; -- loop over years and months
     
     FOR ii1=0,nyears-1 DO BEGIN
