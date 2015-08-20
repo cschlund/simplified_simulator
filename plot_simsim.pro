@@ -21,6 +21,21 @@
 ; MODIFICATION HISTORY:
 ;   Written by Dr. Cornelia Schlundt; 
 ;------------------------------------------------------------------------------
+FUNCTION GET_MINMAX_RANGE, varname, data
+
+	mm = minmax(data)
+
+	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, [0., 1.]
+	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, [0., 1.]
+	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, [0., mm[1]]
+	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, [10., mm[1]]
+	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, [0., mm[1]]
+	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, [180., mm[1]]
+	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., mm[1]]
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., mm[1]]
+
+END
+
 FUNCTION GET_VAR_UNIT, varname
 
 	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ' []'
@@ -60,10 +75,19 @@ END
 
 
 ; -- main program --
-
+;
+; KEYWORDS
+;	verbose:	increase screen output
+;	dir:		set input directory, where ncfiles are located
+;	test:		pre-defined test ncfile
+;	limit:		map_image limit
+;	compare:	compare two variables from same file and make difference plot (blue-to-red)
+;	niter:		number of iterations, i.e. how many variables from the ncfile to be plotted
+;	plotall:	instead selecting one parameter, all parameters of the file will be plotted
+;
 PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		LIMIT=limit, PORTRAIT=portrait, EPS=eps, $
-		COMPARE=compare, NITER=niter
+		COMPARE=compare, NITER=niter, PLOTALL=plotall
 
 
 	; -- eps plots here
@@ -82,8 +106,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
     ; -- Select file
     IF KEYWORD_SET(test) THEN BEGIN
 		ncfile = '/cmsaf/cmsaf-cld6/cschlund/cci_wp5001/ERA_simulator/' + $
-			'v3-1_MM_erainterim_output_incloud_bugfix/' + $
-			'ERA_Interim_MM200801_cot_thv_0.300000_CTP.nc'
+			'v4_MM_simsim_output_analysis/' + $
+			'ERA_Interim_MM200801_cot_thv_1.00000_CTP.nc'
     ENDIF ELSE BEGIN
 		ncfile = DIALOG_PICKFILE(/READ, PATH=dir, FILTER='*.nc', $
 					TITLE='Select ERA-Interim reanalysis file!')
@@ -92,13 +116,24 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
     ENDELSE
 
 
+	; -- Get list of variables in file
+	variableList = GET_NCDF_VARLIST( ncfile )
+
+	; -- determine number of variables to be plotted
+	IF KEYWORD_SET(plotall) THEN niter = N_ELEMENTS(variableList.ToArray())
+
+
 	; -- loop over the number of parameters from the same ncfile
 	FOR i=0, niter-1 DO BEGIN
 
-		; -- Get list of variables in file
-		variableList = GET_NCDF_VARLIST( ncfile )
-		dropListValues = variableList.ToArray()
-		varname = Choose_Item(dropListValues, CANCEL=cancelled)
+		IF KEYWORD_SET(plotall) THEN varname = variableList[i]
+
+		IF ~KEYWORD_SET(plotall) THEN BEGIN
+			; -- Select item from List
+			dropListValues = variableList.ToArray()
+			varname = Choose_Item(dropListValues, CANCEL=cancelled)
+		ENDIF
+
 		varoutf = '_'+varname
 		rainbow=1
 		bwr=0
@@ -165,11 +200,12 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			maxi = 25.
 		ENDIF
 
+		IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
+
 		PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
 
 		unit = GET_VAR_UNIT(varname)
-
-		IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
+		minmax_range = GET_MINMAX_RANGE(varname, img)
 
 
 		; -- Plot settings
@@ -187,20 +223,36 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		ENDELSE
 
 
+		; -- flag negative values with FILLVALUE
+		wo_bad = WHERE(img LT 0, nbad)
+		IF(nbad GT 0) THEN BEGIN
+			img[wo_bad] = -999.
+			PRINT, ' *** ', STRTRIM(nbad,2), ' bad pixels, i.e. negative values'
+		ENDIF
+
+	
+		; -- some rough statistics
+		IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
+			good = WHERE(img GE 0.)
+			PRINT, ' *** MEAN   of image: ', MEAN(img[good])
+			PRINT, ' *** STDDEV of image: ', STDDEV(img[good])
+		ENDIF
+
 		position = [0.10, 0.25, 0.90, 0.90]
 		xlat=0.05 & ylat=0.53
 		xlon=0.46 & ylon=0.17
 		xtit=0.11 & ytit=0.95
 		chars = 2.2
 		barformat = ('(F8.2)')
-		void_index = WHERE(img EQ img_att._FILLVALUE)
-
+		IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
 
 		; -- map_image
 		m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
 			/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
-			/GRID, GLINETHICK=2., MLINETHICK=2., /AUTOSCALE, $
-			CHARSIZE=chars, /HORIZON, MINI=mini, MAXI=maxi, $
+			/GRID, GLINETHICK=2., MLINETHICK=2., $
+			; /AUTOSCALE, $
+			MINI=minmax_range[0], MAXI=minmax_range[1], $
+			CHARSIZE=chars, /HORIZON, $
 			POSITION=position, /CONTINENTS, LIMIT=limit, $
 			FORMAT=barformat, VOID_INDEX=void_index)
 		m -> project, image=img, lon=lon, lat=lat, $
