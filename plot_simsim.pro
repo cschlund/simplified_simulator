@@ -242,6 +242,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			m -> display
 			obj_destroy, m
 
+
 			; -- annotations
 			IF (j EQ 0) THEN XYOUTS, 0.05, 0.97, mtitle, $
 				/norm, CHARSIZE=1.8, CHARTHICK=1.8, COLOR=col
@@ -350,8 +351,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
 		addstr = 'MIN='+minstr+'   MAX='+maxstr
 
-		IF (minmax_range[0] EQ 0.) THEN ctable = 62 & bwr=0 & rainbow=0
-		IF (minmax_range[1] EQ 0.) THEN ctable = 1 & bwr=0 & rainbow=0
+		IF (minmax_range[0] EQ 0.) THEN ctable = 62 
+		IF (minmax_range[1] EQ 0.) THEN ctable = 1 
 
 		; -- Plot settings
 		IF (N_TAGS(glob_att) NE 0) THEN BEGIN
@@ -370,25 +371,37 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		xlon=0.46 & ylon=0.17
 		xtit=0.11 & ytit=0.96
 		chars = 2.2
-		barformat = ('(F8.2)')
+		barformat = ('(F10.3)')
 
 		IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
 
 		; -- map_image (single)
-		m = obj_new("map_image", (img-img2), lat, lon, $
-			rainbow=rainbow, /no_draw, /BOX_AXES, /MAGNIFY, $
-			bwr=bwr, /GRID, GLINETHICK=2., MLINETHICK=2., $
-			n_lev=6, ctable = ctable, $
-; 			discrete=GET_DISCRETE_RANGE(varname), $
-; 			MINI=mini, MAXI=maxi, $
-			CHARSIZE=chars, /HORIZON, POSITION=position, $
-			/CONTINENTS, LIMIT=limit, $
-			FORMAT=barformat, VOID_INDEX=void_index)
+		IF (ISA(ctable) EQ 0) THEN BEGIN
+			m = obj_new("map_image", (img-img2), lat, lon, $
+				rainbow=rainbow, /no_draw, /BOX_AXES, /MAGNIFY, $
+				bwr=bwr, /GRID, GLINETHICK=2., MLINETHICK=2., $
+				n_lev=6, $
+				MINI=minmax_range[0], MAXI=minmax_range[1], $
+				CHARSIZE=chars, /HORIZON, POSITION=position, $
+				/CONTINENTS, LIMIT=limit, $
+				FORMAT=barformat, VOID_INDEX=void_index)
+		ENDIF ELSE BEGIN
+			m = obj_new("map_image", (img-img2), lat, lon, $
+				/no_draw, /BOX_AXES, /MAGNIFY, $
+				/GRID, GLINETHICK=2., MLINETHICK=2., $
+				n_lev=6, ctable = ctable, $
+				MINI=minmax_range[0], MAXI=minmax_range[1], $
+				CHARSIZE=chars, /HORIZON, POSITION=position, $
+				/CONTINENTS, LIMIT=limit, $
+				FORMAT=barformat, VOID_INDEX=void_index)
+		ENDELSE
 		m -> project, image=(img-img2), lon=lon, lat=lat, $
-			/no_erase, /no_draw 
+			/no_erase, /no_draw
 		m -> display
 		obj_destroy, m
 
+		MAP_CONTINENTS, /CONTINENTS, COLOR=0, GLINETHICK=2.2
+		MAP_GRID, COLOR=0, MLINETHICK=2.2
 
 		; -- annotations
 		XYOUTS, xlat, ylat, 'Latitude', $
@@ -397,8 +410,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
 		XYOUTS, xtit, ytit, ptitle, $
 			/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
-		XYOUTS, 0.1, ylon, addstr, $
-			COLOR=col, /norm, CHARSIZE=1.9, CHARTHICK=chars
+; 		XYOUTS, 0.1, ylon, addstr, $
+; 			COLOR=col, /norm, CHARSIZE=1.9, CHARTHICK=chars
 
 
 		IF KEYWORD_SET(eps) THEN BEGIN
@@ -528,25 +541,12 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 ; 				discrete=GET_DISCRETE_RANGE(varname), $
 				MINI=minmax_range[0], MAXI=minmax_range[1], $
 				CHARSIZE=chars, /HORIZON, $
-				POSITION=position, $
-				/CONTINENTS, LIMIT=limit, $
+				POSITION=position, LIMIT=limit, $
 				FORMAT=barformat, VOID_INDEX=void_index)
-
-; 			; -- map_image
-; 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
-; 				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, n_lev=6, $
-; 				/GRID, GLINETHICK=2., MLINETHICK=2., $
-; 				/AUTOSCALE, $
-; 				MINI=minmax_range[0], MAXI=minmax_range[1], $
-; 				CHARSIZE=chars, /HORIZON, $
-; 				POSITION=position, /CONTINENTS, LIMIT=limit, $
-; 				FORMAT=barformat, VOID_INDEX=void_index)
-
 			m -> project, image=img, lon=lon, lat=lat, $
 				/no_erase, /no_draw 
 			m -> display
 			obj_destroy, m
-
 
 			; -- annotations
 			XYOUTS, xlat, ylat, 'Latitude', $
