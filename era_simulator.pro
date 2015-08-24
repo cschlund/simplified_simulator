@@ -48,16 +48,20 @@
 ;   had liquid cloud top (vice verca for IWP)
 ; - …
 ;*******************************************************************************
-PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
+PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
+					logfile=logfile
 ;*******************************************************************************
 
     ; -- import settings
-    
+    IF KEYWORD_SET(verbose) THEN PRINT, ' * Import CONFIG_ERA_SIMULATOR setttings'
     CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
                           months_list, nmonths, dim_ctp, $
                           ctp_limits_final1d, ctp_limits_final2d, $
                           cot_thv_era, cot_thv_sat, crit_str
-    
+
+
+	IF KEYWORD_SET(logfile) THEN $
+		JOURNAL, out_path + 'era_simulator_journal' + cgTimeStamp() + '.pro'
 
     ; -- loop over years and months
     
@@ -75,7 +79,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
             
             PRINT, ''
             PRINT, '------------------------------------------'
-            PRINT, ' *** ',STRTRIM(numff,2), $
+            PRINT, ' * ',STRTRIM(numff,2), $
                    ' Number of files for ', year, '/', month
             PRINT, '------------------------------------------'
             PRINT, ''
@@ -90,149 +94,160 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
                     file1 = file0+'.nc'
                     
                     IF(is_file(file0) AND (NOT is_file(file1))) THEN BEGIN
-                        PRINT,' *** Converting: ' + file0
+                        PRINT,' * Converting: ' + file0
                         SPAWN,'cdo -f nc copy ' + file0 + ' ' + file1
                     ENDIF
                     
                     
                     IF(is_file(file1)) THEN BEGIN
-                    
+
+                        base = FSC_Base_Filename(file1,Directory=dir,Extension=ext)
+
+                        IF KEYWORD_SET(verbose) AND (counti EQ 0) THEN $
+                            PRINT, ' * Input directory: ', dir
+
                         ; -- read netCDF file
-                        PRINT,' *** ',STRTRIM(counti,2),'.File: -> ',file1
+                        IF KEYWORD_SET(verbose) THEN PRINT,' * READ_ERA_NCFILE: ',$
+                            STRTRIM(counti,2),': ',base+'.'+ext
                         READ_ERA_NCFILE, file1, plevel, dpres, lon, lat, $
                                          lwc, iwc, cc, geop, temp
-                        
-                        
+
+
                         IF(counti EQ 0) THEN BEGIN
-                        
+
                             ; -- initialize grid
+                            IF KEYWORD_SET(verbose) THEN PRINT, ' * INIT_ERA_GRID'
                             INIT_ERA_GRID, lwc, lon, lat, $ 
                                            lon2d, lat2d, xdim, ydim, zdim, verbose
-                        
+
                             ; -- initialize mean arrays
-                        
-                            ; model (era) GRID mean
+                            IF KEYWORD_SET(verbose) THEN info = ' * INIT_OUT_ARRAYS: '
+
+                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_era, ctt_era, cth_era, $
                                              ctp_era, lwp_era, iwp_era, $
                                              cfc_era, ctp_hist_era, numb_era, $
                                              numb_tmp, numb_raw
-                        
-                            ; satellite GRID mean
+
+                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_sat, ctt_sat, cth_sat, $
                                              ctp_sat, lwp_sat, iwp_sat, $
                                              cfc_sat, ctp_hist_sat, numb_sat, $
                                              numb_tmp, numb_raw
-                        
-                            ; model (era) INCLOUD mean
+
+                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_inc_era, ctt_inc_era, cth_inc_era, $
                                              ctp_inc_era, lwp_inc_era, iwp_inc_era, $
                                              cfc_inc_era, ctp_hist_inc_era, $
                                              numb_inc_era, numb_tmp, numb_raw
-                        
-                            ; satellite INCLOUD means
+
+                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
                                              ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
                                              cfc_inc_sat, ctp_hist_inc_sat, $
                                              numb_inc_sat, numb_tmp, numb_raw
-                        
+
                         ENDIF
                         counti++
-                        
-                        
+
+
                         ; -- lwc and iwc weighted by cc
+                        IF KEYWORD_SET(verbose) THEN PRINT, ' * INCLOUD_CALC: ', $
+                           'LWC and IWC weighting by means of CC at plevels'
                         INCLOUD_CALC, lwc, iwc, cc, xdim, ydim, zdim, $
                                       lwc_inc, iwc_inc
-                        
-                        
+
+
                         ; -- get liquid & ice COTs
-                        
-                        ; GRID mean
+                        IF KEYWORD_SET(verbose) THEN info = ' * CWP_COT_PER_LAYER: '
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'grid mean'
                         CWP_COT_PER_LAYER, lwc, iwc, dpres, xdim, ydim, zdim, $
                                            liq_cot_lay, ice_cot_lay, $
                                            lwp_lay, iwp_lay
-                        
-                        ; INCLOUD mean
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'incloud mean'
                         CWP_COT_PER_LAYER, lwc_inc, iwc_inc, dpres, xdim, ydim, zdim, $
                                            liq_cot_lay_inc, ice_cot_lay_inc, $
                                            lwp_lay_inc, iwp_lay_inc
-                        
-                                       
+
+
                         ; -- get cloud parameters using COT threshold
-                        
-                        ; model GRID mean
+                        IF KEYWORD_SET(verbose) THEN info = ' * SEARCH_FOR_CLOUD: '
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
                         SEARCH_FOR_CLOUD, liq_cot_lay, ice_cot_lay, cot_thv_era, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
                                           ctp_tmp_era, cth_tmp_era, ctt_tmp_era, $
                                           cph_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                           cfc_tmp_era
-                        
-                        ; satellite GRID mean
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                         SEARCH_FOR_CLOUD, liq_cot_lay, ice_cot_lay, cot_thv_sat, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
                                           ctp_tmp_sat, cth_tmp_sat, ctt_tmp_sat, $
                                           cph_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                           cfc_tmp_sat
-                        
-                        ; model INCLOUD mean
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
                         SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_era, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay_inc, iwp_lay_inc, plevel, cc, $
                                           ctp_tmp_inc_era, cth_tmp_inc_era, ctt_tmp_inc_era, $
                                           cph_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
                                           cfc_tmp_inc_era
-                        
-                        ; satellite INCLOUD mean
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
                         SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay_inc, iwp_lay_inc, plevel, cc, $
                                           ctp_tmp_inc_sat, cth_tmp_inc_sat, ctt_tmp_inc_sat, $
                                           cph_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
                                           cfc_tmp_inc_sat
-                        
-                        
+
+
                         ; -- sum up cloud parameters
-                        
-                        ; model GRID mean
+                        IF KEYWORD_SET(verbose) THEN info = ' * SUMUP_CLOUD_PARAMS: '
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
                         SUMUP_CLOUD_PARAMS, cph_era, ctt_era, cth_era, ctp_era, $
                                             lwp_era, iwp_era, cfc_era, $
                                             cph_tmp_era, ctt_tmp_era, cth_tmp_era, $
                                             ctp_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                             cfc_tmp_era, ctp_hist_era, numb_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp
-                        
-                        ; satellite GRID mean
+                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                         SUMUP_CLOUD_PARAMS, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                                             lwp_sat, iwp_sat, cfc_sat, $
                                             cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, $
                                             ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                             cfc_tmp_sat, ctp_hist_sat, numb_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp
-                        
-                        ; model INCLOUD mean
+                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
                         SUMUP_CLOUD_PARAMS, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
                                             lwp_inc_era, iwp_inc_era, cfc_inc_era, $
                                             cph_tmp_inc_era, ctt_tmp_inc_era, cth_tmp_inc_era, $
                                             ctp_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
                                             cfc_tmp_inc_era, ctp_hist_inc_era, numb_inc_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp
-                        
-                        ; satellite INCLOUD mean
+                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
                         SUMUP_CLOUD_PARAMS, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
                                             lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, $
                                             cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $
                                             ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
                                             cfc_tmp_inc_sat, ctp_hist_inc_sat, numb_inc_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp
-                        
+                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
                         
                         numb_raw++
-                        
                         
                         ; delete tmp arrays
                         DELVAR, cph_tmp_era, ctt_tmp_era, cth_tmp_era, ctp_tmp_era, $
@@ -246,7 +261,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
                                 ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $ 
                                 cfc_tmp_inc_sat
                     
-                    
+
                     ENDIF ;end of IF(is_file(file1))
                 
                 
@@ -255,50 +270,32 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
                 ;-----------------------------------------------------------------------
                 
                 ; -- calculate averages
-                
-                ; model GRID mean 
+                IF KEYWORD_SET(verbose) THEN info = ' * CALC_PARAMS_AVERAGES: '
+
+                IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
                 CALC_PARAMS_AVERAGES, cph_era, ctt_era, cth_era, ctp_era, $
-                                      lwp_era, iwp_era, cfc_era, numb_era, numb_raw
-                
-                ; satellite GRID mean 
+                                      lwp_era, iwp_era, cfc_era, numb_era, numb_raw, $
+                                      verbose
+
+                IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                 CALC_PARAMS_AVERAGES, cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                                      lwp_sat, iwp_sat, cfc_sat, numb_sat, numb_raw
-                
-                ; model INCLOUD mean 
+                                      lwp_sat, iwp_sat, cfc_sat, numb_sat, numb_raw, $
+                                      verbose
+
+                IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
                 CALC_PARAMS_AVERAGES, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
                                       lwp_inc_era, iwp_inc_era, cfc_inc_era, numb_inc_era, $
-                                      numb_raw
-                
-                ; satellite INCLOUD mean 
+                                      numb_raw, verbose
+
+                IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
                 CALC_PARAMS_AVERAGES, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
                                       lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, numb_inc_sat, $
-                                      numb_raw
-                
-                
-                IF KEYWORD_SET(verbose) THEN BEGIN
-                    PRINT, ' *** MINMAX( grid mean ) ********************'
-                    PRINT, '     IWP Sat: ', minmax(lwp_sat)
-                    PRINT, '     LWP Sat: ', minmax(iwp_sat)
-                    PRINT, '     CFC Sat: ', minmax(cfc_sat)
-                    PRINT, '     ----------------------------------------'
-                    PRINT, '     IWP Era: ', minmax(lwp_era)
-                    PRINT, '     LWP Era: ', minmax(iwp_era)
-                    PRINT, '     CFC Era: ', minmax(cfc_era)
-                    PRINT, ' *** MINMAX( incloud mean ) *****************'
-                    PRINT, '     IWP Sat: ', minmax(lwp_inc_sat)
-                    PRINT, '     LWP Sat: ', minmax(iwp_inc_sat)
-                    PRINT, '     CFC Sat: ', minmax(cfc_inc_sat)
-                    PRINT, '     ----------------------------------------'
-                    PRINT, '     IWP Era: ', minmax(lwp_inc_era)
-                    PRINT, '     LWP Era: ', minmax(iwp_inc_era)
-                    PRINT, '     CFC Era: ', minmax(cfc_inc_era)
-                    PRINT, ''
-                ENDIF
-                
-                
-                PRINT,' *** counti (number of files read): ', counti
-                
-                ; write monthly global mean netCDF file
+                                      numb_raw, verbose
+
+
+                PRINT,' * counti (number of files read): ', counti
+
+                IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_MEAN'
                 WRITE_MONTHLY_MEAN, out_path, year, month, crit_str, $
                                     xdim, ydim, zdim, lon, lat, $
                                     cph_era, ctt_era, cth_era, ctp_era,  $
@@ -311,8 +308,8 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
                                     cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
                                     ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
                                     cfc_inc_sat, numb_inc_sat
-                
-                ; write monthly histogram netCDF file
+
+                IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_HIST'
                 WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
                                     xdim, ydim, zdim, dim_ctp, lon, lat, $
                                     ctp_limits_final1d, ctp_limits_final2d, $
@@ -340,5 +337,8 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat
         
         ENDFOR ;end of month loop
     ENDFOR ;end of year loop
+
+    ; End journaling:
+	IF KEYWORD_SET(logfile) THEN JOURNAL
 
 END ;end of program
