@@ -110,21 +110,26 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 
     ; -- Select file
-    IF KEYWORD_SET(test) THEN BEGIN
+	IF KEYWORD_SET(test) THEN BEGIN
 		ncfile = '/cmsaf/cmsaf-cld6/cschlund/cci_wp5001/ERA_simulator/' + $
 			'v4_MM_simsim_output_analysis/' + $
-			'ERA_Interim_MM200801_cot_thv_1.00000_CTP.nc'
-    ENDIF ELSE BEGIN
-		ncfile = DIALOG_PICKFILE(/READ, PATH=dir, FILTER='*.nc', $
+			'ERA_Interim_MM200801_cot_thv_0.300000_CTP.nc'
+	ENDIF ELSE BEGIN
+		ncfile = DIALOG_PICKFILE(/READ, PATH=dir, FILTER='*MM*.nc', $
 					TITLE='Select ERA-Interim reanalysis file!')
 		result = FILE_TEST(ncfile)
 		PRINT, ' *** File Selection: ', result ? 'successful' : 'failed'
-    ENDELSE
+	ENDELSE
 
 
 	; -- Get list of variables in file
 	variableList = GET_NCDF_VARLIST( ncfile )
-
+	
+	; -- Get cot_thv_sat
+	ncbase = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
+	ncsplit = STRSPLIT(ncbase,'_',/EXTRACT)
+	cot_thv_sat = STRMID(ncsplit(N_ELEMENTS(ncsplit)-2),0,3)
+	cot_thv_era = '0.01'
 
 	; ---------------------------------------------------------------------------------------
 	; -- plot [0,2,2], e.g. pmulti='cth', i.e.
@@ -184,9 +189,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			varname = varname_list[j]
 
 			; -- Read variable from ncfile
-			READ_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
-			READ_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
-			READ_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
+			READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
+			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
+			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
 
 			make_geo,lon,lat,grid=0.5
 			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
@@ -217,8 +222,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 
 			IF (N_TAGS(glob_att) NE 0) THEN $
-				mtitle = 'Simplified Simulator results for ' + $
-						 glob_att.TIME_COVERAGE_START + $
+				mtitle = 'Time=' + glob_att.TIME_COVERAGE_START + $
+						 '; cot_thv_era='+cot_thv_era + $
+						 '; cot_thv_sat='+cot_thv_sat + $
 						 '; Source: '+glob_att.SOURCE
 
 
@@ -316,10 +322,10 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 
 		; -- Read variable from ncfile
-		READ_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
-		READ_NCDF, img2, FILE=ncfile, VAR_NAME = varname2, VAR_ATTR = img_att2
-		READ_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
-		READ_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
+		READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
+		READ_SIM_NCDF, img2, FILE=ncfile, VAR_NAME = varname2, VAR_ATTR = img_att2
+		READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
+		READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
 		PRINT, ' *** MINMAX(img) : ', MINMAX(img)
 		PRINT, ' *** MINMAX(img2): ', MINMAX(img2)
 
@@ -349,20 +355,16 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		minmax_range = MINMAX(img-img2)
 		minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
 		maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
-		addstr = 'MIN='+minstr+'   MAX='+maxstr
 
 		IF (minmax_range[0] EQ 0.) THEN ctable = 62 
 		IF (minmax_range[1] EQ 0.) THEN ctable = 1 
 
 		; -- Plot settings
 		IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-			ptitle = 'Simplified Simulator: ' + $
-						glob_att.TIME_COVERAGE_START + ' / ' +$
-						varname + ' - ' + varname2 + unit + $
-						' Source: '+glob_att.SOURCE
+			ptitle = 'Time=' + glob_att.TIME_COVERAGE_START + $
+						'; Difference: ' + varname + ' - ' + varname2 + unit
 		ENDIF ELSE BEGIN
-			ptitle = 'Simplified Simulator: ' + $
-						varname + ' - ' + varname2 + unit
+			ptitle = 'Difference: ' + varname + ' - ' + varname2 + unit
 		ENDELSE
 
 
@@ -371,7 +373,10 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		xlon=0.46 & ylon=0.17
 		xtit=0.11 & ytit=0.96
 		chars = 2.2
-		barformat = ('(F10.3)')
+
+		barformat = ('(F8.2)')
+		IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E8.2)')
+		IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E8.2)')
 
 		IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
 
@@ -400,7 +405,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		m -> display
 		obj_destroy, m
 
-		MAP_CONTINENTS, /CONTINENTS, COLOR=0, GLINETHICK=2.2
+		MAP_CONTINENTS, /CONTINENTS, /HIRES, COLOR=0, GLINETHICK=2.2
 		MAP_GRID, COLOR=0, MLINETHICK=2.2
 
 		; -- annotations
@@ -410,8 +415,35 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
 		XYOUTS, xtit, ytit, ptitle, $
 			/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
-; 		XYOUTS, 0.1, ylon, addstr, $
-; 			COLOR=col, /norm, CHARSIZE=1.9, CHARTHICK=chars
+
+		IF (N_TAGS(glob_att) NE 0) THEN XYOUTS, xlon+0.245, ylon, $
+			' Source: '+glob_att.SOURCE, COLOR=col, /norm, $
+			CHARSIZE=chars, CHARTHICK=chars
+
+		v1 = STRPOS(varname, 'era')
+		v2 = STRPOS(varname2, 'era')
+
+		IF (v1 GT 0 AND v2 GT 0) THEN BEGIN
+			thv = 0
+		ENDIF ELSE IF (v1 LT 0 AND v2 LT 0) THEN BEGIN
+			thv = 1
+		ENDIF ELSE BEGIN
+			thv = 2
+		ENDELSE
+
+		IF(thv EQ 0) THEN BEGIN
+			XYOUTS, 0.1, ylon, 'cot_thv_era='+cot_thv_era, $
+			COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
+		ENDIF
+		IF (thv EQ 1) THEN BEGIN
+			XYOUTS, 0.1, ylon, 'cot_thv_sat='+cot_thv_sat, $
+			COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
+		ENDIF
+		IF (thv EQ 2) THEN BEGIN
+			XYOUTS, 0.1, ylon, 'cot_thv_era='+cot_thv_era+$
+				'; cot_thv_sat='+cot_thv_sat, $
+				COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
+		ENDIF
 
 
 		IF KEYWORD_SET(eps) THEN BEGIN
@@ -479,9 +511,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 
 			; -- Read variable from ncfile
-			READ_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
-			READ_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
-			READ_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
+			READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
+			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
+			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
 
 			;get_grid_res returns 0 ??? and file = ncfile returns -999.000 incl. error message
 			;make_geo,lon,lat,file=ncfile,grid=get_grid_res(img)
@@ -491,6 +523,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
 
 			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
+
+			IF (STRPOS(varname, 'era') GT 0) THEN cot_thv = cot_thv_era $
+				ELSE cot_thv = cot_thv_sat
 
 
 			; -- flag negative values with FILLVALUE
@@ -512,15 +547,12 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			meastr = STRTRIM(STRING(imean, FORMAT='(F8.3)'),2)
 ; 			ptitle = varname+unit+' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
 
-
 			; -- Plot settings
+			ptitle = varname + unit
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				ptitle = 'Simplified Simulator: ' + glob_att.TIME_COVERAGE_START $
-							+ ' - ' + varname + unit + ' Source: '+glob_att.SOURCE
-			ENDIF ELSE BEGIN
-				ptitle = 'Simplified Simulator: ' + varname + unit
-			ENDELSE
-
+				ptitle = ptitle + '; Time=' + glob_att.TIME_COVERAGE_START
+			ENDIF
+			ptitle = ptitle + '; cot_thv=' + cot_thv
 
 			position = [0.10, 0.25, 0.90, 0.90]
 			xlat=0.05 & ylat=0.53
@@ -556,6 +588,10 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			XYOUTS, xtit, ytit, ptitle, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
 
+			IF (N_TAGS(glob_att) NE 0) THEN XYOUTS, xlon+0.245, ylon, $
+				' Source: '+glob_att.SOURCE, COLOR=col, /norm, $
+				CHARSIZE=chars, CHARTHICK=chars
+
 
 			IF KEYWORD_SET(eps) THEN BEGIN
 				DEVICE, /Close_file
@@ -569,5 +605,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 	ENDELSE ; end of if loop (pmulit/compare/normal)
 
+	!P.MULTI = 0
 
 END ; end of program
