@@ -49,19 +49,19 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     ; some screen output
 	PRINT, '   GLOBAL MEANS' & ft = '(F12.4)'
 	good = WHERE(ctp_mean GE 0.)
-	PRINT, '   + ctp_mean = ', STRING(MEAN(ctp_mean[good])), FORMAT=ft)
+	PRINT, '   + ctp_mean = ', STRING(MEAN(ctp_mean[good]), FORMAT=ft)
 	good = WHERE(cth_mean GE 0.)
-	PRINT, '   + cth_mean = ', STRING(MEAN(cth_mean[good])), FORMAT=ft)
+	PRINT, '   + cth_mean = ', STRING(MEAN(cth_mean[good]), FORMAT=ft)
 	good = WHERE(ctt_mean GE 0.)
-	PRINT, '   + ctt_mean = ', STRING(MEAN(ctt_mean[good])), FORMAT=ft)
+	PRINT, '   + ctt_mean = ', STRING(MEAN(ctt_mean[good]), FORMAT=ft)
 	good = WHERE(cph_mean GE 0.)
-	PRINT, '   + cph_mean = ', STRING(MEAN(cph_mean[good])), FORMAT=ft)
+	PRINT, '   + cph_mean = ', STRING(MEAN(cph_mean[good]), FORMAT=ft)
 	good = WHERE(cfc_mean GE 0.)
-	PRINT, '   + cfc_mean = ', STRING(MEAN(cfc_mean[good])), FORMAT=ft)
+	PRINT, '   + cfc_mean = ', STRING(MEAN(cfc_mean[good]), FORMAT=ft)
 	good = WHERE(lwp_mean GE 0.)
-	PRINT, '   + lwp_mean = ', STRING(MEAN(lwp_mean[good])), FORMAT=ft)
+	PRINT, '   + lwp_mean = ', STRING(MEAN(lwp_mean[good]), FORMAT=ft)
 	good = WHERE(iwp_mean GE 0.)
-	PRINT, '   + iwp_mean = ', STRING(MEAN(iwp_mean[good])), FORMAT=ft)
+	PRINT, '   + iwp_mean = ', STRING(MEAN(iwp_mean[good]), FORMAT=ft)
 
 
 END

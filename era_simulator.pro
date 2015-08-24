@@ -61,7 +61,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
 
 
 	IF KEYWORD_SET(logfile) THEN $
-		JOURNAL, out_path + 'era_simulator_journal' + cgTimeStamp() + '.pro'
+		JOURNAL, out_path + 'journal_' + crit_str + cgTimeStamp() + '.pro'
 
     ; -- loop over years and months
     
@@ -274,23 +274,21 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
 
                 IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
                 CALC_PARAMS_AVERAGES, cph_era, ctt_era, cth_era, ctp_era, $
-                                      lwp_era, iwp_era, cfc_era, numb_era, numb_raw, $
-                                      verbose
+                                      lwp_era, iwp_era, cfc_era, numb_era, numb_raw
 
                 IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                 CALC_PARAMS_AVERAGES, cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                                      lwp_sat, iwp_sat, cfc_sat, numb_sat, numb_raw, $
-                                      verbose
+                                      lwp_sat, iwp_sat, cfc_sat, numb_sat, numb_raw
 
                 IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
                 CALC_PARAMS_AVERAGES, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
                                       lwp_inc_era, iwp_inc_era, cfc_inc_era, numb_inc_era, $
-                                      numb_raw, verbose
+                                      numb_raw
 
                 IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
                 CALC_PARAMS_AVERAGES, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
                                       lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, numb_inc_sat, $
-                                      numb_raw, verbose
+                                      numb_raw
 
 
                 PRINT,' * counti (number of files read): ', counti
