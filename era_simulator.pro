@@ -221,7 +221,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             cph_tmp_era, ctt_tmp_era, cth_tmp_era, $
                                             ctp_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                             cfc_tmp_era, ctp_hist_era, numb_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+                                            numb_tmp, ctp_limits_final2d, dim_ctp
 
                         IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                         SUMUP_CLOUD_PARAMS, cph_sat, ctt_sat, cth_sat, ctp_sat, $
@@ -229,7 +229,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, $
                                             ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                             cfc_tmp_sat, ctp_hist_sat, numb_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+                                            numb_tmp, ctp_limits_final2d, dim_ctp
 
                         IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
                         SUMUP_CLOUD_PARAMS, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
@@ -237,7 +237,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             cph_tmp_inc_era, ctt_tmp_inc_era, cth_tmp_inc_era, $
                                             ctp_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
                                             cfc_tmp_inc_era, ctp_hist_inc_era, numb_inc_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+                                            numb_tmp, ctp_limits_final2d, dim_ctp
 
                         IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
                         SUMUP_CLOUD_PARAMS, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
@@ -245,7 +245,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $
                                             ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
                                             cfc_tmp_inc_sat, ctp_hist_inc_sat, numb_inc_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, verbose
+                                            numb_tmp, ctp_limits_final2d, dim_ctp
                         
                         numb_raw++
                         

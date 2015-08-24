@@ -54,16 +54,14 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     ENDFOR
 
 
-    IF KEYWORD_SET(verbose) THEN BEGIN
-        ft = '(F12.4)'
-        PRINT, '   ctp_tmp: min/max = ', STRING(MINMAX(ctp_tmp[wo_ctp]), FORMAT=ft)
-        PRINT, '   ctt_tmp: min/max = ', STRING(MINMAX(ctt_tmp[wo_ctp]), FORMAT=ft)
-        PRINT, '   cth_tmp: min/max = ', STRING(MINMAX(cth_tmp[wo_ctp]), FORMAT=ft)
-        PRINT, '   cph_tmp: min/max = ', STRING(MINMAX(cph_tmp[wo_ctp]), FORMAT=ft)
-        PRINT, '   cfc_tmp: min/max = ', STRING(MINMAX(cfc_tmp[wo_ctp]), FORMAT=ft)
-        PRINT, '   lwp_tmp: min/max = ', STRING(MINMAX(lwp_tmp[wo_ctp]), FORMAT=ft)
-        PRINT, '   iwp_tmp: min/max = ', STRING(MINMAX(iwp_tmp[wo_ctp]), FORMAT=ft)
-    ENDIF
+	ft = '(F12.4)'
+	PRINT, '   ctp_tmp: min/max = ', STRING(MINMAX(ctp_tmp[wo_ctp]), FORMAT=ft)
+	PRINT, '   ctt_tmp: min/max = ', STRING(MINMAX(ctt_tmp[wo_ctp]), FORMAT=ft)
+	PRINT, '   cth_tmp: min/max = ', STRING(MINMAX(cth_tmp[wo_ctp]), FORMAT=ft)
+	PRINT, '   cph_tmp: min/max = ', STRING(MINMAX(cph_tmp[wo_ctp]), FORMAT=ft)
+	PRINT, '   cfc_tmp: min/max = ', STRING(MINMAX(cfc_tmp[wo_ctp]), FORMAT=ft)
+	PRINT, '   lwp_tmp: min/max = ', STRING(MINMAX(lwp_tmp[wo_ctp]), FORMAT=ft)
+	PRINT, '   iwp_tmp: min/max = ', STRING(MINMAX(iwp_tmp[wo_ctp]), FORMAT=ft)
 
     ;PRINT, ' *** SUMUP_CLOUD_PARAMS'
     ;PRINT, '     MINMAX(ctt_tmp):       ', minmax(ctt_tmp)
