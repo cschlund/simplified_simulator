@@ -260,7 +260,6 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                 cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $ 
                                 ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $ 
                                 cfc_tmp_inc_sat
-                    
 
                     ENDIF ;end of IF(is_file(file1))
                 
@@ -316,21 +315,24 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                 
                 
                 ; delete final arrays before next cycle starts
-                DELVAR, cph_era, ctt_era, cth_era, ctp_era, $
-                        lwp_era, iwp_era, cfc_era,$
-                        cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                        lwp_sat, iwp_sat, cfc_sat,$
-                        ctp_hist_era, ctp_hist_sat, $
-                        cph_inc_era, ctt_inc_era, cth_inc_era, $
-                        ctp_inc_era, lwp_inc_era, iwp_inc_era, $
-                        cfc_inc_era, numb_inc_era, $
-                        cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
-                        ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
-                        cfc_inc_sat, numb_inc_sat, $
-                        ctp_hist_inc_era, ctp_hist_inc_sat, $
-                        numb_tmp, numb_raw, counti
-            
-            
+                ; UNDEFINE, var0, ..., var9 ;
+                UNDEFINE, cph_era, ctt_era, cth_era, ctp_era, $
+                          lwp_era, iwp_era, cfc_era
+                UNDEFINE, cph_sat, ctt_sat, cth_sat, ctp_sat, $
+                          lwp_sat, iwp_sat, cfc_sat
+                UNDEFINE, ctp_hist_era, ctp_hist_sat, $
+                          cph_inc_era, ctt_inc_era, cth_inc_era, $
+                          ctp_inc_era, lwp_inc_era, iwp_inc_era, $
+                          cfc_inc_era, numb_inc_era
+                UNDEFINE, cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
+                          ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
+                          cfc_inc_sat, numb_inc_sat, $
+                          ctp_hist_inc_era, ctp_hist_inc_sat
+                UNDEFINE, numb_tmp, numb_raw, counti
+
+                HELP, numb_inc_era, numb_inc_sat
+                HELP, numb_tmp, numb_raw, counti
+
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
         
         ENDFOR ;end of month loop
