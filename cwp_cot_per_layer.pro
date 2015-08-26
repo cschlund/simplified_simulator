@@ -1,6 +1,6 @@
 
 ;-------------------------------------------------------------------
-;-- from top-down find liquid and ice COT from lwc & iwc
+;-- from bottom-up find liquid and ice COT from lwc & iwc
 ;-------------------------------------------------------------------
 ;
 ; in : lwc, iwc, pres_diff, xdim, ydim, zdim

@@ -60,12 +60,16 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
 
     ctp_idx = WHERE(ctp_tmp[wo_ctp] LT 0., nctp)
     IF (nctp GT 0) THEN  BEGIN
+        PRINT, inputfile
+        PRINT, what
         PRINT, '   ctp_tmp[wo_ctp] LT 0: ', STRTRIM(nctp,2), ' occurrences'
         PRINT, '   min/max = ', STRING(MINMAX(ctp_tmp[wo_ctp]), FORMAT=ft)
     ENDIF
 
     ctt_idx = WHERE(ctt_tmp[wo_ctp] LT 0., nctt)
     IF (nctt GT 0) THEN BEGIN
+        PRINT, inputfile
+        PRINT, what
         PRINT, '   ctt_tmp[wo_ctp] LT 0: ', STRTRIM(nctt,2), ' occurrences'
         PRINT, '   min/max = ', STRING(MINMAX(ctt_tmp[wo_ctp]), FORMAT=ft)
     ENDIF
@@ -80,24 +84,32 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
 
     cph_idx = WHERE(cph_tmp[wo_ctp] LT 0., ncph)
     IF (ncph GT 0) THEN BEGIN
+        PRINT, inputfile
+        PRINT, what
         PRINT, '   cph_tmp[wo_ctp] LT 0: ', STRTRIM(ncph,2), ' occurrences'
         PRINT, '   min/max = ', STRING(MINMAX(cph_tmp[wo_ctp]), FORMAT=ft)
     ENDIF
 
     cfc_idx = WHERE(cfc_tmp[wo_ctp] LT 0., ncfc)
     IF (ncfc GT 0) THEN BEGIN
+        PRINT, inputfile
+        PRINT, what
         PRINT, '   cfc_tmp[wo_ctp] LT 0: ', STRTRIM(ncfc,2), ' occurrences'
         PRINT, '   min/max = ', STRING(MINMAX(cfc_tmp[wo_ctp]), FORMAT=ft)
     ENDIF
 
     lwp_idx = WHERE(lwp_tmp[wo_ctp] LT 0., nlwp)
     IF (nlwp GT 0) THEN BEGIN
+        PRINT, inputfile
+        PRINT, what
         PRINT, '   lwp_tmp[wo_ctp] LT 0: ', STRTRIM(nlwp,2), ' occurrences'
         PRINT, '   min/max = ', STRING(MINMAX(lwp_tmp[wo_ctp]), FORMAT=ft)
     ENDIF
 
     iwp_idx = WHERE(iwp_tmp[wo_ctp] LT 0., niwp)
     IF (niwp GT 0) THEN BEGIN
+        PRINT, inputfile
+        PRINT, what
         PRINT, '   iwp_tmp[wo_ctp] LT 0: ', STRTRIM(niwp,2), ' occurrences'
         PRINT, '   min/max = ', STRING(MINMAX(iwp_tmp[wo_ctp]), FORMAT=ft)
     ENDIF
