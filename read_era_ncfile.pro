@@ -43,4 +43,15 @@ PRO READ_ERA_NCFILE, ncfile, plevel, diff_pressure, lon, lat, $
     diff_pressure = plevel[1:N_ELEMENTS(plevel)-1] - $
                     plevel[0:N_ELEMENTS(plevel)-2]
 
+
+    ; -- check for negative values in: cc, lwc, iwc
+    lwc_idx = WHERE(lwc LT 0., nlwc) 
+    IF (nlwc GT 0) THEN lwc[lwc_idx] = 0.
+
+    iwc_idx = WHERE(iwc LT 0., niwc)
+    IF (niwc GT 0) THEN iwc[iwc_idx] = 0.
+
+    cc_idx = WHERE(cc LT 0., ncc)
+    IF (ncc GT 0) THEN cc[cc_idx] = 0.
+
 END
