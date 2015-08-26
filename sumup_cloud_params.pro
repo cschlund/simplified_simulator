@@ -29,7 +29,8 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                         cph_tmp, ctt_tmp, cth_tmp, ctp_tmp, $
                         lwp_tmp, iwp_tmp, cfc_tmp, $
                         ctp_hist, numb, numb_tmp, $
-                        ctp_limits_final2d, dim_ctp, verbose
+                        ctp_limits_final2d, dim_ctp, $
+                        what, inputfile
 
 
     wo_ctp = WHERE(ctp_tmp GT 10., nwo_ctp)
@@ -54,14 +55,52 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     ENDFOR
 
 
-	ft = '(F12.4)'
-	PRINT, '   ctp_tmp: min/max = ', STRING(MINMAX(ctp_tmp[wo_ctp]), FORMAT=ft)
-	PRINT, '   ctt_tmp: min/max = ', STRING(MINMAX(ctt_tmp[wo_ctp]), FORMAT=ft)
-	PRINT, '   cth_tmp: min/max = ', STRING(MINMAX(cth_tmp[wo_ctp]), FORMAT=ft)
-	PRINT, '   cph_tmp: min/max = ', STRING(MINMAX(cph_tmp[wo_ctp]), FORMAT=ft)
-	PRINT, '   cfc_tmp: min/max = ', STRING(MINMAX(cfc_tmp[wo_ctp]), FORMAT=ft)
-	PRINT, '   lwp_tmp: min/max = ', STRING(MINMAX(lwp_tmp[wo_ctp]), FORMAT=ft)
-	PRINT, '   iwp_tmp: min/max = ', STRING(MINMAX(iwp_tmp[wo_ctp]), FORMAT=ft)
+    ; -- check for negative values in variable_tmp arrays
+    ft = '(F12.4)'
+
+    ctp_idx = WHERE(ctp_tmp[wo_ctp] LT 0., nctp)
+    IF (nctp GT 0) THEN  BEGIN
+        PRINT, '   ctp_tmp[wo_ctp] LT 0: ', STRTRIM(nctp,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(ctp_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
+
+    ctt_idx = WHERE(ctt_tmp[wo_ctp] LT 0., nctt)
+    IF (nctt GT 0) THEN BEGIN
+        PRINT, '   ctt_tmp[wo_ctp] LT 0: ', STRTRIM(nctt,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(ctt_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
+
+    cth_idx = WHERE(cth_tmp[wo_ctp] LT 0., ncth)
+    IF (ncth GT 0) THEN BEGIN
+        PRINT, inputfile
+        PRINT, what
+        PRINT, '   cth_tmp[wo_ctp] LT 0: ', STRTRIM(ncth,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(cth_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
+
+    cph_idx = WHERE(cph_tmp[wo_ctp] LT 0., ncph)
+    IF (ncph GT 0) THEN BEGIN
+        PRINT, '   cph_tmp[wo_ctp] LT 0: ', STRTRIM(ncph,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(cph_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
+
+    cfc_idx = WHERE(cfc_tmp[wo_ctp] LT 0., ncfc)
+    IF (ncfc GT 0) THEN BEGIN
+        PRINT, '   cfc_tmp[wo_ctp] LT 0: ', STRTRIM(ncfc,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(cfc_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
+
+    lwp_idx = WHERE(lwp_tmp[wo_ctp] LT 0., nlwp)
+    IF (nlwp GT 0) THEN BEGIN
+        PRINT, '   lwp_tmp[wo_ctp] LT 0: ', STRTRIM(nlwp,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(lwp_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
+
+    iwp_idx = WHERE(iwp_tmp[wo_ctp] LT 0., niwp)
+    IF (niwp GT 0) THEN BEGIN
+        PRINT, '   iwp_tmp[wo_ctp] LT 0: ', STRTRIM(niwp,2), ' occurrences'
+        PRINT, '   min/max = ', STRING(MINMAX(iwp_tmp[wo_ctp]), FORMAT=ft)
+    ENDIF
 
     ;PRINT, ' *** SUMUP_CLOUD_PARAMS'
     ;PRINT, '     MINMAX(ctt_tmp):       ', minmax(ctt_tmp)
