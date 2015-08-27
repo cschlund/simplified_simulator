@@ -9,12 +9,11 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
                         lwp_era, iwp_era, cfc_era, numb_era, $
                         cph_sat, ctt_sat, cth_sat, ctp_sat,  $
                         lwp_sat, iwp_sat, cfc_sat, numb_sat, $
-                        cph_inc_era, ctt_inc_era, cth_inc_era, $
-                        ctp_inc_era, lwp_inc_era, iwp_inc_era, $
-                        cfc_inc_era, numb_inc_era, $
-                        cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
-                        ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
-                        cfc_inc_sat, numb_inc_sat
+						lwp_inc_era, iwp_inc_era, $
+						numb_lwp_inc_era, numb_iwp_inc_era, $
+						lwp_inc_sat, iwp_inc_sat, $
+						numb_lwp_inc_sat, numb_iwp_inc_sat
+
 
     dim_time   = 1
     fyear      = FLOAT(year)
@@ -52,83 +51,75 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     ; model like output (original ERA-Interim): thv = 1.0
     vid  = NCDF_VARDEF(id, 'ctp_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctp_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'ctp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'ctp_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'cth_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cth_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'cth_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'cth_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'ctt_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctt_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'ctt_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'ctt_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'cc_total_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cc_total_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'cc_total_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'cc_total_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'lwp_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'lwp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'lwp_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'iwp_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'iwp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'iwp_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'cph_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cph_era', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'cph_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'cph_inc_era', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'nobs_era', [dim_x_id,dim_y_id,time_id], /LONG)
-    vid  = NCDF_VARDEF(id, 'nobs_inc_era', [dim_x_id,dim_y_id,time_id], /LONG)
+
+    ; incloud parameters
+    vid  = NCDF_VARDEF(id, 'lwp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'lwp_inc_era', '_FillValue', -999.
+
+    vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_era', [dim_x_id,dim_y_id,time_id], /LONG)
+
+    vid  = NCDF_VARDEF(id, 'iwp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'iwp_inc_era', '_FillValue', -999.
+
+    vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_era', [dim_x_id,dim_y_id,time_id], /LONG)
 
 
     ; satellite like output: thv = 1.0
     vid  = NCDF_VARDEF(id, 'ctp_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctp_sat', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'ctp_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'ctp_inc_sat', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'cth_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cth_sat', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'cth_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'cth_inc_sat', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'ctt_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctt_sat', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'ctt_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'ctt_inc_sat', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'cph_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cph_sat', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'cph_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'cph_inc_sat', '_FillValue', -999.
-    
+
     vid  = NCDF_VARDEF(id, 'cc_total_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cc_total_sat', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'cc_total_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'cc_total_inc_sat', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'lwp_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_sat', '_FillValue', -999.
-    vid  = NCDF_VARDEF(id, 'lwp_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
-    NCDF_ATTPUT, id, 'lwp_inc_sat', '_FillValue', -999.
 
     vid  = NCDF_VARDEF(id, 'iwp_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_sat', '_FillValue', -999.
+
+    vid  = NCDF_VARDEF(id, 'nobs_sat', [dim_x_id,dim_y_id,time_id], /LONG)
+
+    ; incloud parameters
+    vid  = NCDF_VARDEF(id, 'lwp_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'lwp_inc_sat', '_FillValue', -999.
+
+    vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_sat', [dim_x_id,dim_y_id,time_id], /LONG)
+
     vid  = NCDF_VARDEF(id, 'iwp_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_sat', '_FillValue', -999.
 
-    vid  = NCDF_VARDEF(id, 'nobs_sat', [dim_x_id,dim_y_id,time_id], /LONG)
-    vid  = NCDF_VARDEF(id, 'nobs_inc_sat', [dim_x_id,dim_y_id,time_id], /LONG)
-    
-    
+    vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_sat', [dim_x_id,dim_y_id,time_id], /LONG)
+
+
     NCDF_CONTROL, id, /ENDEF ;Exit define mode
 
     NCDF_VARPUT, id, 'time', itime
@@ -146,14 +137,11 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_VARPUT, id, 'cc_total_era',cfc_era ;(numb*1.0)/counti
 
     ; model INCLOUD mean
-    NCDF_VARPUT, id, 'ctp_inc_era',ctp_inc_era
-    NCDF_VARPUT, id, 'cth_inc_era',cth_inc_era
-    NCDF_VARPUT, id, 'ctt_inc_era',ctt_inc_era
-    NCDF_VARPUT, id, 'cph_inc_era',cph_inc_era
     NCDF_VARPUT, id, 'lwp_inc_era',lwp_inc_era
     NCDF_VARPUT, id, 'iwp_inc_era',iwp_inc_era
-    NCDF_VARPUT, id, 'nobs_inc_era',numb_inc_era
-    NCDF_VARPUT, id, 'cc_total_inc_era',cfc_inc_era ;(numb*1.0)/counti
+    NCDF_VARPUT, id, 'nobs_lwp_inc_era',numb_lwp_inc_era
+    NCDF_VARPUT, id, 'nobs_iwp_inc_era',numb_iwp_inc_era
+
 
     ; satellite GRID mean
     NCDF_VARPUT, id, 'ctp_sat',ctp_sat
@@ -166,14 +154,10 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_VARPUT, id, 'cc_total_sat',cfc_sat ;(numb_sat*1.0)/counti
 
     ; satellite INCLOUD mean
-    NCDF_VARPUT, id, 'ctp_inc_sat',ctp_inc_sat
-    NCDF_VARPUT, id, 'cth_inc_sat',cth_inc_sat
-    NCDF_VARPUT, id, 'ctt_inc_sat',ctt_inc_sat
-    NCDF_VARPUT, id, 'cph_inc_sat',cph_inc_sat
     NCDF_VARPUT, id, 'lwp_inc_sat',lwp_inc_sat
     NCDF_VARPUT, id, 'iwp_inc_sat',iwp_inc_sat
-    NCDF_VARPUT, id, 'nobs_inc_sat',numb_inc_sat
-    NCDF_VARPUT, id, 'cc_total_inc_sat',cfc_inc_sat ;(numb_sat*1.0)/counti
+    NCDF_VARPUT, id, 'nobs_lwp_inc_sat',numb_lwp_inc_sat
+    NCDF_VARPUT, id, 'nobs_iwp_inc_sat',numb_iwp_inc_sat
 
     NCDF_CLOSE, id ;Close netCDF output file
 

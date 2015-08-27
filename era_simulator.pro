@@ -113,40 +113,23 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                         IF(counti EQ 0) THEN BEGIN
 
                             ; -- initialize grid
-                            IF KEYWORD_SET(verbose) THEN PRINT, ' * INIT_ERA_GRID'
                             INIT_ERA_GRID, lwc, lon, lat, $ 
                                            lon2d, lat2d, xdim, ydim, zdim, verbose
 
                             ; -- initialize mean arrays
-                            IF KEYWORD_SET(verbose) THEN info = ' * INIT_OUT_ARRAYS: '
-
-                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_era, ctt_era, cth_era, $
                                              ctp_era, lwp_era, iwp_era, $
-                                             cfc_era, ctp_hist_era, numb_era, $
-                                             numb_tmp, numb_raw
+                                             cfc_era, lwp_inc_era, iwp_inc_era, $
+                                             numb_lwp_inc_era, numb_iwp_inc_era, $
+                                             ctp_hist_era, numb_era, numb_tmp, numb_raw
 
-                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_sat, ctt_sat, cth_sat, $
                                              ctp_sat, lwp_sat, iwp_sat, $
-                                             cfc_sat, ctp_hist_sat, numb_sat, $
-                                             numb_tmp, numb_raw
-
-                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
-                            INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
-                                             cph_inc_era, ctt_inc_era, cth_inc_era, $
-                                             ctp_inc_era, lwp_inc_era, iwp_inc_era, $
-                                             cfc_inc_era, ctp_hist_inc_era, $
-                                             numb_inc_era, numb_tmp, numb_raw
-
-                            IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
-                            INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
-                                             cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
-                                             ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
-                                             cfc_inc_sat, ctp_hist_inc_sat, $
-                                             numb_inc_sat, numb_tmp, numb_raw
+                                             cfc_sat, lwp_inc_sat, iwp_inc_sat, $
+                                             numb_lwp_inc_sat, numb_iwp_inc_sat, $
+                                             ctp_hist_sat, numb_sat, numb_tmp, numb_raw
 
                         ENDIF
                         counti++
@@ -162,88 +145,60 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                         ; -- get liquid & ice COTs
                         IF KEYWORD_SET(verbose) THEN info = ' * CWP_COT_PER_LAYER: '
 
+                        ; -- goal: get lwp_lay & iwp_lay
                         IF KEYWORD_SET(verbose) THEN PRINT, info, 'grid mean'
                         CWP_COT_PER_LAYER, lwc, iwc, dpres, xdim, ydim, zdim, $
                                            liq_cot_lay, ice_cot_lay, $
                                            lwp_lay, iwp_lay
 
+                        ; -- goal: get liq_cot_lay_inc & ice_cot_lay_inc
                         IF KEYWORD_SET(verbose) THEN PRINT, info, 'incloud mean'
                         CWP_COT_PER_LAYER, lwc_inc, iwc_inc, dpres, xdim, ydim, zdim, $
                                            liq_cot_lay_inc, ice_cot_lay_inc, $
                                            lwp_lay_inc, iwp_lay_inc
 
 
-                        ; -- get cloud parameters using COT threshold
+                        ; -- get cloud parameters using incloud liquid + ice COT threshold
                         IF KEYWORD_SET(verbose) THEN info = ' * SEARCH_FOR_CLOUD: '
 
-                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
-                        SEARCH_FOR_CLOUD, liq_cot_lay, ice_cot_lay, cot_thv_era, $
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
+                        SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_era, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
                                           ctp_tmp_era, cth_tmp_era, ctt_tmp_era, $
                                           cph_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                           cfc_tmp_era
 
-                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
-                        SEARCH_FOR_CLOUD, liq_cot_lay, ice_cot_lay, cot_thv_sat, $
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
+                        SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
                                           ctp_tmp_sat, cth_tmp_sat, ctt_tmp_sat, $
                                           cph_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                           cfc_tmp_sat
 
-                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
-                        SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_era, $
-                                          xdim, ydim, zdim, geop, temp, $
-                                          lwp_lay_inc, iwp_lay_inc, plevel, cc, $
-                                          ctp_tmp_inc_era, cth_tmp_inc_era, ctt_tmp_inc_era, $
-                                          cph_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
-                                          cfc_tmp_inc_era
-
-                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
-                        SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
-                                          xdim, ydim, zdim, geop, temp, $
-                                          lwp_lay_inc, iwp_lay_inc, plevel, cc, $
-                                          ctp_tmp_inc_sat, cth_tmp_inc_sat, ctt_tmp_inc_sat, $
-                                          cph_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
-                                          cfc_tmp_inc_sat
-
 
                         ; -- sum up cloud parameters
                         info = ' * SUMUP_CLOUD_PARAMS: '
-                        txt_info = info + 'model grid mean'
+                        txt_info = info + 'model mean'
                         SUMUP_CLOUD_PARAMS, cph_era, ctt_era, cth_era, ctp_era, $
                                             lwp_era, iwp_era, cfc_era, $
+                                            lwp_inc_era, iwp_inc_era, $
+                                            numb_lwp_inc_era, numb_iwp_inc_era, $
                                             cph_tmp_era, ctt_tmp_era, cth_tmp_era, $
                                             ctp_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                             cfc_tmp_era, ctp_hist_era, numb_era, $
                                             numb_tmp, ctp_limits_final2d, dim_ctp, $
                                             txt_info, file1
 
-                        txt_info = info + 'satellite grid mean'
+                        txt_info = info + 'satellite mean'
                         SUMUP_CLOUD_PARAMS, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                                             lwp_sat, iwp_sat, cfc_sat, $
+                                            lwp_inc_sat, iwp_inc_sat, $
+                                            numb_lwp_inc_sat, numb_iwp_inc_sat, $
                                             cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, $
                                             ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                             cfc_tmp_sat, ctp_hist_sat, numb_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, $
-                                            txt_info, file1
-
-                        txt_info = info + 'model incloud mean'
-                        SUMUP_CLOUD_PARAMS, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
-                                            lwp_inc_era, iwp_inc_era, cfc_inc_era, $
-                                            cph_tmp_inc_era, ctt_tmp_inc_era, cth_tmp_inc_era, $
-                                            ctp_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $
-                                            cfc_tmp_inc_era, ctp_hist_inc_era, numb_inc_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, $
-                                            txt_info, file1
-
-                        txt_info = info + 'satellite incloud mean'
-                        SUMUP_CLOUD_PARAMS, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
-                                            lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, $
-                                            cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $
-                                            ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $
-                                            cfc_tmp_inc_sat, ctp_hist_inc_sat, numb_inc_sat, $
                                             numb_tmp, ctp_limits_final2d, dim_ctp, $
                                             txt_info, file1
                         
@@ -254,12 +209,6 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                   lwp_tmp_era, iwp_tmp_era, cfc_tmp_era
                         UNDEFINE, cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, ctp_tmp_sat, $
                                   lwp_tmp_sat, iwp_tmp_sat, cfc_tmp_sat
-                        UNDEFINE, cph_tmp_inc_era, ctt_tmp_inc_era, cth_tmp_inc_era, $ 
-                                  ctp_tmp_inc_era, lwp_tmp_inc_era, iwp_tmp_inc_era, $ 
-                                  cfc_tmp_inc_era
-                        UNDEFINE, cph_tmp_inc_sat, ctt_tmp_inc_sat, cth_tmp_inc_sat, $ 
-                                  ctp_tmp_inc_sat, lwp_tmp_inc_sat, iwp_tmp_inc_sat, $ 
-                                  cfc_tmp_inc_sat
 
                     ENDIF ;end of IF(is_file(file1))
                 
@@ -271,23 +220,19 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                 ; -- calculate averages
                 IF KEYWORD_SET(verbose) THEN info = ' * CALC_PARAMS_AVERAGES: '
 
-                IF KEYWORD_SET(verbose) THEN PRINT, info, 'model grid mean'
+                IF KEYWORD_SET(verbose) THEN PRINT, info, 'model mean'
                 CALC_PARAMS_AVERAGES, cph_era, ctt_era, cth_era, ctp_era, $
-                                      lwp_era, iwp_era, cfc_era, numb_era, numb_raw
+                                      lwp_era, iwp_era, cfc_era, $
+                                      lwp_inc_era, iwp_inc_era, $
+                                      numb_lwp_inc_era, numb_iwp_inc_era, $
+                                      numb_era, numb_raw
 
-                IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite grid mean'
+                IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite mean'
                 CALC_PARAMS_AVERAGES, cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                                      lwp_sat, iwp_sat, cfc_sat, numb_sat, numb_raw
-
-                IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
-                CALC_PARAMS_AVERAGES, cph_inc_era, ctt_inc_era, cth_inc_era, ctp_inc_era, $
-                                      lwp_inc_era, iwp_inc_era, cfc_inc_era, numb_inc_era, $
-                                      numb_raw
-
-                IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
-                CALC_PARAMS_AVERAGES, cph_inc_sat, ctt_inc_sat, cth_inc_sat, ctp_inc_sat, $
-                                      lwp_inc_sat, iwp_inc_sat, cfc_inc_sat, numb_inc_sat, $
-                                      numb_raw
+                                      lwp_sat, iwp_sat, cfc_sat, $
+                                      lwp_inc_sat, iwp_inc_sat, $
+                                      numb_lwp_inc_sat, numb_iwp_inc_sat, $
+                                      numb_sat, numb_raw
 
 
                 PRINT,' * counti (number of files read): ', counti
@@ -299,19 +244,16 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                     lwp_era, iwp_era, cfc_era, numb_era, $
                                     cph_sat, ctt_sat, cth_sat, ctp_sat,  $
                                     lwp_sat, iwp_sat, cfc_sat, numb_sat, $
-                                    cph_inc_era, ctt_inc_era, cth_inc_era, $
-                                    ctp_inc_era, lwp_inc_era, iwp_inc_era, $
-                                    cfc_inc_era, numb_inc_era, $
-                                    cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
-                                    ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
-                                    cfc_inc_sat, numb_inc_sat
+                                    lwp_inc_era, iwp_inc_era, $
+                                    numb_lwp_inc_era, numb_iwp_inc_era, $
+                                    lwp_inc_sat, iwp_inc_sat, $
+                                    numb_lwp_inc_sat, numb_iwp_inc_sat
 
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_HIST'
                 WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
                                     xdim, ydim, zdim, dim_ctp, lon, lat, $
                                     ctp_limits_final1d, ctp_limits_final2d, $
-                                    ctp_hist_era, ctp_hist_sat, $
-                                    ctp_hist_inc_era, ctp_hist_inc_sat
+                                    ctp_hist_era, ctp_hist_sat
                 
                 
                 ; delete final arrays before next cycle starts
@@ -321,20 +263,17 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                 UNDEFINE, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                           lwp_sat, iwp_sat, cfc_sat
                 UNDEFINE, ctp_hist_era, ctp_hist_sat, $
-                          cph_inc_era, ctt_inc_era, cth_inc_era, $
-                          ctp_inc_era, lwp_inc_era, iwp_inc_era, $
-                          cfc_inc_era, numb_inc_era
-                UNDEFINE, cph_inc_sat, ctt_inc_sat, cth_inc_sat, $
-                          ctp_inc_sat, lwp_inc_sat, iwp_inc_sat, $
-                          cfc_inc_sat, numb_inc_sat, $
-                          ctp_hist_inc_era, ctp_hist_inc_sat
-                UNDEFINE, numb_tmp, numb_raw, counti
+                          lwp_inc_era, iwp_inc_era, $
+                          lwp_inc_sat, iwp_inc_sat
+                UNDEFINE, numb_tmp, numb_raw, counti, numb_era, numb_sat
+                UNDEFINE, numb_lwp_inc_era, numb_iwp_inc_era, $
+                          numb_lwp_inc_sat, numb_iwp_inc_sat
 
-                HELP, numb_inc_era, numb_inc_sat
-                HELP, numb_tmp, numb_raw, counti
+;                 HELP, numb_inc_era, numb_inc_sat
+;                 HELP, numb_tmp, numb_raw, counti
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
-        
+
         ENDFOR ;end of month loop
     ENDFOR ;end of year loop
 

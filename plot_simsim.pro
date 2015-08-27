@@ -85,15 +85,16 @@ END
 ;	dir:		set input directory, where ncfiles are located
 ;	test:		pre-defined test ncfile
 ;	limit:		map_image limit
+;	normal:		plot one variable onto single page
 ;	compare:	compare two variables from same file and make difference plot (blue-to-red)
 ;	niter:		number of iterations, i.e. how many variables from the ncfile to be plotted
 ;	plotall:	instead selecting one parameter, all parameters of the file will be plotted
-;	pmulti:		plot 4 onto one page regarding one type of parameter, e.g. 'cth'
+;	pmulti:		plot 4 onto one page regarding one type of parameter, e.g. 'lwp', 'iwc'
 ;
 PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		LIMIT=limit, PORTRAIT=portrait, EPS=eps, $
 		COMPARE=compare, NITER=niter, PLOTALL=plotall, $
-		PMULTI=pmulti
+		PMULTI=pmulti, NORMAL=normal
 
 
 	; -- eps plots here
@@ -129,7 +130,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 	ncbase = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
 	ncsplit = STRSPLIT(ncbase,'_',/EXTRACT)
 	cot_thv_sat = STRMID(ncsplit(N_ELEMENTS(ncsplit)-2),0,3)
-	cot_thv_era = '0.01'
+	cot_thv_era = '0.001'
 
 	; ---------------------------------------------------------------------------------------
 	; -- plot [0,2,2], e.g. pmulti='cth', i.e.
@@ -248,6 +249,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			m -> display
 			obj_destroy, m
 
+			MAP_CONTINENTS, /CONTINENTS, /HIRES, COLOR=255, GLINETHICK=2.
+			MAP_GRID, COLOR=255, MLINETHICK=2.
 
 			; -- annotations
 			IF (j EQ 0) THEN XYOUTS, 0.05, 0.97, mtitle, $
@@ -266,9 +269,12 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		ENDIF
 
 
+	ENDIF
+
+
 	; ---------------------------------------------------------------------------------------
 	; -- difference plot onto single page
-	ENDIF ELSE IF KEYWORD_SET(compare) THEN BEGIN
+	IF KEYWORD_SET(compare) THEN BEGIN
 
 		; -- select blue-white-red color table
 		rainbow = 0 & bwr = 1
@@ -453,11 +459,13 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			end_eps
 		ENDIF
 
+	ENDIF
+
 
 	; ---------------------------------------------------------------------------------------
 	; -- normal plot onto single page
 
-	ENDIF ELSE BEGIN
+	IF KEYWORD_SET(normal) THEN BEGIN
 
 		; -- determine number of variables to be plotted
 		IF KEYWORD_SET(plotall) THEN niter = N_ELEMENTS(variableList.ToArray())
@@ -580,6 +588,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			m -> display
 			obj_destroy, m
 
+			MAP_CONTINENTS, /CONTINENTS, /HIRES, COLOR=255, GLINETHICK=2.5
+			MAP_GRID, COLOR=255, MLINETHICK=2.5
+
 			; -- annotations
 			XYOUTS, xlat, ylat, 'Latitude', $
 				COLOR=col, /norm, CHARSIZE=chars, orientation=90, CHARTHICK=chars
@@ -602,8 +613,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 		ENDFOR ; end of for loop (niter)
 
+	ENDIF
+	; ---------------------------------------------------------------------------------------
 
-	ENDELSE ; end of if loop (pmulit/compare/normal)
 
 	!P.MULTI = 0
 
