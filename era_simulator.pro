@@ -59,6 +59,9 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                           ctp_limits_final1d, ctp_limits_final2d, $
                           cot_thv_era, cot_thv_sat, crit_str
 
+	IF KEYWORD_SET(verbose) THEN BEGIN
+		HELP, era_path, out_path, cot_thv_era, cot_thv_sat
+	ENDIF
 
 	IF KEYWORD_SET(logfile) THEN $
 		JOURNAL, out_path + 'journal_' + crit_str + cgTimeStamp() + '.pro'
@@ -161,7 +164,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                         ; -- get cloud parameters using incloud liquid + ice COT threshold
                         IF KEYWORD_SET(verbose) THEN info = ' * SEARCH_FOR_CLOUD: '
 
-                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model incloud mean'
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'model mean'
                         SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_era, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
@@ -169,7 +172,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                           cph_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                           cfc_tmp_era
 
-                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite incloud mean'
+                        IF KEYWORD_SET(verbose) THEN PRINT, info, 'satellite mean'
                         SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
