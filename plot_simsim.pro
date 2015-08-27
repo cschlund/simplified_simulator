@@ -195,6 +195,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
 
 			make_geo,lon,lat,grid=0.5
+			lat = ROTATE(lat,2)
+			lon = lon + 180.
 			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
 			IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
@@ -266,6 +268,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			!P.MULTI = 0
 			end_plot
 			end_eps
+			SPAWN, 'convert '+outf+'.eps '+outf+'.png'
 		ENDIF
 
 
@@ -336,6 +339,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		PRINT, ' *** MINMAX(img2): ', MINMAX(img2)
 
 		make_geo, lon, lat, grid=0.5
+		lat = ROTATE(lat,2)
+		lon = lon + 180.
 		img  = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 		img2 = congrid(img2,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
@@ -457,6 +462,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			!P.MULTI = 0
 			end_plot
 			end_eps
+			SPAWN, 'convert '+outf+'.eps '+outf+'.png'
 		ENDIF
 
 	ENDIF
@@ -522,10 +528,11 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
 			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
 			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
-
 			;get_grid_res returns 0 ??? and file = ncfile returns -999.000 incl. error message
 			;make_geo,lon,lat,file=ncfile,grid=get_grid_res(img)
 			make_geo,lon,lat,grid=0.5
+			lat = ROTATE(lat,2)
+			lon = lon + 180.
 			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
 			IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
@@ -609,6 +616,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 				!P.MULTI = 0
 				end_plot
 				end_eps
+				SPAWN, 'convert '+outf+'.eps '+outf+'.png'
 			ENDIF
 
 		ENDFOR ; end of for loop (niter)
