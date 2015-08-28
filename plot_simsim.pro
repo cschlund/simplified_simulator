@@ -79,6 +79,11 @@ END
 
 
 ; -- main program --
+; 
+; alternative: use ncdf_browser from Stefan
+;	which can plot simulator results, except two things (so far):
+;		1) compare two variables from one file (diffplot)
+;		2) compare one variable with reference data
 ;
 ; KEYWORDS
 ;	verbose:	increase screen output
@@ -209,8 +214,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			lat = ROTATE(lat,2)
 			lon = lon + 180.
 			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
-
-			IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
 
 			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
 
@@ -368,12 +371,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		IF (nbad GT 0) THEN BEGIN
 			img[bad] = img_att._FILLVALUE
 			img2[bad] = img_att._FILLVALUE
-		ENDIF
-
-		; -- convert CTH in km
-		IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN BEGIN
-			img = img/1000.
-			img2 = img2/1000.
 		ENDIF
 
 		PRINT, ' *** MINMAX of '+varname+'-'+varname2+' :', MINMAX(img-img2)
@@ -556,8 +553,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			lon = lon + 180.
 			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
-			IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN img = img/1000.
-
 			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
 
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
@@ -653,8 +648,5 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 	ENDIF
 	; ---------------------------------------------------------------------------------------
-
-
-	!P.MULTI = 0
 
 END ; end of program
