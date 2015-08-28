@@ -250,13 +250,15 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                     lwp_inc_era, iwp_inc_era, $
                                     numb_lwp_inc_era, numb_iwp_inc_era, $
                                     lwp_inc_sat, iwp_inc_sat, $
-                                    numb_lwp_inc_sat, numb_iwp_inc_sat
+                                    numb_lwp_inc_sat, numb_iwp_inc_sat, $
+                                    cot_thv_era, cot_thv_sat
 
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_HIST'
                 WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
                                     xdim, ydim, zdim, dim_ctp, lon, lat, $
                                     ctp_limits_final1d, ctp_limits_final2d, $
-                                    ctp_hist_era, ctp_hist_sat
+                                    ctp_hist_era, ctp_hist_sat, $
+                                    cot_thv_era, cot_thv_sat
                 
                 
                 ; delete final arrays before next cycle starts

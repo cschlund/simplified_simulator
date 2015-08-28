@@ -6,7 +6,8 @@
 PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
                         xdim, ydim, zdim, dim_ctp, lon, lat, $
                         ctp_limits_final1d, ctp_limits_final2d, $
-                        ctp_hist_era, ctp_hist_sat
+                        ctp_hist_era, ctp_hist_sat, $
+                        cot_thv_era, cot_thv_sat
 
     dim_time   = 1
     fyear      = FLOAT(year)
@@ -36,6 +37,8 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, /GLOBAL, "Source" , "ERA-Interim" ;
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_START" , ""+year+month ;
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_RESOLUTION", "P1M"
+    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_era", cot_thv_era
+    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_sat", cot_thv_sat
     
     dim_tb_id  = NCDF_DIMDEF(id, 'gsize', 2)
     dim_p_id  = NCDF_DIMDEF(id, 'plev', dim_ctp)
