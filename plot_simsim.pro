@@ -39,8 +39,8 @@ FUNCTION GET_DISCRETE_RANGE, varname
 	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)*100+10.
 	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(10)*2
 	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)*10+180
-	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(8)/10.+0.05
-	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(8)/10.+0.05
+	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.*0.6
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10./10 +0.05
 END
 
 FUNCTION GET_VAR_UNIT, varname
@@ -89,13 +89,19 @@ END
 ;	compare:	compare two variables from same file and make difference plot (blue-to-red)
 ;	niter:		number of iterations, i.e. how many variables from the ncfile to be plotted
 ;	plotall:	instead selecting one parameter, all parameters of the file will be plotted
-;	pmulti:		plot 4 onto one page regarding one type of parameter, e.g. 'lwp', 'iwc'
+;	pmulti:		plot 4 onto one page regarding one type of parameter, only for: 'lwp', 'iwc'
+;	mini:		set minrange for /normal
+;	maxi:		set maxrange for /normal
 ;
 PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		LIMIT=limit, PORTRAIT=portrait, EPS=eps, $
 		COMPARE=compare, NITER=niter, PLOTALL=plotall, $
-		PMULTI=pmulti, NORMAL=normal
+		PMULTI=pmulti, NORMAL=normal, MINI=mini, MAXI=maxi
 
+
+	; -- path to reference data
+; 	refdata_dir = '/cmsaf/cmsaf-cld6/esa_cci_cloud_data/data'
+	refdata_dir = '/cmsaf/cmsaf-cld1/esa_cci_cloud_data/data/temp'
 
 	; -- eps plots here
 	outdir = '/cmsaf/cmsaf-cld6/cschlund/figs/cci_wp5001/'
@@ -130,7 +136,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 	ncbase = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
 	ncsplit = STRSPLIT(ncbase,'_',/EXTRACT)
 	cot_thv_sat = STRMID(ncsplit(N_ELEMENTS(ncsplit)-2),0,3)
-	cot_thv_era = '0.001'
+	cot_thv_era = '0.01'
 
 	; ---------------------------------------------------------------------------------------
 	; -- plot [0,2,2], e.g. pmulti='cth', i.e.
@@ -181,8 +187,13 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		ENDELSE
 
 
-		varname_list = [pmulti+'_era', pmulti+'_sat', $
-						pmulti+'_inc_era', pmulti+'_inc_sat']
+		IF (pmulti EQ 'lwp' OR pmulti EQ 'iwp') THEN BEGIN
+			varname_list = [pmulti+'_era', pmulti+'_sat', $
+							pmulti+'_inc_era', pmulti+'_inc_sat']
+		ENDIF ELSE BEGIN
+			varname_list = [pmulti+'_era', pmulti+'_sat', $
+							'cc_total_era', 'cc_total_sat']
+		ENDELSE
 
 
 		FOR j=0, N_ELEMENTS(varname_list)-1 DO BEGIN
@@ -224,16 +235,22 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			ptitle = varname+unit+' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
 
 
-			IF (N_TAGS(glob_att) NE 0) THEN $
-				mtitle = 'Time=' + glob_att.TIME_COVERAGE_START + $
+			IF (N_TAGS(glob_att) NE 0 and j EQ 0) THEN BEGIN
+				long_name = STRING(img_att.long_name)
+				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_era, FORMAT='(F5.2)'),2)
+				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv_sat, FORMAT='(F5.2)'),2)
+				mtitle =  long_name + '; ' + $
+						  'Time=' + glob_att.TIME_COVERAGE_START + $
 						 '; cot_thv_era='+cot_thv_era + $
 						 '; cot_thv_sat='+cot_thv_sat + $
 						 '; Source: '+glob_att.SOURCE
+			ENDIF
 
 
-			IF(ISA(img_att) NE 0) THEN $
-				void_index = WHERE(img EQ img_att._FILLVALUE)
-
+			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
+				IF(ISA(img_att) NE 0) THEN $
+					void_index = WHERE(img EQ img_att._FILLVALUE)
+			ENDIF
 
 			; -- map_image (pmulti)
 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
@@ -362,6 +379,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		PRINT, ' *** MINMAX of '+varname+'-'+varname2+' :', MINMAX(img-img2)
 
 		; -- some info written onto plot
+		long_name = STRING(img_att.long_name)
 		unit  = GET_VAR_UNIT(varname)
 		minmax_range = MINMAX(img-img2)
 		minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
@@ -371,11 +389,14 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		IF (minmax_range[1] EQ 0.) THEN ctable = 1 
 
 		; -- Plot settings
+		ptitle = long_name
 		IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-			ptitle = 'Time=' + glob_att.TIME_COVERAGE_START + $
-						'; Difference: ' + varname + ' - ' + varname2 + unit
+			cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_era, FORMAT='(F5.2)'),2)
+			cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv_sat, FORMAT='(F5.2)'),2)
+			ptitle = ptitle + '  ' + glob_att.TIME_COVERAGE_START + $
+						'  Difference: ' + varname + ' - ' + varname2 + unit
 		ENDIF ELSE BEGIN
-			ptitle = 'Difference: ' + varname + ' - ' + varname2 + unit
+			ptitle = ptitle + '  Difference: ' + varname + ' - ' + varname2 + unit
 		ENDELSE
 
 
@@ -386,8 +407,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		chars = 2.2
 
 		barformat = ('(F8.2)')
-		IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E8.2)')
-		IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E8.2)')
+		IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
+		IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
 
 		IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
 
@@ -539,9 +560,15 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
 
+			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
+				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_era, FORMAT='(F5.2)'),2)
+				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv_sat, FORMAT='(F5.2)'),2)
+			ENDIF
+
 			IF (STRPOS(varname, 'era') GT 0) THEN cot_thv = cot_thv_era $
 				ELSE cot_thv = cot_thv_sat
 
+			long_name = STRING(img_att.long_name)
 
 			; -- flag negative values with FILLVALUE
 			wo_bad = WHERE(img LT 0, nbad)
@@ -560,14 +587,17 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(F8.3)'),2)
 			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(F8.3)'),2)
 			meastr = STRTRIM(STRING(imean, FORMAT='(F8.3)'),2)
-; 			ptitle = varname+unit+' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
+			mmmstr = ' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
+
+			IF KEYWORD_SET(MINI) THEN mini=mini ELSE mini=minmax_range[0]
+			IF KEYWORD_SET(MAXI) THEN maxi=maxi ELSE maxi=minmax_range[1]
 
 			; -- Plot settings
-			ptitle = varname + unit
+			ptitle = long_name + ':   ' + varname + unit
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				ptitle = ptitle + '; Time=' + glob_att.TIME_COVERAGE_START
+				ptitle = ptitle + '   ' + glob_att.TIME_COVERAGE_START
 			ENDIF
-			ptitle = ptitle + '; cot_thv=' + cot_thv
+			ptitle = ptitle + '   cot_thv=' + cot_thv
 
 			position = [0.10, 0.25, 0.90, 0.90]
 			xlat=0.05 & ylat=0.53
@@ -584,10 +614,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
 				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
 				/GRID, GLINETHICK=2., MLINETHICK=2., $
-				n_lev=6, $
-; 				discrete=GET_DISCRETE_RANGE(varname), $
-				MINI=minmax_range[0], MAXI=minmax_range[1], $
-				CHARSIZE=chars, /HORIZON, $
+				n_lev=6, MINI=mini, MAXI=maxi, $
+				CHARSIZE=chars, /HORIZON,  $
 				POSITION=position, LIMIT=limit, $
 				FORMAT=barformat, VOID_INDEX=void_index)
 			m -> project, image=img, lon=lon, lat=lat, $
@@ -605,6 +633,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 				COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
 			XYOUTS, xtit, ytit, ptitle, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
+			XYOUTS, 0.1, ylon, mmmstr, $
+				/norm, CHARSIZE=1.8, CHARTHICK=chars, COLOR=col
 
 			IF (N_TAGS(glob_att) NE 0) THEN XYOUTS, xlon+0.245, ylon, $
 				' Source: '+glob_att.SOURCE, COLOR=col, /norm, $
