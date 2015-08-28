@@ -41,25 +41,33 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         ctp_tmp[where_cot] = plevel[z]/100.
         cth_tmp[where_cot] = geop_tmp[where_cot]
         ctt_tmp[where_cot] = temp_tmp[where_cot]
-        cph_tmp[where_cot] = (0. > ( $
-            lwp_lay_tmp[where_cot] / $
-            (lwp_lay_tmp[where_cot] + iwp_lay_tmp[where_cot]) $
-            ) < 1.0)
+        cph_tmp[where_cot] = ROUND( (0. > ( lwp_lay_tmp[where_cot] / $
+            (lwp_lay_tmp[where_cot] + iwp_lay_tmp[where_cot]) ) < 1.0) )
         
         ; layer between two levels
         IF(z LT zdim-2) THEN BEGIN
+
           lwp_tmp[where_cot] = (total(lwp_lay[*,*,z:*],3))[where_cot]
           iwp_tmp[where_cot] = (total(iwp_lay[*,*,z:*],3))[where_cot]
-          cfc_tmp[where_cot] = (0. > ( (max(cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
+          cfc_tmp[where_cot] = ROUND( (0. > ( $
+			(max(cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
+
         ; lowest layer, to be checked
         ENDIF ELSE BEGIN
+
           lwp_tmp[where_cot] = (lwp_lay[*,*,z])[where_cot]
           iwp_tmp[where_cot] = (iwp_lay[*,*,z])[where_cot]
-          cfc_tmp[where_cot] = (0. > ( (cc[*,*,z])[where_cot] ) < 1.0 )
+          cfc_tmp[where_cot] = ROUND( (0. > ( (cc[*,*,z])[where_cot] ) < 1.0 ) )
+
         ENDELSE
         
       ENDIF
       
     ENDFOR
-    
+
+	; cph: if cph = round(0./(0. + 0.)) then round(Nan) = -2.14748e+09
+	; therefore, set these to fillvalue
+	idx = WHERE(cph_tmp LT -999., nidx)
+	IF (nidx GT 0) THEN cph_tmp[idx] = -999.
+
 END
