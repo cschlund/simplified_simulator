@@ -78,7 +78,7 @@ FUNCTION GET_NCDF_VARLIST, fil
 END
 
 
-; -- main program --
+; -- main program -------------------------------------------------------------------------------
 ; 
 ; alternative: use ncdf_browser from Stefan
 ;	which can plot simulator results, except two things (so far):
@@ -142,6 +142,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 	ncsplit = STRSPLIT(ncbase,'_',/EXTRACT)
 	cot_thv_sat = STRMID(ncsplit(N_ELEMENTS(ncsplit)-2),0,3)
 	cot_thv_era = '0.01'
+
+
 
 	; ---------------------------------------------------------------------------------------
 	; -- plot [0,2,2], e.g. pmulti='cth', i.e.
@@ -293,6 +295,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 
 	ENDIF
+
+
 
 
 	; ---------------------------------------------------------------------------------------
@@ -486,6 +490,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 	ENDIF
 
 
+
+
 	; ---------------------------------------------------------------------------------------
 	; -- normal plot onto single page
 
@@ -579,13 +585,15 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			istdv = STDDEV(img[good])
 			unit  = GET_VAR_UNIT(varname)
 			minmax_range = MINMAX(img[good])
-			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(F8.3)'),2)
-			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(F8.3)'),2)
+			mini=minmax_range[0]
+			maxi=minmax_range[1]
+			minstr = STRTRIM(STRING(mini, FORMAT='(F8.3)'),2)
+			maxstr = STRTRIM(STRING(maxi, FORMAT='(F8.3)'),2)
 			meastr = STRTRIM(STRING(imean, FORMAT='(F8.3)'),2)
 			mmmstr = ' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
 
-			IF KEYWORD_SET(MINI) THEN mini=mini ELSE mini=minmax_range[0]
-			IF KEYWORD_SET(MAXI) THEN maxi=maxi ELSE maxi=minmax_range[1]
+			IF KEYWORD_SET(MINI) THEN mini=mini
+			IF KEYWORD_SET(MAXI) THEN maxi=maxi
 
 			; -- Plot settings
 			ptitle = long_name + ':   ' + varname + unit
@@ -647,6 +655,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 		ENDFOR ; end of for loop (niter)
 
 	ENDIF
-	; ---------------------------------------------------------------------------------------
+
+
+
 
 END ; end of program
