@@ -28,7 +28,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
     erg_plev_bnds = ctp_limits_final2d;*100.
         
 
-    file_out='ERA_Interim_MH'+year+month+'_'+crit_str+'_CTP.nc'
+    file_out='SimpSimu_MH'+year+month+'_'+crit_str+'_CTP.nc'
     clobber=1
     PRINT,'creating netcdf file: '+file_out
     

@@ -15,6 +15,11 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 						numb_lwp_inc_sat, numb_iwp_inc_sat, $
                         cot_thv_era, cot_thv_sat
 
+	; convert cth form 'm' to 'km'
+	idx_era = WHERE(cth_era GT 0., nera)
+	IF(nera GT 0) THEN cth_era[idx_era] = cth_era[idx_era] / 1000.
+	idx_sat = WHERE(cth_sat GT 0., nsat)
+	IF(nsat GT 0) THEN cth_sat[idx_sat] = cth_sat[idx_sat] / 1000.
 
     dim_time   = 1
     fyear      = FLOAT(year)
@@ -29,7 +34,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     tbo[1,0]   = tttt2-tref
     itime      = tttt-tref
 
-    file_out = 'ERA_Interim_MM'+year+month+'_'+crit_str+'_CTP.nc'
+    file_out = 'SimpSimu_MM'+year+month+'_'+crit_str+'_CTP.nc'
     clobber  = 1
     PRINT, ' *** Creating netCDF file: ' + file_out
     
@@ -60,7 +65,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'cth_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cth_era', '_FillValue', -999.
     NCDF_ATTPUT, id, 'cth_era', 'long_name', 'cloud top height'
-    NCDF_ATTPUT, id, 'cth_era', 'units', 'm'
+    NCDF_ATTPUT, id, 'cth_era', 'units', 'km'
 
     vid  = NCDF_VARDEF(id, 'ctt_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctt_era', '_FillValue', -999.
@@ -120,7 +125,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'cth_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cth_sat', '_FillValue', -999.
     NCDF_ATTPUT, id, 'cth_sat', 'long_name', 'cloud top height'
-    NCDF_ATTPUT, id, 'cth_sat', 'units', 'm'
+    NCDF_ATTPUT, id, 'cth_sat', 'units', 'km'
 
     vid  = NCDF_VARDEF(id, 'ctt_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctt_sat', '_FillValue', -999.
