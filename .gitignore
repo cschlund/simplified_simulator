@@ -13,4 +13,5 @@ config_era_simulator.pro
 *JPG
 *nc
 *txt
+.directory
 
