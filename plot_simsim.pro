@@ -585,15 +585,15 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			istdv = STDDEV(img[good])
 			unit  = GET_VAR_UNIT(varname)
 			minmax_range = MINMAX(img[good])
-			mini=minmax_range[0]
-			maxi=minmax_range[1]
-			minstr = STRTRIM(STRING(mini, FORMAT='(F8.3)'),2)
-			maxstr = STRTRIM(STRING(maxi, FORMAT='(F8.3)'),2)
+			minlim = minmax_range[0]
+			maxlim = minmax_range[1]
+			minstr = STRTRIM(STRING(minlim, FORMAT='(F8.3)'),2)
+			maxstr = STRTRIM(STRING(maxlim, FORMAT='(F8.3)'),2)
 			meastr = STRTRIM(STRING(imean, FORMAT='(F8.3)'),2)
 			mmmstr = ' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
 
-			IF KEYWORD_SET(MINI) THEN mini=mini
-			IF KEYWORD_SET(MAXI) THEN maxi=maxi
+			IF KEYWORD_SET(MINI) THEN minlim=mini
+			IF KEYWORD_SET(MAXI) THEN maxlim=maxi
 
 			; -- Plot settings
 			ptitle = long_name + ':   ' + varname + unit
@@ -617,7 +617,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
 				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
 				/GRID, GLINETHICK=2., MLINETHICK=2., $
-				n_lev=6, MINI=mini, MAXI=maxi, $
+				n_lev=6, MINI=minlim, MAXI=maxlim, $
 				CHARSIZE=chars, /HORIZON,  $
 				POSITION=position, LIMIT=limit, $
 				FORMAT=barformat, VOID_INDEX=void_index)
