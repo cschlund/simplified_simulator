@@ -18,8 +18,8 @@ PRO CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
     ;-- input and output paths
     
     ; era simulator output directory
-    out_base = 'v3-1_MM_erainterim_output_incloud_bugfix/'
-    pwd_base = '/cmsaf/cmsaf-cld6/cschlund/cloud_cci/ERA_simulator/'
+    out_base = 'v7_simres4cloudcci_comparison/4_LWP_IWP_via_cphtop/'
+    pwd_base = '/cmsaf/cmsaf-cld6/cschlund/cci_wp5001/ERA_simulator/'
     out_path = pwd_base + out_base
     validres = VALID_DIR( out_path )
     IF(validres EQ 0) THEN creatres = CREATE_DIR( out_path )
@@ -41,8 +41,8 @@ PRO CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
     
     ;-- Set list of month to be processed
     
-    ;months_list = ['01','02','03','04','05','06','07','08','09','10','11','12']
-    months_list = ['01']
+;     months_list = ['01','02','03','04','05','06','07','08','09','10','11','12']
+    months_list = ['07']
     nmonths = N_ELEMENTS(months_list)
     
     
@@ -69,9 +69,10 @@ PRO CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
     IF KEYWORD_SET(cot_thv_sat) THEN BEGIN
 	cot_thv_sat = cot_thv_sat
     ENDIF ELSE BEGIN
-	cot_thv_sat = 1.0
+	cot_thv_sat = 0.3
     ENDELSE
 
-    crit_str    = 'cot_thv_'+strtrim(cot_thv_sat,1)
+;     crit_str = 'cot_thv_'+strtrim(cot_thv_sat,1)
+    crit_str = 'cot_thv_'+STRTRIM(STRING(cot_thv_sat, FORMAT='(F4.2)'),2)
 
 END
