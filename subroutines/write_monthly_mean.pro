@@ -88,7 +88,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'lwp_bin_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_bin_era', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_bin_era', 'long_name', 'cloud liquid water path based on binary cph'
+    NCDF_ATTPUT, id, 'lwp_bin_era', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp_bin_era', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'iwp_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
@@ -98,7 +98,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'iwp_bin_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_bin_era', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_bin_era', 'long_name', 'cloud ice water path based on binary cph'
+    NCDF_ATTPUT, id, 'iwp_bin_era', 'long_name', 'cloud ice water path'
     NCDF_ATTPUT, id, 'iwp_bin_era', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'cph_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
@@ -113,7 +113,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     ; incloud parameters
     vid  = NCDF_VARDEF(id, 'lwp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_era', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_inc_era', 'long_name', 'cloud liquid water path (incloud)'
+    NCDF_ATTPUT, id, 'lwp_inc_era', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp_inc_era', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_era', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -122,7 +122,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'iwp_inc_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_era', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_inc_era', 'long_name', 'cloud ice water path (incloud)'
+    NCDF_ATTPUT, id, 'iwp_inc_era', 'long_name', 'cloud ice water path'
     NCDF_ATTPUT, id, 'iwp_inc_era', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_era', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -132,7 +132,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     ; incloud parameters of binary cph based lwp and iwp arrays
     vid  = NCDF_VARDEF(id, 'lwp_inc_bin_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_bin_era', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_inc_bin_era', 'long_name', 'cloud liquid water path (incloud) based on binary cph'
+    NCDF_ATTPUT, id, 'lwp_inc_bin_era', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp_inc_bin_era', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_bin_era', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -141,7 +141,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'iwp_inc_bin_era', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_bin_era', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_inc_bin_era', 'long_name', 'cloud ice water path (incloud) based on binary cph'
+    NCDF_ATTPUT, id, 'iwp_inc_bin_era', 'long_name', 'cloud ice water path'
     NCDF_ATTPUT, id, 'iwp_inc_bin_era', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_bin_era', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -182,7 +182,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'lwp_bin_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_bin_sat', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_bin_sat', 'long_name', 'cloud liquid water path based on binary cph'
+    NCDF_ATTPUT, id, 'lwp_bin_sat', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp_bin_sat', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'iwp_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
@@ -192,7 +192,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'iwp_bin_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_bin_sat', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_bin_sat', 'long_name', 'cloud ice water path based on binary cph'
+    NCDF_ATTPUT, id, 'iwp_bin_sat', 'long_name', 'cloud ice water path'
     NCDF_ATTPUT, id, 'iwp_bin_sat', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_sat', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -202,7 +202,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     ; incloud parameters
     vid  = NCDF_VARDEF(id, 'lwp_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_sat', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_inc_sat', 'long_name', 'cloud liquid water path (incloud)'
+    NCDF_ATTPUT, id, 'lwp_inc_sat', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp_inc_sat', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_sat', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -211,7 +211,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'iwp_inc_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_sat', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_inc_sat', 'long_name', 'cloud ice water path (incloud)'
+    NCDF_ATTPUT, id, 'iwp_inc_sat', 'long_name', 'cloud ice water path'
     NCDF_ATTPUT, id, 'iwp_inc_sat', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_sat', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -221,7 +221,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     ; incloud parameters: lwp and iwp based on binary cph
     vid  = NCDF_VARDEF(id, 'lwp_inc_bin_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_bin_sat', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_inc_bin_sat', 'long_name', 'cloud liquid water path (incloud) based on binary cph'
+    NCDF_ATTPUT, id, 'lwp_inc_bin_sat', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp_inc_bin_sat', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_bin_sat', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -230,7 +230,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'iwp_inc_bin_sat', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_bin_sat', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_inc_bin_sat', 'long_name', 'cloud ice water path (incloud) based on binary cph'
+    NCDF_ATTPUT, id, 'iwp_inc_bin_sat', 'long_name', 'cloud ice water path'
     NCDF_ATTPUT, id, 'iwp_inc_bin_sat', 'units', 'kg/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_bin_sat', [dim_x_id,dim_y_id,time_id], /LONG)
