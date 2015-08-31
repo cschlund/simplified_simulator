@@ -125,14 +125,18 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                              ctp_era, lwp_era, iwp_era, $
                                              cfc_era, lwp_inc_era, iwp_inc_era, $
                                              numb_lwp_inc_era, numb_iwp_inc_era, $
-                                             ctp_hist_era, numb_era, numb_tmp, numb_raw
+                                             ctp_hist_era, numb_era, numb_tmp, numb_raw, $
+                                             lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
+                                             iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era
 
                             INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                                              cph_sat, ctt_sat, cth_sat, $
                                              ctp_sat, lwp_sat, iwp_sat, $
                                              cfc_sat, lwp_inc_sat, iwp_inc_sat, $
                                              numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                             ctp_hist_sat, numb_sat, numb_tmp, numb_raw
+                                             ctp_hist_sat, numb_sat, numb_tmp, numb_raw, $
+                                             lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
+                                             iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat
 
                         ENDIF
                         counti++
@@ -161,14 +165,14 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                           lwp_lay, iwp_lay, plevel, cc, $
                                           ctp_tmp_era, cth_tmp_era, ctt_tmp_era, $
                                           cph_tmp_era, lwp_tmp_era, iwp_tmp_era, $
-                                          cfc_tmp_era
+                                          cfc_tmp_era, lwp_tmp_bin_era, iwp_tmp_bin_era
 
                         SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
                                           xdim, ydim, zdim, geop, temp, $
                                           lwp_lay, iwp_lay, plevel, cc, $
                                           ctp_tmp_sat, cth_tmp_sat, ctt_tmp_sat, $
                                           cph_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
-                                          cfc_tmp_sat
+                                          cfc_tmp_sat, lwp_tmp_bin_sat, iwp_tmp_bin_sat
 
 
                         ; -- sum up cloud parameters
@@ -179,7 +183,11 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             cph_tmp_era, ctt_tmp_era, cth_tmp_era, $
                                             ctp_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                             cfc_tmp_era, ctp_hist_era, numb_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp
+                                            numb_tmp, ctp_limits_final2d, dim_ctp, $
+                                            lwp_tmp_bin_era, lwp_bin_era, $
+                                            lwp_inc_bin_era, numb_lwp_inc_bin_era, $
+                                            iwp_tmp_bin_era, iwp_bin_era, $
+                                            iwp_inc_bin_era, numb_iwp_inc_bin_era
 
                         SUMUP_CLOUD_PARAMS, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                                             lwp_sat, iwp_sat, cfc_sat, $
@@ -188,7 +196,12 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, $
                                             ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                             cfc_tmp_sat, ctp_hist_sat, numb_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp
+                                            numb_tmp, ctp_limits_final2d, dim_ctp, $
+                                            lwp_tmp_bin_sat, lwp_bin_sat, $
+                                            lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
+                                            iwp_tmp_bin_sat, iwp_bin_sat, $
+                                            iwp_inc_bin_sat, numb_iwp_inc_bin_sat
+
                         
                         numb_raw++
                         
@@ -197,6 +210,8 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                   lwp_tmp_era, iwp_tmp_era, cfc_tmp_era
                         UNDEFINE, cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, ctp_tmp_sat, $
                                   lwp_tmp_sat, iwp_tmp_sat, cfc_tmp_sat
+                        UNDEFINE, lwp_tmp_bin_era, iwp_tmp_bin_era, $
+                                  lwp_tmp_bin_sat, iwp_tmp_bin_sat
 
                     ENDIF ;end of IF(is_file(file1))
                 
@@ -210,13 +225,17 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                       lwp_era, iwp_era, cfc_era, $
                                       lwp_inc_era, iwp_inc_era, $
                                       numb_lwp_inc_era, numb_iwp_inc_era, $
-                                      numb_era, numb_raw
+                                      numb_era, numb_raw, $
+                                      lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
+                                      iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era
 
                 CALC_PARAMS_AVERAGES, cph_sat, ctt_sat, cth_sat, ctp_sat, $
                                       lwp_sat, iwp_sat, cfc_sat, $
                                       lwp_inc_sat, iwp_inc_sat, $
                                       numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                      numb_sat, numb_raw
+                                      numb_sat, numb_raw, $
+                                      lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
+                                      iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat
 
 
                 PRINT,' * counti (number of files read): ', counti
@@ -232,7 +251,11 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                     numb_lwp_inc_era, numb_iwp_inc_era, $
                                     lwp_inc_sat, iwp_inc_sat, $
                                     numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                    cot_thv_era, cot_thv_sat
+                                    cot_thv_era, cot_thv_sat, $
+                                    lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
+                                    iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
+                                    lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
+                                    iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat
 
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_HIST'
                 WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
@@ -254,6 +277,10 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                 UNDEFINE, numb_tmp, numb_raw, counti, numb_era, numb_sat
                 UNDEFINE, numb_lwp_inc_era, numb_iwp_inc_era, $
                           numb_lwp_inc_sat, numb_iwp_inc_sat
+                UNDEFINE, lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
+                          iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era
+                UNDEFINE, lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
+                          iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat
 
 ;                 HELP, numb_inc_era, numb_inc_sat
 ;                 HELP, numb_tmp, numb_raw, counti

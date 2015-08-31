@@ -8,25 +8,35 @@
 ;      lwp_mean_inc, iwp_mean_inc, 
 ;      numb_lwp_inc, numb_iwp_inc,
 ;      cph_tmp, ctt_tmp, cth_tmp, ctp_tmp, 
-;      lwp_tmp, iwp_tmp, cfc_tmp, 
-;      ctp_hist, numb, numb_tmp, ctp_limits_final2d, dim_ctp
+;      lwp_tmp, iwp_tmp, cfc_tmp, lwp_tmp_bin, iwp_tmp_bin,
+;      ctp_hist, numb, numb_tmp, ctp_limits_final2d, dim_ctp,
+;      lwp_mean_bin, lwp_mean_inc_bin, numb_lwp_inc_bin,
+;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin
 ;
 ; out: cph_mean, ctt_mean, cth_mean, ctp_mean, 
 ;      lwp_mean, iwp_mean, cfc_mean, ctp_hist,
 ;      numb, lwp_mean_inc, iwp_mean_inc, 
 ;      numb_lwp_inc, numb_iwp_inc
+;      lwp_mean_bin, lwp_mean_inc_bin, numb_lwp_inc_bin,
+;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin
 ;
-; cph ... cloud phase
-; ctt ... cloud top temperature
-; cth ... cloud top height
-; ctp ... cloud top pressure
-; lwp ... cloud liquid water path
-; iwp ... cloud ice water path
-; cfc ... cloud fraction
+; cph_mean ... cloud phase
+; ctt_mean ... cloud top temperature
+; cth_mean ... cloud top height
+; ctp_mean ... cloud top pressure
+; lwp_mean ... cloud liquid water path
+; iwp_mean ... cloud ice water path
+; lwp_mean_bin ... cloud liquid water path based on binary decision of cph
+; iwp_mean_bin ... cloud ice water path based on binary decision of cph
+; cfc_mean ... cloud fraction
 ; lwp_mean_inc ... LWP incloud mean
 ; iwp_mean_inc ... IWP incloud mean
+; lwp_mean_inc_bin ... LWP incloud mean based on lwp_bin
+; iwp_mean_inc_bin ... IWP incloud mean based on iwp_bin
 ; numb_lwp_inc ... count number of occurrences of lwp_mean_inc
 ; numb_iwp_inc ... count number of occurrences of iwp_mean_inc
+; numb_lwp_inc_bin ... count number of occurrences of lwp_mean_inc_bin
+; numb_iwp_inc_bin ... count number of occurrences of iwp_mean_inc_bin
 ; ctp_hist ... cloud top pressure histogram
 ;
 ;-------------------------------------------------------------------
@@ -38,7 +48,11 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                         cph_tmp, ctt_tmp, cth_tmp, ctp_tmp, $
                         lwp_tmp, iwp_tmp, cfc_tmp, $
                         ctp_hist, numb, numb_tmp, $
-                        ctp_limits_final2d, dim_ctp
+                        ctp_limits_final2d, dim_ctp, $
+                        lwp_tmp_bin, lwp_mean_bin, $
+                        lwp_mean_inc_bin, numb_lwp_inc_bin, $
+                        iwp_tmp_bin, iwp_mean_bin, $
+                        iwp_mean_inc_bin, numb_iwp_inc_bin
 
     ; cth and cph limitation added because with cpt_tmp GT 10. alone
     ; negative CTH and CPH pixels do occur
@@ -56,6 +70,9 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     iwp_mean = iwp_mean + iwp_tmp
     cfc_mean = cfc_mean + cfc_tmp
 
+    lwp_mean_bin = lwp_mean_bin + lwp_tmp_bin
+    iwp_mean_bin = iwp_mean_bin + iwp_tmp_bin
+
 
     ; lwp_mean_incloud
     idx1 = WHERE(cfc_tmp GT 0. AND lwp_tmp GT 0., nidx1)
@@ -69,6 +86,21 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     IF (nidx2 GT 0) THEN BEGIN
         iwp_mean_inc[idx2] = iwp_mean_inc[idx2] + iwp_tmp[idx2]/cfc_tmp[idx2]
         numb_iwp_inc[idx2] = numb_iwp_inc[idx2] + 1l
+    ENDIF
+
+
+    ; lwp_mean_incloud_bin
+    idx3 = WHERE(cfc_tmp GT 0. AND lwp_tmp_bin GT 0., nidx3)
+    IF (nidx3 GT 0) THEN BEGIN
+        lwp_mean_inc_bin[idx3] = lwp_mean_inc_bin[idx3] + lwp_tmp_bin[idx3]/cfc_tmp[idx3]
+        numb_lwp_inc_bin[idx3] = numb_lwp_inc_bin[idx3] + 1l
+    ENDIF
+
+    ; iwp_mean_incloud_bin
+    idx4 = WHERE(cfc_tmp GT 0. AND iwp_tmp_bin GT 0., nidx4)
+    IF (nidx4 GT 0) THEN BEGIN
+        iwp_mean_inc_bin[idx4] = iwp_mean_inc_bin[idx4] + iwp_tmp_bin[idx4]/cfc_tmp[idx4]
+        numb_iwp_inc_bin[idx4] = numb_iwp_inc_bin[idx4] + 1l
     ENDIF
 
 

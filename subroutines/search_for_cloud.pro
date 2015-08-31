@@ -6,14 +6,16 @@
 ; in : lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim,
 ;      geop, temp, lwp_lay, iwp_lay, plevel, cc
 ;
-; out: ctp_tmp, cth_tmp, ctt_tmp, cph_tmp, lwp_tmp, iwp_tmp, cfc_tmp
+; out: ctp_tmp, cth_tmp, ctt_tmp, cph_tmp, lwp_tmp, iwp_tmp, 
+;      cfc_tmp, lwp_tmp_bin, iwp_tmp_bin
 ;
 ;-------------------------------------------------------------------
 
 PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
                       geop, temp, lwp_lay, iwp_lay, plevel, cc, $
                       ctp_tmp, cth_tmp, ctt_tmp, cph_tmp, $
-                      lwp_tmp, iwp_tmp, cfc_tmp
+                      lwp_tmp, iwp_tmp, cfc_tmp, $
+                      lwp_tmp_bin, iwp_tmp_bin
 
 
     ; initialize arrays
@@ -24,6 +26,9 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
     lwp_tmp = FLTARR(xdim,ydim) & lwp_tmp[*,*] = 0.
     iwp_tmp = FLTARR(xdim,ydim) & iwp_tmp[*,*] = 0.
     cfc_tmp = FLTARR(xdim,ydim) & cfc_tmp[*,*] = 0.
+    ; lwp and iwp based on binary decision of cph
+    lwp_tmp_bin = FLTARR(xdim,ydim) & lwp_tmp_bin[*,*] = 0.
+    iwp_tmp_bin = FLTARR(xdim,ydim) & iwp_tmp_bin[*,*] = 0.
 
 
     FOR z=zdim-2,1,-1 DO BEGIN
@@ -60,15 +65,17 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         IF(z LT zdim-2) THEN BEGIN
 
           IF (nliq GT 0) THEN BEGIN
-            lwp_tmp[where_cot[wo_liq]] = (total(lwp_lay+iwp_lay[*,*,z:*],3))[where_cot[wo_liq]]
-            iwp_tmp[where_cot[wo_liq]] = 0.
+            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay+iwp_lay[*,*,z:*],3))[where_cot[wo_liq]]
+            iwp_tmp_bin[where_cot[wo_liq]] = 0.
           ENDIF
 
           IF (nice GT 0) THEN BEGIN
-            iwp_tmp[where_cot[wo_ice]] = (total(lwp_lay+iwp_lay[*,*,z:*],3))[where_cot[wo_ice]]
-            lwp_tmp[where_cot[wo_ice]] = 0.
+            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay+iwp_lay[*,*,z:*],3))[where_cot[wo_ice]]
+            lwp_tmp_bin[where_cot[wo_ice]] = 0.
           ENDIF
 
+          lwp_tmp[where_cot] = (total(lwp_lay[*,*,z:*],3))[where_cot]
+          iwp_tmp[where_cot] = (total(iwp_lay[*,*,z:*],3))[where_cot]
           cfc_tmp[where_cot] = ROUND( (0. > ( (max(cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
 
 
@@ -76,15 +83,17 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         ENDIF ELSE BEGIN
 
           IF (nliq GT 0) THEN BEGIN
-            lwp_tmp[where_cot[wo_liq]] = (total(lwp_lay+iwp_lay[*,*,z]))[where_cot[wo_liq]]
-            iwp_tmp[where_cot[wo_liq]] = 0.
+            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay+iwp_lay[*,*,z]))[where_cot[wo_liq]]
+            iwp_tmp_bin[where_cot[wo_liq]] = 0.
           ENDIF
 
           IF (nice GT 0) THEN BEGIN
-            iwp_tmp[where_cot[wo_ice]] = (total(lwp_lay+iwp_lay[*,*,z]))[where_cot[wo_ice]]
-            lwp_tmp[where_cot[wo_ice]] = 0.
+            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay+iwp_lay[*,*,z]))[where_cot[wo_ice]]
+            lwp_tmp_bin[where_cot[wo_ice]] = 0.
           ENDIF
 
+          lwp_tmp[where_cot] = (lwp_lay[*,*,z])[where_cot]
+          iwp_tmp[where_cot] = (iwp_lay[*,*,z])[where_cot]
           cfc_tmp[where_cot] = ROUND( (0. > ( (cc[*,*,z])[where_cot] ) < 1.0 ) )
 
         ENDELSE

@@ -39,8 +39,8 @@ FUNCTION GET_DISCRETE_RANGE, varname
 	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)*100+10.
 	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(10)*2
 	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)*10+180
-	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.*0.6
-	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10./10 +0.05
+	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.;FINDGEN(11)/10.*0.6
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10./10 +0.1;0.05
 END
 
 FUNCTION GET_VAR_UNIT, varname
@@ -609,15 +609,24 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 			chars = 2.2
 			barformat = ('(F8.2)')
 
-			IF(ISA(img_att) NE 0) THEN $
-				void_index = WHERE(img EQ img_att._FILLVALUE)
+			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
+				IF(ISA(img_att) NE 0) THEN $
+					void_index = WHERE(img EQ img_att._FILLVALUE)
+			ENDIF
 
+			IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN BEGIN
+				minlim = 0. & maxlim = 1.
+			ENDIF
+			IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN BEGIN
+				minlim = 0. & maxlim = 0.2
+			ENDIF
 
 			; -- map_image (single)
 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
 				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
 				/GRID, GLINETHICK=2., MLINETHICK=2., $
 				n_lev=6, MINI=minlim, MAXI=maxlim, $
+; 				discrete=GET_DISCRETE_RANGE(varname), $
 				CHARSIZE=chars, /HORIZON,  $
 				POSITION=position, LIMIT=limit, $
 				FORMAT=barformat, VOID_INDEX=void_index)

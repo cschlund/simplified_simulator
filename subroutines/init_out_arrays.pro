@@ -8,7 +8,9 @@
 ; out: cph, ctt, cth, ctp, lwp, iwp, cfc, 
 ;      lwp_incloud, iwp_incloud,
 ;      numb_lwp_incloud, numb_iwp_incloud,
-;      ctp_hist, numb, numb_tmp, numb_raw
+;      ctp_hist, numb, numb_tmp, numb_raw, 
+;      lwp_bin, lwp_incloud_bin, numb_lwp_incloud_bin,
+;      iwp_bin, iwp_incloud_bin, numb_iwp_incloud_bin
 ;
 ; cph ... cloud phase
 ; ctt ... cloud top temperature
@@ -16,11 +18,17 @@
 ; ctp ... cloud top pressure
 ; lwp ... cloud liquid water path
 ; iwp ... cloud ice water path
+; lwp_bin ... cloud liquid water path based on binary decision of cph
+; iwp_bin ... cloud ice water path based on binary decision of cph
 ; cfc ... cloud fraction
 ; lwp_incloud ... LWP incloud mean
 ; iwp_incloud ... IWP incloud mean
+; lwp_incloud_bin ... LWP incloud mean based on lwp_bin
+; iwp_incloud_bin ... IWP incloud mean based on iwp_bin
 ; numb_lwp_incloud ... number of occurrences for lwp_incloud
 ; numb_iwp_incloud ... number of occurrences for iwp_incloud
+; numb_lwp_incloud_bin ... number of occurrences for lwp_incloud_bin
+; numb_iwp_incloud_bin ... number of occurrences for iwp_incloud_bin
 ; ctp_hist ... cloud top pressure histogram
 ;
 ;-------------------------------------------------------------------
@@ -29,7 +37,9 @@ PRO INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                      cph, ctt, cth, ctp, lwp, iwp, cfc, $
                      lwp_incloud, iwp_incloud, $
                      numb_lwp_incloud, numb_iwp_incloud, $
-                     ctp_hist, numb, numb_tmp, numb_raw
+                     ctp_hist, numb, numb_tmp, numb_raw, $
+                     lwp_bin, lwp_incloud_bin, numb_lwp_incloud_bin, $
+                     iwp_bin, iwp_incloud_bin, numb_iwp_incloud_bin
 
     cph = FLTARR(xdim,ydim) & cph[*,*] = 0
     ctt = FLTARR(xdim,ydim) & ctt[*,*] = 0
@@ -38,14 +48,20 @@ PRO INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
     lwp = FLTARR(xdim,ydim) & lwp[*,*] = 0
     iwp = FLTARR(xdim,ydim) & iwp[*,*] = 0
     cfc = FLTARR(xdim,ydim) & cfc[*,*] = 0
+    lwp_bin = FLTARR(xdim,ydim) & lwp_bin[*,*] = 0
+    iwp_bin = FLTARR(xdim,ydim) & iwp_bin[*,*] = 0
 
     ; -- lwp & iwp incloud, 
     ;    i.e. in sumup_cloud_params: lwp_tmp/cfc_tmp; iwp_tmp/cfc_tmp
     lwp_incloud = FLTARR(xdim,ydim) & lwp_incloud[*,*] = 0
     iwp_incloud = FLTARR(xdim,ydim) & iwp_incloud[*,*] = 0
+    lwp_incloud_bin = FLTARR(xdim,ydim) & lwp_incloud_bin[*,*] = 0
+    iwp_incloud_bin = FLTARR(xdim,ydim) & iwp_incloud_bin[*,*] = 0
 
     numb_lwp_incloud = LONARR(xdim,ydim) & numb_lwp_incloud[*,*] = 0
     numb_iwp_incloud = LONARR(xdim,ydim) & numb_iwp_incloud[*,*] = 0
+    numb_lwp_incloud_bin = LONARR(xdim,ydim) & numb_lwp_incloud_bin[*,*] = 0
+    numb_iwp_incloud_bin = LONARR(xdim,ydim) & numb_iwp_incloud_bin[*,*] = 0
 
     ctp_hist = LONARR(xdim,ydim,dim_ctp) & ctp_hist[*,*,*] = 0l
 
