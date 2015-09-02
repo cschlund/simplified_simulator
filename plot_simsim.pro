@@ -88,7 +88,6 @@ END
 ; KEYWORDS
 ;	verbose:	increase screen output
 ;	dir:		set input directory, where ncfiles are located
-;	test:		pre-defined test ncfile
 ;	limit:		map_image limit
 ;	normal:		plot one variable onto single page
 ;	compare:	compare two variables from same file and make difference plot (blue-to-red)
@@ -97,11 +96,13 @@ END
 ;	pmulti:		plot 4 onto one page regarding one type of parameter, only for: 'lwp', 'iwc'
 ;	mini:		set minrange for /normal
 ;	maxi:		set maxrange for /normal
+;	suboutdir:	set subdirectory, where EPS plots should be saved, e.g. 'sim/run4/'
 ;
-PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
+PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 		LIMIT=limit, PORTRAIT=portrait, EPS=eps, $
 		COMPARE=compare, NITER=niter, PLOTALL=plotall, $
-		PMULTI=pmulti, NORMAL=normal, MINI=mini, MAXI=maxi
+		PMULTI=pmulti, NORMAL=normal, MINI=mini, MAXI=maxi, $
+		SUBOUTDIR=suboutdir
 
 
 	; -- path to reference data
@@ -110,6 +111,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 	; -- eps plots here
 	outdir = '/cmsaf/cmsaf-cld6/cschlund/figs/cci_wp5001/'
+	IF KEYWORD_SET(suboutdir) THEN outdir = outdir + suboutdir
 
 	; -- number of parameters to be plotted
 	IF ~KEYWORD_SET(niter) THEN niter = 1
@@ -122,16 +124,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, test=test, $
 
 
     ; -- Select file
-	IF KEYWORD_SET(test) THEN BEGIN
-		ncfile = '/cmsaf/cmsaf-cld6/cschlund/cci_wp5001/ERA_simulator/' + $
-			'v4_MM_simsim_output_analysis/' + $
-			'ERA_Interim_MM200801_cot_thv_0.300000_CTP.nc'
-	ENDIF ELSE BEGIN
-		ncfile = DIALOG_PICKFILE(/READ, PATH=dir, FILTER='*MM*.nc', $
-					TITLE='Select ERA-Interim reanalysis file!')
-		result = FILE_TEST(ncfile)
-		PRINT, ' *** File Selection: ', result ? 'successful' : 'failed'
-	ENDELSE
+	ncfile = DIALOG_PICKFILE(/READ, PATH=dir, FILTER='*.nc', TITLE='Select File!')
+	result = FILE_TEST(ncfile)
+	PRINT, ' *** File Selection: ', result ? 'successful' : 'failed'
 
 
 	; -- Get list of variables in file
