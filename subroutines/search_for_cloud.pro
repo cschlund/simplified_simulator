@@ -56,23 +56,9 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         idx = WHERE(cph_tmp[where_cot] LT -999., nidx)
         IF (nidx GT 0) THEN cph_tmp[where_cot[idx]] = -999.
 
-        ; cloud top: 0=ice, 1=liquid
-        wo_ice = WHERE(cph_tmp[where_cot] EQ 0., nice)
-        wo_liq = WHERE(cph_tmp[where_cot] EQ 1., nliq)
-
 
         ; layer between two levels
         IF(z LT zdim-2) THEN BEGIN
-
-          IF (nliq GT 0) THEN BEGIN
-            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay[*,*,z:*]+iwp_lay[*,*,z:*],3))[where_cot[wo_liq]]
-            iwp_tmp_bin[where_cot[wo_liq]] = 0.
-          ENDIF
-
-          IF (nice GT 0) THEN BEGIN
-            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay[*,*,z:*]+iwp_lay[*,*,z:*],3))[where_cot[wo_ice]]
-            lwp_tmp_bin[where_cot[wo_ice]] = 0.
-          ENDIF
 
           lwp_tmp[where_cot] = (total(lwp_lay[*,*,z:*],3))[where_cot]
           iwp_tmp[where_cot] = (total(iwp_lay[*,*,z:*],3))[where_cot]
@@ -81,16 +67,6 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
 
         ; lowest layer, to be checked
         ENDIF ELSE BEGIN
-
-          IF (nliq GT 0) THEN BEGIN
-            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay[*,*,z]+iwp_lay[*,*,z]))[where_cot[wo_liq]]
-            iwp_tmp_bin[where_cot[wo_liq]] = 0.
-          ENDIF
-
-          IF (nice GT 0) THEN BEGIN
-            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay[*,*,z]+iwp_lay[*,*,z]))[where_cot[wo_ice]]
-            lwp_tmp_bin[where_cot[wo_ice]] = 0.
-          ENDIF
 
           lwp_tmp[where_cot] = (lwp_lay[*,*,z])[where_cot]
           iwp_tmp[where_cot] = (iwp_lay[*,*,z])[where_cot]
@@ -104,5 +80,23 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
 
     ENDFOR
 
+
+    ; ---
+    ; LWP and IWP calculation based on cph_tmp binary decision & lwp_tmp & iwp_tmp
+    ; cloud top: 0=ice, 1=liquid
+    ; ---
+
+    wo_liq = WHERE(cph_tmp EQ 1., nliq)
+    wo_ice = WHERE(cph_tmp EQ 0., nice)
+
+    IF (nliq GT 0) THEN BEGIN
+        lwp_tmp_bin[wo_liq] = lwp_tmp[wo_liq] + iwp_tmp[wo_liq]
+        iwp_tmp_bin[wo_liq] = 0.
+    ENDIF
+
+    IF (nice GT 0) THEN BEGIN
+        lwp_tmp_bin[wo_ice] = 0.
+        iwp_tmp_bin[wo_ice] = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
+    ENDIF
 
 END
