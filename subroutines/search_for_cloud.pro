@@ -65,12 +65,12 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         IF(z LT zdim-2) THEN BEGIN
 
           IF (nliq GT 0) THEN BEGIN
-            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay+iwp_lay[*,*,z:*],3))[where_cot[wo_liq]]
+            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay[*,*,z:*]+iwp_lay[*,*,z:*],3))[where_cot[wo_liq]]
             iwp_tmp_bin[where_cot[wo_liq]] = 0.
           ENDIF
 
           IF (nice GT 0) THEN BEGIN
-            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay+iwp_lay[*,*,z:*],3))[where_cot[wo_ice]]
+            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay[*,*,z:*]+iwp_lay[*,*,z:*],3))[where_cot[wo_ice]]
             lwp_tmp_bin[where_cot[wo_ice]] = 0.
           ENDIF
 
@@ -83,12 +83,12 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         ENDIF ELSE BEGIN
 
           IF (nliq GT 0) THEN BEGIN
-            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay+iwp_lay[*,*,z]))[where_cot[wo_liq]]
+            lwp_tmp_bin[where_cot[wo_liq]] = (total(lwp_lay[*,*,z]+iwp_lay[*,*,z]))[where_cot[wo_liq]]
             iwp_tmp_bin[where_cot[wo_liq]] = 0.
           ENDIF
 
           IF (nice GT 0) THEN BEGIN
-            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay+iwp_lay[*,*,z]))[where_cot[wo_ice]]
+            iwp_tmp_bin[where_cot[wo_ice]] = (total(lwp_lay[*,*,z]+iwp_lay[*,*,z]))[where_cot[wo_ice]]
             lwp_tmp_bin[where_cot[wo_ice]] = 0.
           ENDIF
 
