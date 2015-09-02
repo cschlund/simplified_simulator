@@ -582,26 +582,25 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			minmax_range = MINMAX(img[good])
 			minlim = minmax_range[0]
 			maxlim = minmax_range[1]
-			minstr = STRTRIM(STRING(minlim, FORMAT='(F8.3)'),2)
-			maxstr = STRTRIM(STRING(maxlim, FORMAT='(F8.3)'),2)
-			meastr = STRTRIM(STRING(imean, FORMAT='(F8.3)'),2)
-			mmmstr = ' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
+			minstr = 'MIN='+STRTRIM(STRING(minlim, FORMAT='(E10.2)'),2)
+			maxstr = 'MAX='+STRTRIM(STRING(maxlim, FORMAT='(E10.2)'),2)
 
 			IF KEYWORD_SET(MINI) THEN minlim=mini
 			IF KEYWORD_SET(MAXI) THEN maxlim=maxi
 
 			; -- Plot settings
-			ptitle = long_name + ':   ' + varname + unit
+			ptitle = long_name
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				ptitle = ptitle + '   ' + glob_att.TIME_COVERAGE_START
+				ptitle = glob_att.SOURCE+': '+ptitle + $
+						 ' for ' + glob_att.TIME_COVERAGE_START
 			ENDIF
-			ptitle = ptitle + '   cot_thv=' + cot_thv
+			ptitle = ptitle + ' (cot_thv=' + cot_thv+') ' + meastr
 
 			position = [0.10, 0.25, 0.90, 0.90]
 			xlat=0.05 & ylat=0.53
 			xlon=0.46 & ylon=0.17
-			xtit=0.11 & ytit=0.96
-			chars = 2.2
+			xtit=0.08 & ytit=0.96
+			chars = 2.5
 			barformat = ('(F8.2)')
 
 			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
@@ -610,7 +609,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			ENDIF
 
 			IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN BEGIN
-				minlim = 0. & maxlim = 1.
+				minlim = 0. & maxlim = 0.2
 			ENDIF
 			IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN BEGIN
 				minlim = 0. & maxlim = 0.2
@@ -623,6 +622,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 				n_lev=6, MINI=minlim, MAXI=maxlim, $
 ; 				discrete=GET_DISCRETE_RANGE(varname), $
 				CHARSIZE=chars, /HORIZON,  $
+				TITLE=varname + unit, CHARTHICK=chars, $
 				POSITION=position, LIMIT=limit, $
 				FORMAT=barformat, VOID_INDEX=void_index)
 			m -> project, image=img, lon=lon, lat=lat, $
@@ -634,18 +634,16 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			MAP_GRID, COLOR=255, MLINETHICK=2.5
 
 			; -- annotations
-			XYOUTS, xlat, ylat, 'Latitude', $
-				COLOR=col, /norm, CHARSIZE=chars, orientation=90, CHARTHICK=chars
-			XYOUTS, xlon, ylon, 'Longitude', $
-				COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
+; 			XYOUTS, xlat, ylat, 'Latitude', $
+; 				COLOR=col, /norm, CHARSIZE=chars, orientation=90, CHARTHICK=chars
+; 			XYOUTS, xlon, ylon, 'Longitude', $
+; 				COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
 			XYOUTS, xtit, ytit, ptitle, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
-			XYOUTS, 0.1, ylon, mmmstr, $
-				/norm, CHARSIZE=1.8, CHARTHICK=chars, COLOR=col
-
-			IF (N_TAGS(glob_att) NE 0) THEN XYOUTS, xlon+0.245, ylon, $
-				' Source: '+glob_att.SOURCE, COLOR=col, /norm, $
-				CHARSIZE=chars, CHARTHICK=chars
+			XYOUTS, 0.08, 0.17, minstr, $
+				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
+			XYOUTS, 0.76, 0.17, maxstr, $
+				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
 
 
 			IF KEYWORD_SET(eps) THEN BEGIN
