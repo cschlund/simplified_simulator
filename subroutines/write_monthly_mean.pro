@@ -84,7 +84,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'cc_total_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cc_total_bin_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cc_total_bin_ori', 'long_name', 'binary based cloud fraction'
+    NCDF_ATTPUT, id, 'cc_total_bin_ori', 'long_name', 'cloud fraction'
     NCDF_ATTPUT, id, 'cc_total_bin_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'lwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
@@ -114,7 +114,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'cph_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cph_bin_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cph_bin_ori', 'long_name', 'binary based cloud phase'
+    NCDF_ATTPUT, id, 'cph_bin_ori', 'long_name', 'cloud phase'
     NCDF_ATTPUT, id, 'cph_bin_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'nobs_ori', [dim_x_id,dim_y_id,time_id], /LONG)
@@ -183,7 +183,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'cph_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cph_bin', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cph_bin', 'long_name', 'binary based cloud phase'
+    NCDF_ATTPUT, id, 'cph_bin', 'long_name', 'cloud phase'
     NCDF_ATTPUT, id, 'cph_bin', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'cc_total', [dim_x_id,dim_y_id,time_id], /FLOAT)
@@ -193,7 +193,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
     vid  = NCDF_VARDEF(id, 'cc_total_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cc_total_bin', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cc_total_bin', 'long_name', 'binary based cloud fraction'
+    NCDF_ATTPUT, id, 'cc_total_bin', 'long_name', 'cloud fraction'
     NCDF_ATTPUT, id, 'cc_total_bin', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'lwp', [dim_x_id,dim_y_id,time_id], /FLOAT)
