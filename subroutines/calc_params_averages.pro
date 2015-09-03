@@ -109,44 +109,4 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     wo_iwp_nix_bin = WHERE(numb_iwp_inc_bin EQ 0, niwp_nix_bin)
     IF (niwp_nix_bin GT 0) THEN iwp_incloud_bin[wo_iwp_nix_bin] = -999.
 
-    ; some screen output
-	PRINT, '   GLOBAL MEANS' & ft = '(F12.4)'
-
-	good = WHERE(ctp_mean GT 0.)
-	PRINT, '   + ctp_mean = ', STRING(MEAN(ctp_mean[good]), FORMAT=ft)
-	good = WHERE(cth_mean GT 0.)
-	PRINT, '   + cth_mean = ', STRING(MEAN(cth_mean[good]), FORMAT=ft)
-	good = WHERE(ctt_mean GT 0.)
-	PRINT, '   + ctt_mean = ', STRING(MEAN(ctt_mean[good]), FORMAT=ft)
-
-	good = WHERE(cph_mean GE 0.)
-	PRINT, '   + cph_mean = ', STRING(MEAN(cph_mean[good]), FORMAT=ft)
-	good = WHERE(cfc_mean GE 0.)
-	PRINT, '   + cfc_mean = ', STRING(MEAN(cfc_mean[good]), FORMAT=ft)
-
-	good = WHERE(cph_mean_bin GE 0.)
-	PRINT, '   + cph_mean_bin = ', STRING(MEAN(cph_mean_bin[good]), FORMAT=ft)
-	good = WHERE(cfc_mean_bin GE 0.)
-	PRINT, '   + cfc_mean_bin = ', STRING(MEAN(cfc_mean_bin[good]), FORMAT=ft)
-
-	good = WHERE(lwp_mean GE 0.)
-	PRINT, '   + lwp_mean = ', STRING(MEAN(lwp_mean[good]), FORMAT=ft)
-	good = WHERE(iwp_mean GE 0.)
-	PRINT, '   + iwp_mean = ', STRING(MEAN(iwp_mean[good]), FORMAT=ft)
-
-	good = WHERE(lwp_incloud GE 0.)
-	PRINT, '   + lwp_incloud = ', STRING(MEAN(lwp_incloud[good]), FORMAT=ft)
-	good = WHERE(iwp_incloud GE 0.)
-	PRINT, '   + iwp_incloud = ', STRING(MEAN(iwp_incloud[good]), FORMAT=ft)
-
-	good = WHERE(lwp_mean_bin GE 0.)
-	PRINT, '   + lwp_mean_bin = ', STRING(MEAN(lwp_mean_bin[good]), FORMAT=ft)
-	good = WHERE(iwp_mean_bin GE 0.)
-	PRINT, '   + iwp_mean_bin = ', STRING(MEAN(iwp_mean_bin[good]), FORMAT=ft)
-
-	good = WHERE(lwp_incloud_bin GE 0.)
-	PRINT, '   + lwp_incloud_bin = ', STRING(MEAN(lwp_incloud_bin[good]), FORMAT=ft)
-	good = WHERE(iwp_incloud_bin GE 0.)
-	PRINT, '   + iwp_incloud_bin = ', STRING(MEAN(iwp_incloud[good]), FORMAT=ft)
-
 END
