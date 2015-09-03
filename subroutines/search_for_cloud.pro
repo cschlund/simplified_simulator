@@ -52,19 +52,21 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         cth_tmp[where_cot] = geop_tmp[where_cot]
         ctt_tmp[where_cot] = temp_tmp[where_cot]
 
+
         ; avoiding -NaN output due to 0./(0.+ 0.)
         ; % Program caused arithmetic error: Floating illegal operand
-        lwp_idx = WHERE(lwp_lay_tmp[where_cot] GT 0.)
+        lwp_idx = WHERE(lwp_lay_tmp[where_cot] GT 0., cnt_lwp_idx)
 
         ; cloud top phase
         cph_tmp[where_cot[lwp_idx]] = (0.0 > $
             ( lwp_lay_tmp[where_cot[lwp_idx]] / $
             ( lwp_lay_tmp[where_cot[lwp_idx]] + iwp_lay_tmp[where_cot[lwp_idx]] ) ) < 1.0)
 
+        nanidx = WHERE( ~FINITE(cph_tmp), cnt_nan )
+        IF (cnt_nan GT 0) THEN cph_tmp[nanidx] = -999.
+
         ; cloud top phase via binary decision
-        cph_tmp_bin[where_cot[lwp_idx]] = ROUND( (0.0 > $
-            ( lwp_lay_tmp[where_cot[lwp_idx]] / $
-            ( lwp_lay_tmp[where_cot[lwp_idx]] + iwp_lay_tmp[where_cot[lwp_idx]]) ) < 1.0) )
+        cph_tmp_bin[where_cot[lwp_idx]] = ROUND( cph_tmp[where_cot[lwp_idx]] )
 
 
         ; layer between two levels
