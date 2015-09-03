@@ -11,14 +11,18 @@
 ;      lwp_tmp, iwp_tmp, cfc_tmp, lwp_tmp_bin, iwp_tmp_bin,
 ;      ctp_hist, numb, numb_tmp, ctp_limits_final2d, dim_ctp,
 ;      lwp_mean_bin, lwp_mean_inc_bin, numb_lwp_inc_bin,
-;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin
+;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin,
+;      cfc_tmp_bin, cfc_bin_mean, 
+;      cph_tmp_bin, cph_bin_mean
 ;
 ; out: cph_mean, ctt_mean, cth_mean, ctp_mean, 
 ;      lwp_mean, iwp_mean, cfc_mean, ctp_hist,
 ;      numb, lwp_mean_inc, iwp_mean_inc, 
 ;      numb_lwp_inc, numb_iwp_inc
 ;      lwp_mean_bin, lwp_mean_inc_bin, numb_lwp_inc_bin,
-;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin
+;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin,
+;      cfc_tmp_bin, cfc_bin_mean, 
+;      cph_tmp_bin, cph_bin_mean
 ;
 ; cph_mean ... cloud phase
 ; ctt_mean ... cloud top temperature
@@ -26,6 +30,8 @@
 ; ctp_mean ... cloud top pressure
 ; lwp_mean ... cloud liquid water path
 ; iwp_mean ... cloud ice water path
+; cfc_mean_bin ... binary cloud fraction (0;1)
+; cph_mean_bin ... binary cloud phase (0;1)
 ; lwp_mean_bin ... cloud liquid water path based on binary decision of cph
 ; iwp_mean_bin ... cloud ice water path based on binary decision of cph
 ; cfc_mean ... cloud fraction
@@ -52,7 +58,9 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                         lwp_tmp_bin, lwp_mean_bin, $
                         lwp_mean_inc_bin, numb_lwp_inc_bin, $
                         iwp_tmp_bin, iwp_mean_bin, $
-                        iwp_mean_inc_bin, numb_iwp_inc_bin
+                        iwp_mean_inc_bin, numb_iwp_inc_bin, $
+                        cfc_tmp_bin, cfc_mean_bin, $
+                        cph_tmp_bin, cph_mean_bin
 
     ; cth and cph limitation added because with cpt_tmp GT 10. alone
     ; negative CTH and CPH pixels do occur
@@ -63,12 +71,15 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     cth_mean[wo_ctp] = cth_mean[wo_ctp] + cth_tmp[wo_ctp]
     ctt_mean[wo_ctp] = ctt_mean[wo_ctp] + ctt_tmp[wo_ctp]
     cph_mean[wo_ctp] = cph_mean[wo_ctp] + cph_tmp[wo_ctp]
+    cph_mean_bin[wo_ctp] = cph_mean_bin[wo_ctp] + cph_tmp_bin[wo_ctp]
 
     numb[wo_ctp] = numb[wo_ctp]+1l
 
     lwp_mean = lwp_mean + lwp_tmp
     iwp_mean = iwp_mean + iwp_tmp
+
     cfc_mean = cfc_mean + cfc_tmp
+    cfc_mean_bin = cfc_mean_bin + cfc_tmp_bin
 
     lwp_mean_bin = lwp_mean_bin + lwp_tmp_bin
     iwp_mean_bin = iwp_mean_bin + iwp_tmp_bin
