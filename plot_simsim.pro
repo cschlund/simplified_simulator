@@ -44,9 +44,9 @@ FUNCTION GET_DISCRETE_RANGE, varname
 END
 
 FUNCTION GET_VAR_UNIT, varname
-	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ' []'
-	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, ' []'
-	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, ' '
+	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ''
+	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, ''
+	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, ''
 	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, ' [hPa]'
 	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, ' [km]'
 	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, ' [K]'
@@ -91,9 +91,9 @@ END
 ;	limit:		map_image limit
 ;	normal:		plot one variable onto single page
 ;	compare:	compare two variables from same file and make difference plot (blue-to-red)
+;				compare=2 ... compare a pre-defined set of variables
 ;	niter:		number of iterations, i.e. how many variables from the ncfile to be plotted
 ;	plotall:	instead selecting one parameter, all parameters of the file will be plotted
-;	pmulti:		plot 4 onto one page regarding one type of parameter, only for: 'lwp', 'iwc'
 ;	mini:		set minrange for /normal
 ;	maxi:		set maxrange for /normal
 ;	suboutdir:	set subdirectory, where EPS plots should be saved, e.g. 'sim/run4/'
@@ -101,9 +101,41 @@ END
 PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 		LIMIT=limit, PORTRAIT=portrait, EPS=eps, $
 		COMPARE=compare, NITER=niter, PLOTALL=plotall, $
-		PMULTI=pmulti, NORMAL=normal, MINI=mini, MAXI=maxi, $
+		NORMAL=normal, MINI=mini, MAXI=maxi, $
 		SUBOUTDIR=suboutdir
 
+
+	; -- set options for difference plotting
+	IF KEYWORD_SET(compare) THEN BEGIN
+		IF (compare EQ 1) THEN vlist1 = 1. & vlist2 = 1.
+		IF (compare EQ 2) THEN BEGIN
+
+			vlist1 = ['cph','cc_total','lwp','iwp','lwp_inc','iwp_inc']
+			vlist2 = ['cph_bin','cc_total_bin','lwp_bin','iwp_bin',$
+					'lwp_inc_bin','iwp_inc_bin']
+
+			; attach *_ori variables
+			FOR k=0, N_ELEMENTS(vlist1)-1 DO BEGIN
+				vlist1 = [[vlist1], vlist1[k]+'_ori']
+				vlist2 = [[vlist2], vlist2[k]+'_ori']
+			ENDFOR
+
+			; attach (ori MINUS satellite-like) difference options
+			vlist1 = [[vlist1],'ctp_ori','ctt_ori','cth_ori','cph_ori',$
+						'cc_total_ori']
+			vlist2 = [[vlist2],'ctp','ctt','cth','cph','cc_total']
+
+			PRINT, ' * These difference plots will be produced now: '
+			FOR k=0, N_ELEMENTS(vlist1)-1 DO BEGIN
+				PRINT, '   ', STRTRIM(STRING(k),2),'. ',vlist1[k]+'-'+vlist2[k]
+			ENDFOR
+
+		ENDIF
+	ENDIF
+
+
+	; CHARSIZE
+	chars = 2.4
 
 	; -- path to reference data
 ; 	refdata_dir = '/cmsaf/cmsaf-cld6/esa_cci_cloud_data/data'
@@ -141,346 +173,199 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 
 	; ---------------------------------------------------------------------------------------
-	; -- plot [0,2,2], e.g. pmulti='cth', i.e.
-	;    'cth_era', 'cth_inc_era', 'cth_sat', 'cth_inc_sat'
-
-	IF KEYWORD_SET(pmulti) THEN BEGIN
-
-		PRINT, ' *** PMULTI: ', pmulti
-
-		varoutf = '_pmulti_'+pmulti
-		rainbow=1 & bwr=0
-		chars=1.5
-
-		!P.MULTI = [0,2,2]
-
-		position_list = [[0.05, 0.62, 0.45, 0.90], [0.55, 0.62, 0.95, 0.90], $
-						 [0.05, 0.12, 0.45, 0.40], [0.55, 0.12, 0.95, 0.40]]
-
-		xtit = [[0.05],[0.55],[0.05],[0.55]]
-		ytit = [[0.94],[0.94],[0.44],[0.44]]
-
-
-		; -- set_plot option
-		IF KEYWORD_SET(EPS) THEN BEGIN
-			base = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
-			outf = outdir+base+varoutf
-			col = 0
-			IF KEYWORD_SET(portrait) THEN BEGIN
-				start_plot, outf, 'eps', eps_size=[20,30]
-			ENDIF ELSE BEGIN
-				deviceKeyword={	xsize:30., xoff:0.5, $
-					ysize:20., yoff:29.5, $
-					filename:outf+'.eps', $
-					inches:0, color:1, bits_per_pixel:8, $
-					encapsulated:1, landscape:1}
-				!P.Font=0
-				SET_PLOT, 'ps', /copy
-				DEVICE, /Helvetica, /ISOLATIN1, $
-					_Extra=deviceKeyword, font_size = 8
-			ENDELSE
-		ENDIF ELSE BEGIN
-			SET_PLOT, 'X'
-	; 	    !P.BACKGROUND=-1.
-			DEVICE, RETAIN=2, DECOMPOSED=1
-			DEVICE,SET_font='Helvetica Bold',/tt_font
-			window,  xsize = 1200, ysize = 1000
-			col=255
-		ENDELSE
-
-
-		IF (pmulti EQ 'lwp' OR pmulti EQ 'iwp') THEN BEGIN
-			varname_list = [pmulti+'_era', pmulti+'_sat', $
-							pmulti+'_inc_era', pmulti+'_inc_sat']
-		ENDIF ELSE BEGIN
-			varname_list = [pmulti+'_era', pmulti+'_sat', $
-							'cc_total_era', 'cc_total_sat']
-		ENDELSE
-
-
-		FOR j=0, N_ELEMENTS(varname_list)-1 DO BEGIN
-
-			varname = varname_list[j]
-
-			; -- Read variable from ncfile
-			READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
-			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
-			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
-
-			make_geo,lon,lat,grid=0.5
-			lat = ROTATE(lat,2)
-			lon = lon + 180.
-			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
-
-			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
-
-
-			; -- flag negative values with FILLVALUE
-			wo_bad = WHERE(img LT 0, nbad)
-			IF(nbad GT 0) THEN BEGIN
-				img[wo_bad] = -999.
-				PRINT, ' *** ', STRTRIM(nbad,2), ' bad pixels, i.e. negative values'
-			ENDIF
-
-		
-			; -- some info written onto plot
-			good  = WHERE(img GE 0.)
-			imean = MEAN(img[good])
-			istdv = STDDEV(img[good])
-			unit  = GET_VAR_UNIT(varname)
-			minmax_range = MINMAX(img[good])
-			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(F8.3)'),2)
-			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(F8.3)'),2)
-			meastr = STRTRIM(STRING(imean, FORMAT='(F8.3)'),2)
-			ptitle = varname+unit+' MIN='+minstr+' MAX='+maxstr+' MEAN='+meastr
-
-
-			IF (N_TAGS(glob_att) NE 0 and j EQ 0) THEN BEGIN
-				long_name = STRING(img_att.long_name)
-				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_era, FORMAT='(F5.2)'),2)
-				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv_sat, FORMAT='(F5.2)'),2)
-				mtitle =  long_name + '; ' + $
-						  'Time=' + glob_att.TIME_COVERAGE_START + $
-						 '; cot_thv_era='+cot_thv_era + $
-						 '; cot_thv_sat='+cot_thv_sat + $
-						 '; Source: '+glob_att.SOURCE
-			ENDIF
-
-
-			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
-				IF(ISA(img_att) NE 0) THEN $
-					void_index = WHERE(img EQ img_att._FILLVALUE)
-			ENDIF
-
-			; -- map_image (pmulti)
-			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
-				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
-				/GRID, GLINETHICK=2., MLINETHICK=2., $
-				n_lev=6, $
-				discrete=GET_DISCRETE_RANGE(varname), $
-				MINI=minmax_range[0], MAXI=minmax_range[1], $
-				CHARSIZE=chars, /HORIZON, $
-				POSITION=position_list[*,j], $
-				/CONTINENTS, LIMIT=limit, $
-				FORMAT=GET_BARFORMAT(varname), VOID_INDEX=void_index)
-			m -> project, image=img, lon=lon, lat=lat, $
-				/no_erase, /no_draw 
-			m -> display
-			obj_destroy, m
-
-			MAP_CONTINENTS, /CONTINENTS, /HIRES, COLOR=255, GLINETHICK=2.
-			MAP_GRID, COLOR=255, MLINETHICK=2.
-
-			; -- annotations
-			IF (j EQ 0) THEN XYOUTS, 0.05, 0.97, mtitle, $
-				/norm, CHARSIZE=1.8, CHARTHICK=1.8, COLOR=col
-			XYOUTS, xtit[j], ytit[j], ptitle, $
-				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
-
-		ENDFOR
-
-
-		IF KEYWORD_SET(eps) THEN BEGIN
-			DEVICE, /Close_file
-			!P.MULTI = 0
-			end_plot
-			end_eps
-			SPAWN, 'convert '+outf+'.eps '+outf+'.png'
-		ENDIF
-
-
-	ENDIF
-
-
-
-
-	; ---------------------------------------------------------------------------------------
 	; -- difference plot onto single page
 	IF KEYWORD_SET(compare) THEN BEGIN
 
-		; -- select blue-white-red color table
-		rainbow = 0 & bwr = 1
+		ntimes =  N_ELEMENTS(vlist1)
 
-		; -- Select item from List
-		dropListValues = variableList.ToArray()
-		varname = Choose_Item(dropListValues, CANCEL=cancelled)
-		varoutf = '_'+varname
+		; -- loop over the number of parameters from the same ncfile
+		FOR i=0, ntimes-1 DO BEGIN
 
-		; -- choose second variable
-		variableList = GET_NCDF_VARLIST( ncfile )
-		dropListValues = variableList.ToArray()
-		varname2 = Choose_Item(dropListValues, CANCEL=cancelled)
-		varoutf = varoutf+'-minus-'+varname2
-		rainbow=0 & bwr=1
+			; -- select blue-white-red color table
+			rainbow = 0 & bwr = 1
 
-		PRINT, ' *** Difference plot: ', varoutf
-
-
-		; -- set_plot option
-		IF KEYWORD_SET(EPS) THEN BEGIN
-
-			base = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
-			outf = outdir+base+varoutf
-			col = 0
-
-			IF KEYWORD_SET(portrait) THEN BEGIN
-				start_plot, outf, 'eps', eps_size=[20,30]
+			; -- choose first variable
+			IF (ntimes EQ 1) THEN BEGIN
+				variableList = GET_NCDF_VARLIST( ncfile )
+				dropListValues = variableList.ToArray()
+				varname = Choose_Item(dropListValues, CANCEL=cancelled)
 			ENDIF ELSE BEGIN
-				deviceKeyword={	xsize:30., xoff:0.5, $
-					ysize:20., yoff:29.5, $
-					filename:outf+'.eps', $
-					inches:0, color:1, bits_per_pixel:8, $
-					encapsulated:1, landscape:1}
-				!P.Font=0
-				SET_PLOT, 'ps', /copy
-				DEVICE, /Helvetica, /ISOLATIN1, $
-					_Extra=deviceKeyword, font_size = 8
+				varname = vlist1[i]
+			ENDELSE
+			varoutf = '_DIFF_'+varname
+
+			; -- choose second variable
+			IF (ntimes EQ 1) THEN BEGIN
+				variableList = GET_NCDF_VARLIST( ncfile )
+				dropListValues = variableList.ToArray()
+				varname2 = Choose_Item(dropListValues, CANCEL=cancelled)
+			ENDIF ELSE BEGIN
+				varname2 = vlist2[i]
+			ENDELSE
+			varoutf = varoutf+'-'+varname2
+
+
+			PRINT, ' *** Difference plot: ', varoutf
+
+
+			; -- set_plot option
+			IF KEYWORD_SET(EPS) THEN BEGIN
+
+				base = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
+				outf = outdir+base+varoutf
+				col = 0
+
+				IF KEYWORD_SET(portrait) THEN BEGIN
+					start_plot, outf, 'eps', eps_size=[20,30]
+				ENDIF ELSE BEGIN
+					deviceKeyword={	xsize:30., xoff:0.5, $
+						ysize:20., yoff:29.5, $
+						filename:outf+'.eps', $
+						inches:0, color:1, bits_per_pixel:8, $
+						encapsulated:1, landscape:1}
+					!P.Font=0
+					SET_PLOT, 'ps', /copy
+					DEVICE, /Helvetica, /ISOLATIN1, $
+						_Extra=deviceKeyword, font_size = 8
+				ENDELSE
+
+			ENDIF ELSE BEGIN
+
+				SET_PLOT, 'X'
+	; 			    !P.BACKGROUND=-1.
+				DEVICE, RETAIN=2, DECOMPOSED=1
+				DEVICE, SET_FONT='Helvetica Bold',/TT_FONT
+				window,  xsize = 1200, ysize = 1000
+				col=255
+
 			ENDELSE
 
-		ENDIF ELSE BEGIN
 
-			SET_PLOT, 'X'
-; 			    !P.BACKGROUND=-1.
-			DEVICE, RETAIN=2, DECOMPOSED=1
-			DEVICE, SET_FONT='Helvetica Bold',/TT_FONT
-			window,  xsize = 1200, ysize = 1000
-			col=255
+			; -- Read variable from ncfile
+			READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
+			READ_SIM_NCDF, img2, FILE=ncfile, VAR_NAME = varname2, VAR_ATTR = img_att2
+			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
+			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
+			PRINT, ' *** MINMAX(img) : ', MINMAX(img)
+			PRINT, ' *** MINMAX(img2): ', MINMAX(img2)
 
-		ENDELSE
-
-
-		; -- Read variable from ncfile
-		READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
-		READ_SIM_NCDF, img2, FILE=ncfile, VAR_NAME = varname2, VAR_ATTR = img_att2
-		READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
-		READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
-		PRINT, ' *** MINMAX(img) : ', MINMAX(img)
-		PRINT, ' *** MINMAX(img2): ', MINMAX(img2)
-
-		make_geo, lon, lat, grid=0.5
-		lat = ROTATE(lat,2)
-		lon = lon + 180.
-		img  = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
-		img2 = congrid(img2,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
+			make_geo, lon, lat, grid=0.5
+			lat = ROTATE(lat,2)
+			lon = lon + 180.
+			img  = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
+			img2 = congrid(img2,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
 
-		; -- flag negative values with FILLVALUE
-		bad = WHERE(img LT 0 OR img2 LT 0, nbad)
-		PRINT, ' *** ', STRTRIM(nbad,2), ' bad pixels flagged with FILLVALUE'
-		IF (nbad GT 0) THEN BEGIN
-			img[bad] = img_att._FILLVALUE
-			img2[bad] = img_att._FILLVALUE
-		ENDIF
+			; -- flag negative values with FILLVALUE
+			bad = WHERE(img LT 0 OR img2 LT 0, nbad)
+			PRINT, ' *** ', STRTRIM(nbad,2), ' bad pixels flagged with FILLVALUE'
+			IF (nbad GT 0) THEN BEGIN
+				img[bad] = img_att._FILLVALUE
+				img2[bad] = img_att._FILLVALUE
+			ENDIF
 
-		PRINT, ' *** MINMAX of '+varname+'-'+varname2+' :', MINMAX(img-img2)
+			PRINT, ' *** MINMAX of '+varname+'-'+varname2+' :', MINMAX(img-img2)
 
-		; -- some info written onto plot
-		long_name = STRING(img_att.long_name)
-		unit  = GET_VAR_UNIT(varname)
-		minmax_range = MINMAX(img-img2)
-		minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
-		maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
+			; -- some info written onto plot
+			long_name = STRING(img_att.long_name)
+			unit  = GET_VAR_UNIT(varname)
+			minmax_range = MINMAX(img-img2)
+			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
+			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
 
-		IF (minmax_range[0] EQ 0.) THEN ctable = 62 
-		IF (minmax_range[1] EQ 0.) THEN ctable = 1 
+			IF (minmax_range[0] EQ 0.) THEN ctable = 62 
+			IF (minmax_range[1] EQ 0.) THEN ctable = 1 
 
-		; -- Plot settings
-		ptitle = long_name
-		IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-			cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_era, FORMAT='(F5.2)'),2)
-			cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv_sat, FORMAT='(F5.2)'),2)
-			ptitle = ptitle + '  ' + glob_att.TIME_COVERAGE_START + $
-						'  Difference: ' + varname + ' - ' + varname2 + unit
-		ENDIF ELSE BEGIN
-			ptitle = ptitle + '  Difference: ' + varname + ' - ' + varname2 + unit
-		ENDELSE
+			; -- Plot settings
+			btitle = varname+'-'+varname2+unit
+			ptitle = long_name
+			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
+				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
+				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
+				ptitle = glob_att.SOURCE +': '+ ptitle + ' for ' + glob_att.TIME_COVERAGE_START
+			ENDIF
 
 
-		position = [0.10, 0.25, 0.90, 0.90]
-		xlat=0.05 & ylat=0.53
-		xlon=0.46 & ylon=0.17
-		xtit=0.11 & ytit=0.96
-		chars = 2.2
+			position = [0.10, 0.25, 0.90, 0.90]
+			xlat=0.05 & ylat=0.53
+			xlon=0.46 & ylon=0.17
+			xtit=0.11 & ytit=0.96
 
-		barformat = ('(F8.2)')
-		IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
-		IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
+			barformat = ('(F8.2)')
+			IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
+			IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
 
-		IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
+			IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
 
-		; -- map_image (single)
-		IF (ISA(ctable) EQ 0) THEN BEGIN
-			m = obj_new("map_image", (img-img2), lat, lon, $
-				rainbow=rainbow, /no_draw, /BOX_AXES, /MAGNIFY, $
-				bwr=bwr, /GRID, GLINETHICK=2., MLINETHICK=2., $
-				n_lev=6, $
-				MINI=minmax_range[0], MAXI=minmax_range[1], $
-				CHARSIZE=chars, /HORIZON, POSITION=position, $
-				/CONTINENTS, LIMIT=limit, $
-				FORMAT=barformat, VOID_INDEX=void_index)
-		ENDIF ELSE BEGIN
-			m = obj_new("map_image", (img-img2), lat, lon, $
-				/no_draw, /BOX_AXES, /MAGNIFY, $
-				/GRID, GLINETHICK=2., MLINETHICK=2., $
-				n_lev=6, ctable = ctable, $
-				MINI=minmax_range[0], MAXI=minmax_range[1], $
-				CHARSIZE=chars, /HORIZON, POSITION=position, $
-				/CONTINENTS, LIMIT=limit, $
-				FORMAT=barformat, VOID_INDEX=void_index)
-		ENDELSE
-		m -> project, image=(img-img2), lon=lon, lat=lat, $
-			/no_erase, /no_draw
-		m -> display
-		obj_destroy, m
+			; -- map_image (single)
+			IF (ISA(ctable) EQ 0) THEN BEGIN
+				m = obj_new("map_image", (img-img2), lat, lon, $
+					rainbow=rainbow, /no_draw, /BOX_AXES, /MAGNIFY, $
+					bwr=bwr, /GRID, GLINETHICK=2., MLINETHICK=2., $
+					n_lev=6, TITLE=btitle, $
+					MINI=minmax_range[0], MAXI=minmax_range[1], $
+					CHARSIZE=chars, /HORIZON, POSITION=position, $
+					/CONTINENTS, LIMIT=limit, $
+					FORMAT=barformat, VOID_INDEX=void_index)
+			ENDIF ELSE BEGIN
+				m = obj_new("map_image", (img-img2), lat, lon, $
+					/no_draw, /BOX_AXES, /MAGNIFY, $
+					/GRID, GLINETHICK=2., MLINETHICK=2., $
+					n_lev=6, ctable = ctable, TITLE=btitle, $
+					MINI=minmax_range[0], MAXI=minmax_range[1], $
+					CHARSIZE=chars, /HORIZON, POSITION=position, $
+					/CONTINENTS, LIMIT=limit, $
+					FORMAT=barformat, VOID_INDEX=void_index)
+			ENDELSE
+			m -> project, image=(img-img2), lon=lon, lat=lat, $
+				/no_erase, /no_draw
+			m -> display
+			obj_destroy, m
 
-		MAP_CONTINENTS, /CONTINENTS, /HIRES, COLOR=0, GLINETHICK=2.2
-		MAP_GRID, COLOR=0, MLINETHICK=2.2
+			MAP_CONTINENTS, /CONTINENTS, /HIRES, COLOR=0, GLINETHICK=2.2
+			MAP_GRID, COLOR=0, MLINETHICK=2.2
 
-		; -- annotations
-		XYOUTS, xlat, ylat, 'Latitude', $
-			COLOR=col, /norm, CHARSIZE=chars, orientation=90, CHARTHICK=chars
-		XYOUTS, xlon, ylon, 'Longitude', $
-			COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
-		XYOUTS, xtit, ytit, ptitle, $
-			/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
+			; -- annotations
+			XYOUTS, xtit, ytit, ptitle, $
+				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
 
-		IF (N_TAGS(glob_att) NE 0) THEN XYOUTS, xlon+0.245, ylon, $
-			' Source: '+glob_att.SOURCE, COLOR=col, /norm, $
-			CHARSIZE=chars, CHARTHICK=chars
 
-		v1 = STRPOS(varname, 'era')
-		v2 = STRPOS(varname2, 'era')
+			v1 = STRPOS(varname, 'ori')
+			v2 = STRPOS(varname2, 'ori')
 
-		IF (v1 GT 0 AND v2 GT 0) THEN BEGIN
-			thv = 0
-		ENDIF ELSE IF (v1 LT 0 AND v2 LT 0) THEN BEGIN
-			thv = 1
-		ENDIF ELSE BEGIN
-			thv = 2
-		ENDELSE
+			IF (v1 GT 0 AND v2 GT 0) THEN BEGIN
+				thv = 0
+			ENDIF ELSE IF (v1 LT 0 AND v2 LT 0) THEN BEGIN
+				thv = 1
+			ENDIF ELSE BEGIN
+				thv = 2
+			ENDELSE
 
-		IF(thv EQ 0) THEN BEGIN
-			XYOUTS, 0.1, ylon, 'cot_thv_era='+cot_thv_era, $
-			COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
-		ENDIF
-		IF (thv EQ 1) THEN BEGIN
-			XYOUTS, 0.1, ylon, 'cot_thv_sat='+cot_thv_sat, $
-			COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
-		ENDIF
-		IF (thv EQ 2) THEN BEGIN
-			XYOUTS, 0.1, ylon, 'cot_thv_era='+cot_thv_era+$
-				'; cot_thv_sat='+cot_thv_sat, $
+			IF(thv EQ 0) THEN BEGIN
+				XYOUTS, 0.78, 0.155, 'cot_thv_ori='+cot_thv_era, $
 				COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
-		ENDIF
+			ENDIF
+			IF (thv EQ 1) THEN BEGIN
+				XYOUTS, 0.78, 0.155, 'cot_thv='+cot_thv_sat, $
+				COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
+			ENDIF
+			IF (thv EQ 2) THEN BEGIN
+				XYOUTS, 0.78, 0.155, 'cot_thv_ori='+cot_thv_era,$
+					COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
+				XYOUTS, 0.78, 0.185, 'cot_thv='+cot_thv_sat, $
+					COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
+			ENDIF
 
 
-		IF KEYWORD_SET(eps) THEN BEGIN
-			DEVICE, /Close_file
-			!P.MULTI = 0
-			end_plot
-			end_eps
-			SPAWN, 'convert '+outf+'.eps '+outf+'.png'
-		ENDIF
+			IF KEYWORD_SET(eps) THEN BEGIN
+				DEVICE, /Close_file
+				!P.MULTI = 0
+				end_plot
+				end_eps
+				SPAWN, 'convert '+outf+'.eps '+outf+'.png'
+			ENDIF
+
+		ENDFOR
 
 	ENDIF
 
@@ -557,11 +442,11 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
 
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_era, FORMAT='(F5.2)'),2)
-				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv_sat, FORMAT='(F5.2)'),2)
+				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
+				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
 			ENDIF
 
-			IF (STRPOS(varname, 'era') GT 0) THEN cot_thv = cot_thv_era $
+			IF (STRPOS(varname, 'ori') GT 0) THEN cot_thv = cot_thv_era $
 				ELSE cot_thv = cot_thv_sat
 
 			long_name = STRING(img_att.long_name)
@@ -584,6 +469,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			maxlim = minmax_range[1]
 			minstr = 'MIN='+STRTRIM(STRING(minlim, FORMAT='(E10.2)'),2)
 			maxstr = 'MAX='+STRTRIM(STRING(maxlim, FORMAT='(E10.2)'),2)
+			meastr = 'MEAN='+STRTRIM(STRING(imean, FORMAT='(E10.2)'),2)
 
 			IF KEYWORD_SET(MINI) THEN minlim=mini
 			IF KEYWORD_SET(MAXI) THEN maxlim=maxi
@@ -600,7 +486,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			xlat=0.05 & ylat=0.53
 			xlon=0.46 & ylon=0.17
 			xtit=0.08 & ytit=0.96
-			chars = 2.5
 			barformat = ('(F8.2)')
 
 			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
@@ -634,10 +519,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			MAP_GRID, COLOR=255, MLINETHICK=2.5
 
 			; -- annotations
-; 			XYOUTS, xlat, ylat, 'Latitude', $
-; 				COLOR=col, /norm, CHARSIZE=chars, orientation=90, CHARTHICK=chars
-; 			XYOUTS, xlon, ylon, 'Longitude', $
-; 				COLOR=col, /norm, CHARSIZE=chars, CHARTHICK=chars
 			XYOUTS, xtit, ytit, ptitle, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
 			XYOUTS, 0.08, 0.17, minstr, $
