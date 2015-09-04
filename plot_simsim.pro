@@ -21,6 +21,17 @@
 ; MODIFICATION HISTORY:
 ;   Written by Dr. Cornelia Schlundt; 
 ;------------------------------------------------------------------------------
+FUNCTION GET_VAR_MINMAX, varname
+	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, [0.,1.]
+	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, [0.,1.]
+	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, [0,125]
+	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, [10., 1000.]
+	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, [0., 16.]
+	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, [170.,310.]
+	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 0.5]
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, [0.,0.5]
+END
+
 FUNCTION GET_BARFORMAT, varname
 	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ('(F8.2)')
 	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, ('(F8.2)')
@@ -163,13 +174,6 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 	; -- Get list of variables in file
 	variableList = GET_NCDF_VARLIST( ncfile )
-	
-	; -- Get cot_thv_sat
-	ncbase = FSC_Base_Filename(ncfile,Directory=dir,Extension=ext)
-	ncsplit = STRSPLIT(ncbase,'_',/EXTRACT)
-	cot_thv_sat = STRMID(ncsplit(N_ELEMENTS(ncsplit)-2),0,3)
-	cot_thv_era = '0.01'
-
 
 
 	; ---------------------------------------------------------------------------------------
@@ -246,30 +250,39 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			READ_SIM_NCDF, img2, FILE=ncfile, VAR_NAME = varname2, VAR_ATTR = img_att2
 			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
 			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
-			PRINT, ' *** MINMAX(img) : ', MINMAX(img)
-			PRINT, ' *** MINMAX(img2): ', MINMAX(img2)
 
 			make_geo, lon, lat, grid=0.5
 			lat = ROTATE(lat,2)
 			lon = lon + 180.
+
+
+			; -- nobs does not have an attribute called _FILLVALUE
+			; -- set fillvalue to NANs and set void_index for map_image
+			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
+				IF(ISA(img_att) NE 0) THEN BEGIN
+					j1 = WHERE(img EQ img_att._FILLVALUE, count1)
+					IF (count1 GT 0) THEN img[j1] = !VALUES.F_NAN
+				ENDIF
+				IF(ISA(img_att2) NE 0) THEN BEGIN
+					j2 = WHERE(img2 EQ img_att2._FILLVALUE, count2)
+					IF (count2 GT 0) THEN img2[j2] = !VALUES.F_NAN
+				ENDIF
+			ENDIF
+
+
 			img  = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 			img2 = congrid(img2,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
 
-			; -- flag negative values with FILLVALUE
-			bad = WHERE(img LT 0 OR img2 LT 0, nbad)
-			PRINT, ' *** ', STRTRIM(nbad,2), ' bad pixels flagged with FILLVALUE'
-			IF (nbad GT 0) THEN BEGIN
-				img[bad] = img_att._FILLVALUE
-				img2[bad] = img_att._FILLVALUE
-			ENDIF
+			; -- minmax of image
+			text=' *** MINMAX of '+varname+'-'+varname2
+			cgMinMax, (img-img2), NAN=nan, TEXT=text
 
-			PRINT, ' *** MINMAX of '+varname+'-'+varname2+' :', MINMAX(img-img2)
 
 			; -- some info written onto plot
 			long_name = STRING(img_att.long_name)
 			unit  = GET_VAR_UNIT(varname)
-			minmax_range = MINMAX(img-img2)
+			minmax_range = MINMAX( (img-img2)[WHERE(FINITE(img-img2))] )
 			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
 			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
 
@@ -280,9 +293,19 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			btitle = varname+'-'+varname2+unit
 			ptitle = long_name
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
-				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
-				ptitle = glob_att.SOURCE +': '+ ptitle + ' for ' + glob_att.TIME_COVERAGE_START
+
+				IF(ISA(glob_att.cot_thv_ori) NE 0) THEN $
+					cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
+
+				IF(ISA(glob_att.cot_thv) NE 0) THEN $
+					cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
+
+				IF(ISA(glob_att.SOURCE) NE 0) THEN $
+					ptitle = glob_att.SOURCE +': '+ ptitle
+
+				IF(ISA(glob_att.TIME_COVERAGE_START) NE 0) THEN $
+					ptitle = ptitle + ' for ' + glob_att.TIME_COVERAGE_START
+
 			ENDIF
 
 
@@ -292,10 +315,10 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			xtit=0.11 & ytit=0.96
 
 			barformat = ('(F8.2)')
-			IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
-			IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.3)')
+			IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.2)')
+			IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN barformat = ('(E10.2)')
 
-			IF(ISA(img_att) NE 0) THEN void_index = WHERE(img EQ img_att._FILLVALUE)
+			void_index = WHERE(~FINITE(img-img2))
 
 			; -- map_image (single)
 			IF (ISA(ctable) EQ 0) THEN BEGIN
@@ -364,7 +387,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 				end_eps
 				SPAWN, 'convert '+outf+'.eps '+outf+'.png'
 			ENDIF
-
+stop
 		ENDFOR
 
 	ENDIF
@@ -383,7 +406,10 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 		; -- loop over the number of parameters from the same ncfile
 		FOR i=0, niter-1 DO BEGIN
 
-			IF KEYWORD_SET(plotall) THEN varname = variableList[i]
+			IF KEYWORD_SET(plotall) THEN BEGIN
+				varname = variableList[i]
+				IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN CONTINUE
+			ENDIF
 
 			IF ~KEYWORD_SET(plotall) THEN BEGIN
 				; -- Select item from List
@@ -437,50 +463,61 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			make_geo,lon,lat,grid=0.5
 			lat = ROTATE(lat,2)
 			lon = lon + 180.
-			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
-			PRINT, ' *** MINMAX of '+varname+' :', MINMAX(img)
 
-			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
-				cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
+			; -- nobs does not have an attribute called _FILLVALUE
+			; -- set fillvalue to NANs and set void_index for map_image
+			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
+				IF(ISA(img_att) NE 0) THEN BEGIN
+					j = WHERE(img EQ img_att._FILLVALUE, count)
+					IF (count GT 0) THEN img[j] = !VALUES.F_NAN
+				ENDIF
 			ENDIF
 
-			IF (STRPOS(varname, 'ori') GT 0) THEN cot_thv = cot_thv_era $
-				ELSE cot_thv = cot_thv_sat
+			img = congrid(img,(size(lon,/dim))[0],(size(lon,/dim))[1],/interp)
 
-			long_name = STRING(img_att.long_name)
+			; -- minmax of image
+			cgMinMax, img, NAN=nan, TEXT=' *** MinMax of '+varname
 
-			; -- flag negative values with FILLVALUE
-			wo_bad = WHERE(img LT 0, nbad)
-			IF(nbad GT 0) THEN BEGIN
-				img[wo_bad] = img_att._FILLVALUE
-				PRINT, ' *** ', STRTRIM(nbad,2), ' bad pixels, i.e. negative values'
+
+			; -- read global attributes if available
+			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
+
+				IF(ISA(glob_att.cot_thv_ori) NE 0) THEN $
+					cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
+
+				IF(ISA(glob_att.cot_thv) NE 0) THEN $
+					cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
+
+				IF (STRPOS(varname, 'ori') GT 0) THEN cot_thv = cot_thv_era $
+					ELSE cot_thv = cot_thv_sat
+
 			ENDIF
 
 
 			; -- some info written onto plot
-			good  = WHERE(img GE 0.)
-			imean = MEAN(img[good])
-			istdv = STDDEV(img[good])
-			unit  = GET_VAR_UNIT(varname)
-			minmax_range = MINMAX(img[good])
+			long_name = STRING(img_att.long_name)
+			imean = AVG(img, /NAN)
+			unit = GET_VAR_UNIT(varname)
+			minmax_range = MINMAX(img[WHERE(FINITE(img))])
 			minlim = minmax_range[0]
 			maxlim = minmax_range[1]
-			minstr = 'MIN='+STRTRIM(STRING(minlim, FORMAT='(E10.2)'),2)
-			maxstr = 'MAX='+STRTRIM(STRING(maxlim, FORMAT='(E10.2)'),2)
-			meastr = 'MEAN='+STRTRIM(STRING(imean, FORMAT='(E10.2)'),2)
+			strfmt = '(F8.2)'
+			minstr = 'MIN='+STRTRIM(STRING(minlim, FORMAT=strfmt),2)
+			maxstr = 'MAX='+STRTRIM(STRING(maxlim, FORMAT=strfmt),2)
+			meastr = 'MEAN='+STRTRIM(STRING(imean, FORMAT=strfmt),2)
 
-			IF KEYWORD_SET(MINI) THEN minlim=mini
-			IF KEYWORD_SET(MAXI) THEN maxlim=maxi
 
 			; -- Plot settings
 			ptitle = long_name
-			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
-				ptitle = glob_att.SOURCE+': '+ptitle + $
-						 ' for ' + glob_att.TIME_COVERAGE_START
-			ENDIF
-			ptitle = ptitle + ' (cot_thv=' + cot_thv+') ' + meastr
+			IF (N_TAGS(glob_att) NE 0) THEN ptitle = glob_att.SOURCE+': '+$
+				ptitle + ' for ' + glob_att.TIME_COVERAGE_START
+			IF(ISA(cot_thv) NE 0) THEN BEGIN
+				ptitle = ptitle + ' (cot_thv=' + cot_thv+') ' + meastr
+			ENDIF ELSE BEGIN
+				ptitle = ptitle + ' ' + meastr
+			ENDELSE
+
 
 			position = [0.10, 0.25, 0.90, 0.90]
 			xlat=0.05 & ylat=0.53
@@ -488,17 +525,12 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			xtit=0.08 & ytit=0.96
 			barformat = ('(F8.2)')
 
-			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
-				IF(ISA(img_att) NE 0) THEN $
-					void_index = WHERE(img EQ img_att._FILLVALUE)
-			ENDIF
+			rminmax = GET_VAR_MINMAX(varname)
 
-			IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN BEGIN
-				minlim = 0. & maxlim = 0.2
-			ENDIF
-			IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN BEGIN
-				minlim = 0. & maxlim = 0.2
-			ENDIF
+			IF KEYWORD_SET(MINI) THEN minlim=mini ELSE minlim=rminmax[0]
+			IF KEYWORD_SET(MAXI) THEN maxlim=maxi ELSE maxlim=rminmax[1]
+
+			void_index = WHERE(~FINITE(img))
 
 			; -- map_image (single)
 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
