@@ -118,12 +118,17 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 	; -- set options for difference plotting
 	IF KEYWORD_SET(compare) THEN BEGIN
-		IF (compare EQ 1) THEN vlist1 = 1. & vlist2 = 1.
+		IF (compare EQ 1) THEN vlist1 = ['select'] & vlist2 = ['select']
 		IF (compare EQ 2) THEN BEGIN
 
+; ;			------------------------------
+; 			for testing just one option: disable everything below this block
+; 			vlist1 = ['cth_ori']
+; 			vlist2 = ['cth']
+; ;			------------------------------
+
 			vlist1 = ['cph','cc_total','lwp','iwp','lwp_inc','iwp_inc']
-			vlist2 = ['cph_bin','cc_total_bin','lwp_bin','iwp_bin',$
-					'lwp_inc_bin','iwp_inc_bin']
+			vlist2 = ['cph_bin','cc_total_bin','lwp_bin','iwp_bin','lwp_inc_bin','iwp_inc_bin']
 
 			; attach *_ori variables
 			FOR k=0, N_ELEMENTS(vlist1)-1 DO BEGIN
@@ -131,10 +136,21 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 				vlist2 = [[vlist2], vlist2[k]+'_ori']
 			ENDFOR
 
-			; attach (ori MINUS satellite-like) difference options
-			vlist1 = [[vlist1],'ctp_ori','ctt_ori','cth_ori','cph_ori',$
-						'cc_total_ori']
+			; attach (ori MINUS satellite-like) difference options, normal products
+			vlist1 = [[vlist1],'ctp_ori','ctt_ori','cth_ori','cph_ori','cc_total_ori']
 			vlist2 = [[vlist2],'ctp','ctt','cth','cph','cc_total']
+
+			; attach (ori MINUS satellite-like) difference options, normal products
+			vlist1 = [[vlist1],'lwp_ori','iwp_ori','lwp_inc_ori','iwp_inc_ori']
+			vlist2 = [[vlist2],'lwp','iwp','lwp_inc','iwp_inc']
+
+			; attach (ori MINUS satellite-like) difference options, binary products
+			vlist1 = [[vlist1],'cc_total_bin_ori','cph_bin_ori']
+			vlist2 = [[vlist2],'cc_total_bin','cph_bin']
+
+			; attach (ori MINUS satellite-like) difference options, binary products
+			vlist1 = [[vlist1],'lwp_bin_ori','iwp_bin_ori','lwp_inc_bin_ori','iwp_inc_bin_ori']
+			vlist2 = [[vlist2],'lwp_bin','iwp_bin','lwp_inc_bin','iwp_inc_bin']
 
 			PRINT, ' * These difference plots will be produced now: '
 			FOR k=0, N_ELEMENTS(vlist1)-1 DO BEGIN
@@ -189,7 +205,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			rainbow = 0 & bwr = 1
 
 			; -- choose first variable
-			IF (ntimes EQ 1) THEN BEGIN
+			IF (vlist1[0] EQ 'select') THEN BEGIN
 				variableList = GET_NCDF_VARLIST( ncfile )
 				dropListValues = variableList.ToArray()
 				varname = Choose_Item(dropListValues, CANCEL=cancelled)
@@ -199,7 +215,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			varoutf = '_DIFF_'+varname
 
 			; -- choose second variable
-			IF (ntimes EQ 1) THEN BEGIN
+			IF (vlist2[0] EQ 'select') THEN BEGIN
 				variableList = GET_NCDF_VARLIST( ncfile )
 				dropListValues = variableList.ToArray()
 				varname2 = Choose_Item(dropListValues, CANCEL=cancelled)
@@ -286,8 +302,25 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
 			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
 
-			IF (minmax_range[0] EQ 0.) THEN ctable = 62 
-			IF (minmax_range[1] EQ 0.) THEN ctable = 1 
+
+			IF(minmax_range[0] EQ 0. OR minmax_range[1] EQ 0) THEN BEGIN
+
+				IF(minmax_range[0] EQ 0.) THEN $
+					minlim = -(minmax_range[1]) ELSE minlim = minmax_range[0]
+
+				IF(minmax_range[1] EQ 0.) THEN $
+					maxlim = ABS(minmax_range[0]) ELSE maxlim = minmax_range[1]
+
+			ENDIF ELSE BEGIN
+
+				IF(ABS(minmax_range[0]) GT ABS(minmax_range[1])) THEN BEGIN
+					minlim = minmax_range[0] & maxlim = ABS(minmax_range[0])
+				ENDIF ELSE IF (ABS(minmax_range[0]) LT ABS(minmax_range[1])) THEN BEGIN
+					minlim = -(minmax_range[1]) & maxlim = minmax_range[1]
+				ENDIF
+
+			ENDELSE
+
 
 			; -- Plot settings
 			btitle = varname+'-'+varname2+unit
@@ -321,25 +354,14 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			void_index = WHERE(~FINITE(img-img2))
 
 			; -- map_image (single)
-			IF (ISA(ctable) EQ 0) THEN BEGIN
-				m = obj_new("map_image", (img-img2), lat, lon, $
-					rainbow=rainbow, /no_draw, /BOX_AXES, /MAGNIFY, $
-					bwr=bwr, /GRID, GLINETHICK=2., MLINETHICK=2., $
-					n_lev=6, TITLE=btitle, $
-					MINI=minmax_range[0], MAXI=minmax_range[1], $
-					CHARSIZE=chars, /HORIZON, POSITION=position, $
-					/CONTINENTS, LIMIT=limit, $
-					FORMAT=barformat, VOID_INDEX=void_index)
-			ENDIF ELSE BEGIN
-				m = obj_new("map_image", (img-img2), lat, lon, $
-					/no_draw, /BOX_AXES, /MAGNIFY, $
-					/GRID, GLINETHICK=2., MLINETHICK=2., $
-					n_lev=6, ctable = ctable, TITLE=btitle, $
-					MINI=minmax_range[0], MAXI=minmax_range[1], $
-					CHARSIZE=chars, /HORIZON, POSITION=position, $
-					/CONTINENTS, LIMIT=limit, $
-					FORMAT=barformat, VOID_INDEX=void_index)
-			ENDELSE
+			m = obj_new("map_image", (img-img2), lat, lon, $
+				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
+				/GRID, GLINETHICK=2., MLINETHICK=2., $
+				n_lev=6, TITLE=btitle, $
+				MINI=minlim, MAXI=maxlim, $
+				CHARSIZE=chars, /HORIZON, POSITION=position, $
+				/CONTINENTS, LIMIT=limit, $
+				FORMAT=barformat, VOID_INDEX=void_index)
 			m -> project, image=(img-img2), lon=lon, lat=lat, $
 				/no_erase, /no_draw
 			m -> display
@@ -387,7 +409,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 				end_eps
 				SPAWN, 'convert '+outf+'.eps '+outf+'.png'
 			ENDIF
-stop
+
 		ENDFOR
 
 	ENDIF
