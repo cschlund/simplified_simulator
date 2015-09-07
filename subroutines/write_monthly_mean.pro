@@ -7,12 +7,12 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
                         xdim, ydim, zdim, lon, lat, $
                         cph_era, ctt_era, cth_era, ctp_era,  $
                         lwp_era, iwp_era, cfc_era, numb_era, $
+                        numb_lwp_era, numb_iwp_era, numb_cph_bin_era, $
                         cph_sat, ctt_sat, cth_sat, ctp_sat,  $
                         lwp_sat, iwp_sat, cfc_sat, numb_sat, $
-                        lwp_inc_era, iwp_inc_era, $
-                        numb_lwp_inc_era, numb_iwp_inc_era, $
-                        lwp_inc_sat, iwp_inc_sat, $
-                        numb_lwp_inc_sat, numb_iwp_inc_sat, $
+                        numb_lwp_sat, numb_iwp_sat, numb_cph_bin_sat, $
+                        lwp_inc_era, iwp_inc_era, numb_lwp_inc_era, numb_iwp_inc_era, $
+                        lwp_inc_sat, iwp_inc_sat, numb_lwp_inc_sat, numb_iwp_inc_sat, $
                         cot_thv_era, cot_thv_sat, $
                         lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
                         iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
@@ -121,6 +121,18 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs_ori', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_ori', 'units', ' '
 
+    vid  = NCDF_VARDEF(id, 'nobs_lwp_ori', [dim_x_id,dim_y_id,time_id], /LONG)
+    NCDF_ATTPUT, id, 'nobs_lwp_ori', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_lwp_ori', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'nobs_iwp_ori', [dim_x_id,dim_y_id,time_id], /LONG)
+    NCDF_ATTPUT, id, 'nobs_iwp_ori', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_iwp_ori', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'nobs_cph_bin_ori', [dim_x_id,dim_y_id,time_id], /LONG)
+    NCDF_ATTPUT, id, 'nobs_cph_bin_ori', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_cph_bin_ori', 'units', ' '
+
     ; incloud parameters
     vid  = NCDF_VARDEF(id, 'lwp_inc_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_ori', '_FillValue', -999.
@@ -220,6 +232,18 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs', 'units', ' '
 
+    vid  = NCDF_VARDEF(id, 'nobs_lwp', [dim_x_id,dim_y_id,time_id], /LONG)
+    NCDF_ATTPUT, id, 'nobs_lwp', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_lwp', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'nobs_iwp', [dim_x_id,dim_y_id,time_id], /LONG)
+    NCDF_ATTPUT, id, 'nobs_iwp', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_iwp', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'nobs_cph_bin', [dim_x_id,dim_y_id,time_id], /LONG)
+    NCDF_ATTPUT, id, 'nobs_cph_bin', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_cph_bin', 'units', ' '
+
     ; incloud parameters
     vid  = NCDF_VARDEF(id, 'lwp_inc', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc', '_FillValue', -999.
@@ -274,6 +298,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_VARPUT, id, 'lwp_ori',lwp_era
     NCDF_VARPUT, id, 'iwp_ori',iwp_era
     NCDF_VARPUT, id, 'nobs_ori',numb_era
+    NCDF_VARPUT, id, 'nobs_lwp_ori',numb_lwp_era
+    NCDF_VARPUT, id, 'nobs_iwp_ori',numb_iwp_era
+    NCDF_VARPUT, id, 'nobs_cph_bin_ori',numb_cph_bin_era
     NCDF_VARPUT, id, 'cc_total_ori',cfc_era
     NCDF_VARPUT, id, 'cc_total_bin_ori',cfc_bin_era
     NCDF_VARPUT, id, 'lwp_bin_ori',lwp_bin_era
@@ -300,6 +327,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_VARPUT, id, 'lwp',lwp_sat
     NCDF_VARPUT, id, 'iwp',iwp_sat
     NCDF_VARPUT, id, 'nobs',numb_sat
+    NCDF_VARPUT, id, 'nobs_lwp',numb_lwp_sat
+    NCDF_VARPUT, id, 'nobs_iwp',numb_iwp_sat
+    NCDF_VARPUT, id, 'nobs_cph_bin',numb_cph_bin_sat
     NCDF_VARPUT, id, 'cc_total',cfc_sat
     NCDF_VARPUT, id, 'cc_total_bin',cfc_bin_sat
     NCDF_VARPUT, id, 'lwp_bin',lwp_bin_sat

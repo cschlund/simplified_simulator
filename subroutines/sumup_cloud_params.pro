@@ -3,26 +3,9 @@
 ;-- sum up cloud parameters from current file processed
 ;-------------------------------------------------------------------
 ;
-; in : cph_mean, ctt_mean, cth_mean, ctp_mean, 
-;      lwp_mean, iwp_mean, cfc_mean, 
-;      lwp_mean_inc, iwp_mean_inc, 
-;      numb_lwp_inc, numb_iwp_inc,
-;      cph_tmp, ctt_tmp, cth_tmp, ctp_tmp, 
-;      lwp_tmp, iwp_tmp, cfc_tmp, lwp_tmp_bin, iwp_tmp_bin,
-;      ctp_hist, numb, numb_tmp, ctp_limits_final2d, dim_ctp,
-;      lwp_mean_bin, lwp_mean_inc_bin, numb_lwp_inc_bin,
-;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin,
-;      cfc_tmp_bin, cfc_bin_mean, 
-;      cph_tmp_bin, cph_bin_mean
+; in : mean and tmp arrays incl. counters
 ;
-; out: cph_mean, ctt_mean, cth_mean, ctp_mean, 
-;      lwp_mean, iwp_mean, cfc_mean, ctp_hist,
-;      numb, lwp_mean_inc, iwp_mean_inc, 
-;      numb_lwp_inc, numb_iwp_inc
-;      lwp_mean_bin, lwp_mean_inc_bin, numb_lwp_inc_bin,
-;      iwp_mean_bin, iwp_mean_inc_bin, numb_iwp_inc_bin,
-;      cfc_tmp_bin, cfc_bin_mean, 
-;      cph_tmp_bin, cph_bin_mean
+; out: mean arrays incl. counters
 ;
 ; cph_mean ... cloud phase
 ; ctt_mean ... cloud top temperature
@@ -44,6 +27,11 @@
 ; numb_lwp_inc_bin ... count number of occurrences of lwp_mean_inc_bin
 ; numb_iwp_inc_bin ... count number of occurrences of iwp_mean_inc_bin
 ; ctp_hist ... cloud top pressure histogram
+; numb_lwp ... counter for positive LWP values (GT 0.)
+; numb_iwp ... counter for positive IWP values (GT 0.)
+; numb_cph_bin ... counter for positive CPH_BIN values (GE 0.) 
+;                  not every grid cells has a cloud phase due to
+;                  missing/no LWP_LAY occurrences
 ;
 ;-------------------------------------------------------------------
 
@@ -55,6 +43,7 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                         lwp_tmp, iwp_tmp, cfc_tmp, $
                         ctp_hist, numb, numb_tmp, $
                         ctp_limits_final2d, dim_ctp, $
+                        numb_lwp, numb_iwp, numb_cph_bin, $
                         lwp_tmp_bin, lwp_mean_bin, $
                         lwp_mean_inc_bin, numb_lwp_inc_bin, $
                         iwp_tmp_bin, iwp_mean_bin, $
@@ -62,27 +51,39 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                         cfc_tmp_bin, cfc_mean_bin, $
                         cph_tmp_bin, cph_mean_bin
 
+    ; no condition for cloud fraction [0;1]: clear or cloudy
+    cfc_mean = cfc_mean + cfc_tmp
+    cfc_mean_bin = cfc_mean_bin + cfc_tmp_bin
+
     ; cth and cph limitation added because with cpt_tmp GT 10. alone
     ; negative CTH and CPH pixels do occur
-    wo_ctp = WHERE((ctp_tmp GT 10.) AND $
-                   (cth_tmp GT 0.) AND (cph_tmp GE 0.), nwo_ctp)
-
+    ; cph: lwp_lay / (lwp_lay + iwp_lay) WHERE lwp_lay is positive
+    ;      if cph is fill_value, no cloud due to no LWP/IWP
+    wo_ctp = WHERE((ctp_tmp GT 10.) AND (cth_tmp GT 0.) AND (cph_tmp GE 0.), nwo_ctp)
     ctp_mean[wo_ctp] = ctp_mean[wo_ctp] + ctp_tmp[wo_ctp]
     cth_mean[wo_ctp] = cth_mean[wo_ctp] + cth_tmp[wo_ctp]
     ctt_mean[wo_ctp] = ctt_mean[wo_ctp] + ctt_tmp[wo_ctp]
     cph_mean[wo_ctp] = cph_mean[wo_ctp] + cph_tmp[wo_ctp]
     cph_mean_bin[wo_ctp] = cph_mean_bin[wo_ctp] + cph_tmp_bin[wo_ctp]
+    numb[wo_ctp] = numb[wo_ctp] + 1l
 
-    numb[wo_ctp] = numb[wo_ctp]+1l
 
-    lwp_mean = lwp_mean + lwp_tmp
-    iwp_mean = iwp_mean + iwp_tmp
+    ; lwp grid mean
+    wo_lwp = WHERE(lwp_tmp GT 0., nwo_lwp)
+    lwp_mean[wo_lwp] = lwp_mean[wo_lwp] + lwp_tmp[wo_lwp]
+    numb_lwp[wo_lwp] = numb_lwp[wo_lwp] + 1l
 
-    cfc_mean = cfc_mean + cfc_tmp
-    cfc_mean_bin = cfc_mean_bin + cfc_tmp_bin
+    ; iwp grid mean
+    wo_iwp = WHERE(iwp_tmp GT 0., nwo_iwp)
+    iwp_mean[wo_iwp] = iwp_mean[wo_iwp] + iwp_tmp[wo_iwp]
+    numb_iwp[wo_iwp] = numb_iwp[wo_iwp] + 1l
 
-    lwp_mean_bin = lwp_mean_bin + lwp_tmp_bin
-    iwp_mean_bin = iwp_mean_bin + iwp_tmp_bin
+
+    ; lwp and iwp grid mean based on cph_tmp_bin (binary cph)
+    wo_cph_bin = WHERE(cph_tmp_bin GE 0., nwo_cph_bin)
+    lwp_mean_bin[wo_cph_bin] = lwp_mean_bin[wo_cph_bin] + lwp_tmp_bin[wo_cph_bin]
+    iwp_mean_bin[wo_cph_bin] = iwp_mean_bin[wo_cph_bin] + iwp_tmp_bin[wo_cph_bin]
+    numb_cph_bin[wo_cph_bin] = numb_cph_bin[wo_cph_bin] + 1l
 
 
     ; lwp_mean_incloud

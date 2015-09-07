@@ -3,19 +3,9 @@
 ;-- calculate cloud mean values after all files read (monthly mean)
 ;-------------------------------------------------------------------
 ;
-; in : cph_mean, ctt_mean, cth_mean, ctp_mean, 
-;      lwp_mean, iwp_mean, cfc_mean, lwp_incloud, iwp_incloud, 
-;      numb_lwp_inc, numb_iwp_inc, numb, numb_raw,
-;      lwp_mean_bin, lwp_incloud_bin, numb_lwp_inc_bin,
-;      iwp_mean_bin, iwp_incloud_bin, numb_iwp_inc_bin,
-;      cfc_mean_bin, cph_mean_bin
+; in : mean arrays incl. counters
 ;
-; out: cph_mean, ctt_mean, cth_mean, ctp_mean, 
-;      lwp_mean, iwp_mean, cfc_mean, lwp_incloud, iwp_incloud, 
-;      numb_lwp_inc, numb_iwp_inc, numb,
-;      lwp_mean_bin, lwp_incloud_bin, numb_lwp_inc_bin,
-;      iwp_mean_bin, iwp_incloud_bin, numb_iwp_inc_bin,
-;      cfc_mean_bin, cph_mean_bin
+; out: mean arrays incl. counters
 ;
 ; cph_mean ... cloud phase
 ; ctt_mean ... cloud top temperature
@@ -37,6 +27,9 @@
 ; numb_lwp_inc_bin ... counts for lwp_incloud_bin
 ; numb_iwp_inc_bin ... counts for iwp_incloud_bin
 ; numb ... number of observations
+; numb_lwp ... counter for valid LWP sumup events
+; numb_iwp ... counter for valid IWP sumup events
+; numb_cph_bin ... counter for valid CPH_BIN sumup events
 ;
 ;-------------------------------------------------------------------
 
@@ -45,6 +38,7 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                           lwp_incloud, iwp_incloud, $
                           numb_lwp_inc, numb_iwp_inc, $
                           numb, numb_raw, $
+                          numb_lwp, numb_iwp, numb_cph_bin, $
                           lwp_mean_bin, lwp_incloud_bin, numb_lwp_inc_bin, $
                           iwp_mean_bin, iwp_incloud_bin, numb_iwp_inc_bin, $
                           cfc_mean_bin, cph_mean_bin
@@ -58,12 +52,22 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     IF(n_wo_numi GT 0) THEN cph_mean[wo_numi] = cph_mean[wo_numi] / numb[wo_numi]
     IF(n_wo_numi GT 0) THEN cph_mean_bin[wo_numi] = cph_mean_bin[wo_numi] / numb[wo_numi]
 
-    lwp_mean = lwp_mean / numb_raw
-    iwp_mean = iwp_mean / numb_raw
+    ; cloud fraction divided by number of files read = numb_raw
     cfc_mean = cfc_mean / numb_raw
     cfc_mean_bin = cfc_mean_bin / numb_raw
-    lwp_mean_bin = lwp_mean_bin / numb_raw
-    iwp_mean_bin = iwp_mean_bin / numb_raw
+
+
+    ; LWP & IWP grid mean
+    idx_liq = WHERE(numb_lwp GT 0, nidx_liq)
+    IF(nidx_liq GT 0) THEN lwp_mean[idx_liq] = lwp_mean[idx_liq] / numb_lwp[idx_liq]
+
+    idx_ice = WHERE(numb_iwp GT 0, nidx_ice)
+    IF(nidx_ice GT 0) THEN iwp_mean[idx_ice] = iwp_mean[idx_ice] / numb_iwp[idx_ice]
+
+    ; LWP & IWP binary grid mean
+    idx_cph = WHERE(numb_cph_bin GT 0, nidx_cph)
+    IF(nidx_cph GT 0) THEN lwp_mean_bin[idx_cph] = lwp_mean_bin[idx_cph] / numb_cph_bin[idx_cph]
+    IF(nidx_cph GT 0) THEN iwp_mean_bin[idx_cph] = iwp_mean_bin[idx_cph] / numb_cph_bin[idx_cph]
 
 
     ; lwp and iwp incloud based on lwp and iwp
@@ -85,17 +89,23 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
 
 
     ; fill_value for grid cells with no observations
-    wo_numi0 = WHERE(numb EQ 0, n_wo_numi0)
 
+    wo_numi0 = WHERE(numb EQ 0, n_wo_numi0)
     IF(n_wo_numi0 GT 0) THEN ctp_mean[wo_numi0] = -999.
     IF(n_wo_numi0 GT 0) THEN cth_mean[wo_numi0] = -999.
     IF(n_wo_numi0 GT 0) THEN ctt_mean[wo_numi0] = -999.
     IF(n_wo_numi0 GT 0) THEN cph_mean[wo_numi0] = -999.
     IF(n_wo_numi0 GT 0) THEN cph_mean_bin[wo_numi0] = -999.
-;     IF(n_wo_numi0 GT 0) THEN lwp_mean[wo_numi0] = -999.
-;     IF(n_wo_numi0 GT 0) THEN iwp_mean[wo_numi0] = -999.
-;     IF(n_wo_numi0 GT 0) THEN lwp_mean_bin[wo_numi0] = -999.
-;     IF(n_wo_numi0 GT 0) THEN iwp_mean_bin[wo_numi0] = -999.
+
+    idx_liq0 = WHERE(numb_lwp EQ 0, nidx_liq0)
+    IF(nidx_liq0 GT 0) THEN lwp_mean[idx_liq0] = -999.
+
+    idx_ice0 = WHERE(numb_iwp EQ 0, nidx_ice0)
+    IF(nidx_ice0 GT 0) THEN iwp_mean[idx_ice0] = -999.
+
+    idx_cph0 = WHERE(numb_cph_bin EQ 0, nidx_cph0)
+    IF(nidx_cph0 GT 0) THEN lwp_mean_bin[idx_cph0] = -999.
+    IF(nidx_cph0 GT 0) THEN iwp_mean_bin[idx_cph0] = -999.
 
     wo_lwp_nix = WHERE(numb_lwp_inc EQ 0, nlwp_nix)
     IF (nlwp_nix GT 0) THEN lwp_incloud[wo_lwp_nix] = -999.
