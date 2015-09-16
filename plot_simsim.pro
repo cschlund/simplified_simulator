@@ -3,7 +3,7 @@
 ;   PLOT_SIMSIM
 ;
 ; PURPOSE:
-;   Plotting the results of ERA_SIMULATOR.pro,
+;   Plotting the results of CLOUDCCI_SIMULATOR.PRO,
 ;   simplified cloud simulator
 ;
 ; AUTHOR:

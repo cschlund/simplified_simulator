@@ -1,9 +1,9 @@
 ;+
 ; NAME:
-;   ERA_SIMULATOR
+;   CLOUDCCI_SIMULATOR
 ;
 ; PURPOSE:
-;   Calculates monthly means of cloud parameters based on ERA-Interim reanalysis
+;   Calculates monthly means of cloud-cci like parameters based on ERA-Interim reanalysis
 ;
 ; AUTHOR:
 ;   Dr. Martin Stengel
@@ -15,7 +15,7 @@
 ;
 ;
 ; CALLING SEQUENCE:
-;   era_simulator
+;   cloudcci_simulator
 ;
 ; MODIFICATION HISTORY:
 ;   Written by Dr. Martin Stengel, 2014; 
@@ -45,13 +45,13 @@
 ; ToDo: add COT as output variable
 ;
 ;*******************************************************************************
-PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
-					logfile=logfile
+PRO CLOUDCCI_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
+                        logfile=logfile
 ;*******************************************************************************
 
     ; -- import settings
-    IF KEYWORD_SET(verbose) THEN PRINT, ' * Import CONFIG_ERA_SIMULATOR setttings'
-    CONFIG_ERA_SIMULATOR, era_path, out_path, years_list, nyears, $
+    IF KEYWORD_SET(verbose) THEN PRINT, ' * Import CONFIG_CLOUDCCI_SIMULATOR setttings'
+    CONFIG_CLOUDCCI_SIMULATOR, era_path, out_path, years_list, nyears, $
                           months_list, nmonths, dim_ctp, $
                           ctp_limits_final1d, ctp_limits_final2d, $
                           cot_thv_era, cot_thv_sat, crit_str
