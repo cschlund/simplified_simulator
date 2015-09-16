@@ -15,7 +15,7 @@
 ; ----------------------------------------------------------------
 
 FUNCTION CREATE_DIR, dir
-    SPAWN, 'mkdir ' + dir
+    SPAWN, 'mkdir -p ' + dir
     result = VALID_DIR( dir )
     RETURN, KEYWORD_SET( result )
 END
