@@ -29,9 +29,8 @@
 ; ctp_hist ... cloud top pressure histogram
 ; numb_lwp ... counter for positive LWP values (GT 0.)
 ; numb_iwp ... counter for positive IWP values (GT 0.)
-; numb_cph_bin ... counter for positive CPH_BIN values (GE 0.) 
-;                  not every grid cells has a cloud phase due to
-;                  missing/no LWP_LAY occurrences
+; numb_lwp_bin ... counter cph_bin EQ 1. (liquid)
+; numb_iwp_bin ... counter cph_bin EQ 0. (ice)
 ;
 ;-------------------------------------------------------------------
 
@@ -43,7 +42,7 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                         lwp_tmp, iwp_tmp, cfc_tmp, $
                         ctp_hist, numb, numb_tmp, $
                         ctp_limits_final2d, dim_ctp, $
-                        numb_lwp, numb_iwp, numb_cph_bin, $
+                        numb_lwp, numb_iwp, numb_lwp_bin, numb_iwp_bin, $
                         lwp_tmp_bin, lwp_mean_bin, $
                         lwp_mean_inc_bin, numb_lwp_inc_bin, $
                         iwp_tmp_bin, iwp_mean_bin, $
@@ -80,10 +79,13 @@ PRO SUMUP_CLOUD_PARAMS, cph_mean, ctt_mean, cth_mean, ctp_mean, $
 
 
     ; lwp and iwp grid mean based on cph_tmp_bin (binary cph)
-    wo_cph_bin = WHERE(cph_tmp_bin GE 0., nwo_cph_bin)
-    lwp_mean_bin[wo_cph_bin] = lwp_mean_bin[wo_cph_bin] + lwp_tmp_bin[wo_cph_bin]
-    iwp_mean_bin[wo_cph_bin] = iwp_mean_bin[wo_cph_bin] + iwp_tmp_bin[wo_cph_bin]
-    numb_cph_bin[wo_cph_bin] = numb_cph_bin[wo_cph_bin] + 1l
+    wo_cph_bin_liq = WHERE(cph_tmp_bin EQ 1., nwo_cph_bin_liq)
+    lwp_mean_bin[wo_cph_bin_liq] = lwp_mean_bin[wo_cph_bin_liq] + lwp_tmp_bin[wo_cph_bin_liq]
+    numb_lwp_bin[wo_cph_bin_liq] = numb_lwp_bin[wo_cph_bin_liq] + 1l
+
+    wo_cph_bin_ice = WHERE(cph_tmp_bin EQ 0., nwo_cph_bin_ice)
+    iwp_mean_bin[wo_cph_bin_ice] = iwp_mean_bin[wo_cph_bin_ice] + iwp_tmp_bin[wo_cph_bin_ice]
+    numb_iwp_bin[wo_cph_bin_ice] = numb_iwp_bin[wo_cph_bin_ice] + 1l
 
 
     ; lwp_mean_incloud

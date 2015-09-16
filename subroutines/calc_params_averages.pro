@@ -29,7 +29,8 @@
 ; numb ... number of observations
 ; numb_lwp ... counter for valid LWP sumup events
 ; numb_iwp ... counter for valid IWP sumup events
-; numb_cph_bin ... counter for valid CPH_BIN sumup events
+; numb_lwp_bin ... counter for valid CPH_BIN sumup events for liquid
+; numb_iwp_bin ... counter for valid CPH_BIN sumup events for ice
 ;
 ;-------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
                           lwp_incloud, iwp_incloud, $
                           numb_lwp_inc, numb_iwp_inc, $
                           numb, numb_raw, $
-                          numb_lwp, numb_iwp, numb_cph_bin, $
+                          numb_lwp, numb_iwp, numb_lwp_bin, numb_iwp_bin, $
                           lwp_mean_bin, lwp_incloud_bin, numb_lwp_inc_bin, $
                           iwp_mean_bin, iwp_incloud_bin, numb_iwp_inc_bin, $
                           cfc_mean_bin, cph_mean_bin
@@ -65,9 +66,11 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     IF(nidx_ice GT 0) THEN iwp_mean[idx_ice] = iwp_mean[idx_ice] / numb_iwp[idx_ice]
 
     ; LWP & IWP binary grid mean
-    idx_cph = WHERE(numb_cph_bin GT 0, nidx_cph)
-    IF(nidx_cph GT 0) THEN lwp_mean_bin[idx_cph] = lwp_mean_bin[idx_cph] / numb_cph_bin[idx_cph]
-    IF(nidx_cph GT 0) THEN iwp_mean_bin[idx_cph] = iwp_mean_bin[idx_cph] / numb_cph_bin[idx_cph]
+    idx_cph_liq = WHERE(numb_lwp_bin GT 0, nidx_cph_liq)
+    IF(nidx_cph_liq GT 0) THEN lwp_mean_bin[idx_cph_liq] = lwp_mean_bin[idx_cph_liq] / numb_lwp_bin[idx_cph_liq]
+
+    idx_cph_ice = WHERE(numb_iwp_bin GT 0, nidx_cph_ice)
+    IF(nidx_cph_ice GT 0) THEN iwp_mean_bin[idx_cph_ice] = iwp_mean_bin[idx_cph_ice] / numb_iwp_bin[idx_cph_ice]
 
 
     ; lwp and iwp incloud based on lwp and iwp
@@ -103,9 +106,11 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     idx_ice0 = WHERE(numb_iwp EQ 0, nidx_ice0)
     IF(nidx_ice0 GT 0) THEN iwp_mean[idx_ice0] = -999.
 
-    idx_cph0 = WHERE(numb_cph_bin EQ 0, nidx_cph0)
-    IF(nidx_cph0 GT 0) THEN lwp_mean_bin[idx_cph0] = -999.
-    IF(nidx_cph0 GT 0) THEN iwp_mean_bin[idx_cph0] = -999.
+    idx_cph_liq0 = WHERE(numb_lwp_bin EQ 0, nidx_cph_liq0)
+    IF(nidx_cph_liq0 GT 0) THEN lwp_mean_bin[idx_cph_liq0] = -999.
+
+    idx_cph_ice0 = WHERE(numb_iwp_bin EQ 0, nidx_cph_ice0)
+    IF(nidx_cph_ice0 GT 0) THEN iwp_mean_bin[idx_cph_ice0] = -999.
 
     wo_lwp_nix = WHERE(numb_lwp_inc EQ 0, nlwp_nix)
     IF (nlwp_nix GT 0) THEN lwp_incloud[wo_lwp_nix] = -999.

@@ -123,7 +123,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                              cfc_era, lwp_inc_era, iwp_inc_era, $
                                              numb_lwp_inc_era, numb_iwp_inc_era, $
                                              ctp_hist_era, numb_era, numb_tmp, numb_raw, $
-                                             numb_lwp_era, numb_iwp_era, numb_cph_bin_era, $
+                                             numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
                                              lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
                                              iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
                                              cfc_bin_era, cph_bin_era
@@ -134,7 +134,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                              cfc_sat, lwp_inc_sat, iwp_inc_sat, $
                                              numb_lwp_inc_sat, numb_iwp_inc_sat, $
                                              ctp_hist_sat, numb_sat, numb_tmp, numb_raw, $
-                                             numb_lwp_sat, numb_iwp_sat, numb_cph_bin_sat, $
+                                             numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
                                              lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
                                              iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
                                              cfc_bin_sat, cph_bin_sat
@@ -187,7 +187,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             ctp_tmp_era, lwp_tmp_era, iwp_tmp_era, $
                                             cfc_tmp_era, ctp_hist_era, numb_era, $
                                             numb_tmp, ctp_limits_final2d, dim_ctp, $
-                                            numb_lwp_era, numb_iwp_era, numb_cph_bin_era, $
+                                            numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
                                             lwp_tmp_bin_era, lwp_bin_era, $
                                             lwp_inc_bin_era, numb_lwp_inc_bin_era, $
                                             iwp_tmp_bin_era, iwp_bin_era, $
@@ -203,7 +203,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                             ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
                                             cfc_tmp_sat, ctp_hist_sat, numb_sat, $
                                             numb_tmp, ctp_limits_final2d, dim_ctp, $
-                                            numb_lwp_sat, numb_iwp_sat, numb_cph_bin_sat, $
+                                            numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
                                             lwp_tmp_bin_sat, lwp_bin_sat, $
                                             lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
                                             iwp_tmp_bin_sat, iwp_bin_sat, $
@@ -237,7 +237,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                       lwp_inc_era, iwp_inc_era, $
                                       numb_lwp_inc_era, numb_iwp_inc_era, $
                                       numb_era, numb_raw, $
-                                      numb_lwp_era, numb_iwp_era, numb_cph_bin_era, $
+                                      numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
                                       lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
                                       iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
                                       cfc_bin_era, cph_bin_era
@@ -247,7 +247,7 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                       lwp_inc_sat, iwp_inc_sat, $
                                       numb_lwp_inc_sat, numb_iwp_inc_sat, $
                                       numb_sat, numb_raw, $
-                                      numb_lwp_sat, numb_iwp_sat, numb_cph_bin_sat, $
+                                      numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
                                       lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
                                       iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
                                       cfc_bin_sat, cph_bin_sat
@@ -260,10 +260,10 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                                     xdim, ydim, zdim, lon, lat, $
                                     cph_era, ctt_era, cth_era, ctp_era,  $
                                     lwp_era, iwp_era, cfc_era, numb_era, $
-                                    numb_lwp_era, numb_iwp_era, numb_cph_bin_era, $
+                                    numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
                                     cph_sat, ctt_sat, cth_sat, ctp_sat,  $
                                     lwp_sat, iwp_sat, cfc_sat, numb_sat, $
-                                    numb_lwp_sat, numb_iwp_sat, numb_cph_bin_sat, $
+                                    numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
                                     lwp_inc_era, iwp_inc_era, numb_lwp_inc_era, numb_iwp_inc_era, $
                                     lwp_inc_sat, iwp_inc_sat, numb_lwp_inc_sat, numb_iwp_inc_sat, $
                                     cot_thv_era, cot_thv_sat, $
@@ -291,8 +291,8 @@ PRO ERA_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                           lwp_inc_era, iwp_inc_era, $
                           lwp_inc_sat, iwp_inc_sat
                 UNDEFINE, numb_tmp, numb_raw, counti, numb_era, numb_sat
-                UNDEFINE, numb_lwp_era, numb_iwp_era, numb_cph_bin_era
-                UNDEFINE, numb_lwp_sat, numb_iwp_sat, numb_cph_bin_sat
+                UNDEFINE, numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era
+                UNDEFINE, numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat
                 UNDEFINE, numb_lwp_inc_era, numb_iwp_inc_era, $
                           numb_lwp_inc_sat, numb_iwp_inc_sat
                 UNDEFINE, lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $

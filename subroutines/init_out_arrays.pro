@@ -39,6 +39,10 @@
 ; numb_iwp_incloud_bin ... number of occurrences for iwp_incloud_bin
 ; ctp_hist ... cloud top pressure histogram
 ; numb_hist ... counter for ctp_hist
+; numb_lwp ... counter for lwp_mean
+; numb_iwp ... counter for iwp_mean
+; numb_lwp_bin ... counter for lwp_mean_bin (based on binary cph)
+; numb_iwp_bin ... counter for iwp_mean_bin (based on binary cph)
 ;
 ;-------------------------------------------------------------------
 
@@ -47,7 +51,7 @@ PRO INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
                      lwp_incloud, iwp_incloud, $
                      numb_lwp_incloud, numb_iwp_incloud, $
                      ctp_hist, numb, numb_tmp, numb_raw, $
-                     numb_lwp, numb_iwp, numb_cph_bin, $
+                     numb_lwp, numb_iwp, numb_lwp_bin, numb_iwp_bin, $
                      lwp_bin, lwp_incloud_bin, numb_lwp_incloud_bin, $
                      iwp_bin, iwp_incloud_bin, numb_iwp_incloud_bin, $
                      cfc_bin, cph_bin
@@ -81,7 +85,8 @@ PRO INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
     numb = LONARR(xdim,ydim) & numb[*,*] = 0
     numb_lwp = LONARR(xdim,ydim) & numb_lwp[*,*] = 0
     numb_iwp = LONARR(xdim,ydim) & numb_iwp[*,*] = 0
-    numb_cph_bin = LONARR(xdim,ydim) & numb_cph_bin[*,*] = 0
+    numb_lwp_bin = LONARR(xdim,ydim) & numb_lwp_bin[*,*] = 0
+    numb_iwp_bin = LONARR(xdim,ydim) & numb_iwp_bin[*,*] = 0
 
     IF(ISA(numb_tmp) EQ 0) THEN numb_tmp = INTARR(xdim,ydim)
     IF(ISA(numb_raw) EQ 0) THEN numb_raw = 0l
