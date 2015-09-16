@@ -22,6 +22,9 @@
 ;   Written by Dr. Cornelia Schlundt; 
 ;------------------------------------------------------------------------------
 FUNCTION GET_VAR_MINMAX, varname
+	; CCI
+	IF STREGEX(varname, '^cloud_albedo', /FOLD_CASE) EQ 0 THEN RETURN, [0.,1.]
+	; Simulator
 	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, [0.,1.]
 	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, [0.,1.]
 	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, [0,125]
@@ -33,6 +36,9 @@ FUNCTION GET_VAR_MINMAX, varname
 END
 
 FUNCTION GET_BARFORMAT, varname
+	; CCI
+	IF STREGEX(varname, '^cloud_albedo', /FOLD_CASE) EQ 0 THEN RETURN, ('(F8.2)')
+	; Simulator
 	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ('(F8.2)')
 	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, ('(F8.2)')
 	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, ('(I)')
@@ -44,6 +50,9 @@ FUNCTION GET_BARFORMAT, varname
 END
 
 FUNCTION GET_DISCRETE_RANGE, varname
+	; CCI
+	IF STREGEX(varname, '^cloud_albedo', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.
+	; Simulator
 	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.
 	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.
 	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, [0, 25, 50, 75, 100, 125]
@@ -55,6 +64,9 @@ FUNCTION GET_DISCRETE_RANGE, varname
 END
 
 FUNCTION GET_VAR_UNIT, varname
+	; CCI
+	IF STREGEX(varname, '^cloud_albedo', /FOLD_CASE) EQ 0 THEN RETURN, ''
+	; Simulator
 	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ''
 	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, ''
 	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, ''
@@ -190,6 +202,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 	; -- Get list of variables in file
 	variableList = GET_NCDF_VARLIST( ncfile )
+
 
 
 	; ---------------------------------------------------------------------------------------
@@ -480,19 +493,25 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			READ_SIM_NCDF, img, FILE=ncfile, VAR_NAME = varname, VAR_ATTR = img_att
 			READ_SIM_NCDF, lon, FILE=ncfile, VAR_NAME = 'lon', GLOB_ATTR = glob_att
 			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
+
 			;get_grid_res returns 0 ??? and file = ncfile returns -999.000 incl. error message
 			;make_geo,lon,lat,file=ncfile,grid=get_grid_res(img)
 			make_geo,lon,lat,grid=0.5
-			lat = ROTATE(lat,2)
-			lon = lon + 180.
+
+			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
+				IF(glob_att.SOURCE EQ 'ERA-Interim') THEN BEGIN
+					lat = ROTATE(lat,2)
+					lon = lon + 180.
+				ENDIF
+			ENDIF
 
 
 			; -- nobs does not have an attribute called _FILLVALUE
 			; -- set fillvalue to NANs and set void_index for map_image
 			IF STREGEX(varname, '^nobs', /FOLD_CASE) NE 0 THEN BEGIN
 				IF(ISA(img_att) NE 0) THEN BEGIN
-					j = WHERE(img EQ img_att._FILLVALUE, count)
-					IF (count GT 0) THEN img[j] = !VALUES.F_NAN
+					j = WHERE(img EQ img_att._FILLVALUE, bad)
+					IF (bad GT 0) THEN img[j] = !VALUES.F_NAN
 				ENDIF
 			ENDIF
 
@@ -505,14 +524,18 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			; -- read global attributes if available
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
 
-				IF(ISA(glob_att.cot_thv_ori) NE 0) THEN $
-					cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
+				IF(glob_att.SOURCE EQ 'ERA-Interim') THEN BEGIN
 
-				IF(ISA(glob_att.cot_thv) NE 0) THEN $
-					cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
+					IF(ISA(glob_att.cot_thv_ori) NE 0) THEN $
+						cot_thv_era = STRTRIM(STRING(glob_att.cot_thv_ori, FORMAT='(F5.2)'),2)
 
-				IF (STRPOS(varname, 'ori') GT 0) THEN cot_thv = cot_thv_era $
-					ELSE cot_thv = cot_thv_sat
+					IF(ISA(glob_att.cot_thv) NE 0) THEN $
+						cot_thv_sat = STRTRIM(STRING(glob_att.cot_thv, FORMAT='(F5.2)'),2)
+
+					IF (STRPOS(varname, 'ori') GT 0) THEN cot_thv = cot_thv_era $
+						ELSE cot_thv = cot_thv_sat
+
+				ENDIF
 
 			ENDIF
 
@@ -532,6 +555,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 			; -- Plot settings
 			ptitle = long_name
+
 			IF (N_TAGS(glob_att) NE 0) THEN ptitle = glob_att.SOURCE+': '+$
 				ptitle + ' for ' + glob_att.TIME_COVERAGE_START
 			IF(ISA(cot_thv) NE 0) THEN BEGIN
@@ -551,6 +575,17 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 			IF KEYWORD_SET(MINI) THEN minlim=mini ELSE minlim=rminmax[0]
 			IF KEYWORD_SET(MAXI) THEN maxlim=maxi ELSE maxlim=rminmax[1]
+
+
+			IF(STRING(img_att.units) EQ 'g/m2') THEN BEGIN
+				IF(STRING(img_att.long_name) EQ ('cloud liquid water path')) THEN BEGIN
+					minlim = 0. & maxlim = 1000.
+				ENDIF ELSE BEGIN
+					minlim = 0. & maxlim = 4000.
+				ENDELSE
+				unit = ' ['+STRING(img_att.units)+']'
+			ENDIF
+
 
 			void_index = WHERE(~FINITE(img))
 
