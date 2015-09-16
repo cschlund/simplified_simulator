@@ -31,8 +31,8 @@ FUNCTION GET_VAR_MINMAX, varname
 	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, [10., 1000.]
 	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, [0., 16.]
 	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, [170.,310.]
-	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 0.5]
-	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, [0.,0.5]
+	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 1000.]
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 1000.]
 END
 
 FUNCTION GET_BARFORMAT, varname
@@ -60,22 +60,9 @@ FUNCTION GET_DISCRETE_RANGE, varname
 	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(10)*2
 	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)*10+180
 	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.;FINDGEN(11)/10.*0.6
-	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10./10 +0.1;0.05
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, FINDGEN(11)/10.;/10 +0.1;0.05
 END
 
-FUNCTION GET_VAR_UNIT, varname
-	; CCI
-	IF STREGEX(varname, '^cloud_albedo', /FOLD_CASE) EQ 0 THEN RETURN, ''
-	; Simulator
-	IF STREGEX(varname, '^cc', /FOLD_CASE) EQ 0 THEN RETURN, ''
-	IF STREGEX(varname, '^cph', /FOLD_CASE) EQ 0 THEN RETURN, ''
-	IF STREGEX(varname, '^nobs', /FOLD_CASE) EQ 0 THEN RETURN, ''
-	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, ' [hPa]'
-	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, ' [km]'
-	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, ' [K]'
-	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, ' [kg/m^2]'
-	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, ' [kg/m^2]'
-END
 
 FUNCTION GET_NCDF_VARLIST, fil
     ignoreList = LIST('lon', 'lat', 'time', 'longitude', 'latitude')
@@ -100,7 +87,7 @@ FUNCTION GET_NCDF_VARLIST, fil
     RETURN, varList
 END
 
-
+@/home/cschlund/programs/idl/vali_gui_rv/plot_l3.pro
 ; -- main program -------------------------------------------------------------------------------
 ; 
 ; alternative: use ncdf_browser from Stefan
@@ -310,30 +297,35 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 			; -- some info written onto plot
 			long_name = STRING(img_att.long_name)
-			unit  = GET_VAR_UNIT(varname)
+			unit  = STRING(img_att.units)
+			IF(STRLEN(unit) LE 1 and unit NE 'K') THEN unit = unit ELSE unit = ' ['+unit+']'
 			minmax_range = MINMAX( (img-img2)[WHERE(FINITE(img-img2))] )
 			minstr = STRTRIM(STRING(minmax_range[0], FORMAT='(E10.3)'),2)
 			maxstr = STRTRIM(STRING(minmax_range[1], FORMAT='(E10.3)'),2)
 
-
-			IF(minmax_range[0] EQ 0. OR minmax_range[1] EQ 0) THEN BEGIN
-
-				IF(minmax_range[0] EQ 0.) THEN $
-					minlim = -(minmax_range[1]) ELSE minlim = minmax_range[0]
-
-				IF(minmax_range[1] EQ 0.) THEN $
-					maxlim = ABS(minmax_range[0]) ELSE maxlim = minmax_range[1]
-
+			IF (minmax_range[0] EQ 0. AND minmax_range[1] EQ 0.) THEN BEGIN
+				minlim = -0.1 & maxlim = 0.1
 			ENDIF ELSE BEGIN
 
-				IF(ABS(minmax_range[0]) GT ABS(minmax_range[1])) THEN BEGIN
-					minlim = minmax_range[0] & maxlim = ABS(minmax_range[0])
-				ENDIF ELSE IF (ABS(minmax_range[0]) LT ABS(minmax_range[1])) THEN BEGIN
-					minlim = -(minmax_range[1]) & maxlim = minmax_range[1]
-				ENDIF
+				IF(minmax_range[0] EQ 0. OR minmax_range[1] EQ 0.) THEN BEGIN
+
+					IF(minmax_range[0] EQ 0.) THEN $
+						minlim = -(minmax_range[1]) ELSE minlim = minmax_range[0]
+
+					IF(minmax_range[1] EQ 0.) THEN $
+						maxlim = ABS(minmax_range[0]) ELSE maxlim = minmax_range[1]
+
+				ENDIF ELSE BEGIN
+
+					IF(ABS(minmax_range[0]) GT ABS(minmax_range[1])) THEN BEGIN
+						minlim = minmax_range[0] & maxlim = ABS(minmax_range[0])
+					ENDIF ELSE IF (ABS(minmax_range[0]) LT ABS(minmax_range[1])) THEN BEGIN
+						minlim = -(minmax_range[1]) & maxlim = minmax_range[1]
+					ENDIF
+
+				ENDELSE
 
 			ENDELSE
-
 
 			; -- Plot settings
 			btitle = varname+'-'+varname2+unit
@@ -495,8 +487,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			READ_SIM_NCDF, lat, FILE=ncfile, VAR_NAME = 'lat'
 
 			;get_grid_res returns 0 ??? and file = ncfile returns -999.000 incl. error message
-			;make_geo,lon,lat,file=ncfile,grid=get_grid_res(img)
-			make_geo,lon,lat,grid=0.5
+			make_geo,lon,lat,file=ncfile,grid=get_grid_res(img)
+; 			make_geo,lon,lat,grid=0.5
 
 			IF (N_TAGS(glob_att) NE 0) THEN BEGIN
 				IF(glob_att.SOURCE EQ 'ERA-Interim') THEN BEGIN
@@ -543,15 +535,16 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			; -- some info written onto plot
 			long_name = STRING(img_att.long_name)
 			imean = AVG(img, /NAN)
-			unit = GET_VAR_UNIT(varname)
+			unit  = STRING(img_att.units)
+			IF(STRLEN(unit) LE 1 and unit NE 'K') THEN unit = unit ELSE unit = ' ['+unit+']'
 			minmax_range = MINMAX(img[WHERE(FINITE(img))])
 			minlim = minmax_range[0]
 			maxlim = minmax_range[1]
 			strfmt = '(F8.2)'
-			minstr = 'MIN='+STRTRIM(STRING(minlim, FORMAT=strfmt),2)
-			maxstr = 'MAX='+STRTRIM(STRING(maxlim, FORMAT=strfmt),2)
+			minstr = STRTRIM(STRING(minlim, FORMAT=strfmt),2)
+			maxstr = STRTRIM(STRING(maxlim, FORMAT=strfmt),2)
 			meastr = 'MEAN='+STRTRIM(STRING(imean, FORMAT=strfmt),2)
-
+			minmaxstr = 'Min/Max'+' : '+minstr+'/'+maxstr
 
 			; -- Plot settings
 			ptitle = long_name
@@ -568,7 +561,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			position = [0.10, 0.25, 0.90, 0.90]
 			xlat=0.05 & ylat=0.53
 			xlon=0.46 & ylon=0.17
-			xtit=0.08 & ytit=0.96
+			xtit=0.10 & ytit=0.96
 			barformat = ('(F8.2)')
 
 			rminmax = GET_VAR_MINMAX(varname)
@@ -576,16 +569,8 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			IF KEYWORD_SET(MINI) THEN minlim=mini ELSE minlim=rminmax[0]
 			IF KEYWORD_SET(MAXI) THEN maxlim=maxi ELSE maxlim=rminmax[1]
 
-
-			IF(STRING(img_att.units) EQ 'g/m2') THEN BEGIN
-				IF(STRING(img_att.long_name) EQ ('cloud liquid water path')) THEN BEGIN
-					minlim = 0. & maxlim = 1000.
-				ENDIF ELSE BEGIN
-					minlim = 0. & maxlim = 4000.
-				ENDELSE
-				unit = ' ['+STRING(img_att.units)+']'
-			ENDIF
-
+			IF (minmax_range[0] LT minlim) THEN l_eq = 1 ELSE l_eq = 0
+			IF (minmax_range[1] GT maxlim) THEN g_eq = 1 ELSE g_eq = 0
 
 			void_index = WHERE(~FINITE(img))
 
@@ -594,9 +579,10 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
 				/GRID, GLINETHICK=2., MLINETHICK=2., $
 				n_lev=6, MINI=minlim, MAXI=maxlim, $
+				g_eq=g_eq, l_eq=l_eq, $
 ; 				discrete=GET_DISCRETE_RANGE(varname), $
 				CHARSIZE=chars, /HORIZON,  $
-				TITLE=varname + unit, CHARTHICK=chars, $
+				TITLE=varname+unit, CHARTHICK=chars, $
 				POSITION=position, LIMIT=limit, $
 				FORMAT=barformat, VOID_INDEX=void_index)
 			m -> project, image=img, lon=lon, lat=lat, $
@@ -610,9 +596,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			; -- annotations
 			XYOUTS, xtit, ytit, ptitle, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
-			XYOUTS, 0.08, 0.17, minstr, $
-				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
-			XYOUTS, 0.76, 0.17, maxstr, $
+			XYOUTS, 0.10, 0.17, minmaxstr, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
 
 
