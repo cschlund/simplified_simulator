@@ -31,8 +31,8 @@ FUNCTION GET_VAR_MINMAX, varname
 	IF STREGEX(varname, '^ctp', /FOLD_CASE) EQ 0 THEN RETURN, [10., 1000.]
 	IF STREGEX(varname, '^cth', /FOLD_CASE) EQ 0 THEN RETURN, [0., 16.]
 	IF STREGEX(varname, '^ctt', /FOLD_CASE) EQ 0 THEN RETURN, [170.,310.]
-	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 1000.]
-	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 1000.]
+	IF STREGEX(varname, '^lwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 500.]
+	IF STREGEX(varname, '^iwp', /FOLD_CASE) EQ 0 THEN RETURN, [0., 500.]
 END
 
 FUNCTION GET_BARFORMAT, varname
@@ -540,7 +540,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			minmax_range = MINMAX(img[WHERE(FINITE(img))])
 			minlim = minmax_range[0]
 			maxlim = minmax_range[1]
-			strfmt = '(F8.2)'
+			strfmt = '(F10.2)'
 			minstr = STRTRIM(STRING(minlim, FORMAT=strfmt),2)
 			maxstr = STRTRIM(STRING(maxlim, FORMAT=strfmt),2)
 			meastr = 'MEAN='+STRTRIM(STRING(imean, FORMAT=strfmt),2)
@@ -578,7 +578,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			m = obj_new("map_image", img, lat, lon, rainbow=rainbow, $
 				/no_draw, /BOX_AXES, /MAGNIFY, bwr=bwr, $
 				/GRID, GLINETHICK=2., MLINETHICK=2., $
-				n_lev=6, MINI=minlim, MAXI=maxlim, $
+				n_lev=5, MINI=minlim, MAXI=maxlim, $
 				g_eq=g_eq, l_eq=l_eq, $
 ; 				discrete=GET_DISCRETE_RANGE(varname), $
 				CHARSIZE=chars, /HORIZON,  $
@@ -597,7 +597,7 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			XYOUTS, xtit, ytit, ptitle, $
 				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
 			XYOUTS, 0.10, 0.17, minmaxstr, $
-				/norm, CHARSIZE=chars, CHARTHICK=chars, COLOR=col
+				/norm, CHARSIZE=2., CHARTHICK=chars, COLOR=col
 
 
 			IF KEYWORD_SET(eps) THEN BEGIN
