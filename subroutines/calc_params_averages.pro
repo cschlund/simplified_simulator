@@ -48,47 +48,51 @@ PRO CALC_PARAMS_AVERAGES, cph_mean, ctt_mean, cth_mean, ctp_mean, $
     wo_numi  = WHERE(numb GT 0, n_wo_numi)
 
     IF(n_wo_numi GT 0) THEN ctp_mean[wo_numi] = ctp_mean[wo_numi] / numb[wo_numi]
-    IF(n_wo_numi GT 0) THEN cth_mean[wo_numi] = cth_mean[wo_numi] / numb[wo_numi]
+    ; convert CTH from [m] to [km]
+    IF(n_wo_numi GT 0) THEN cth_mean[wo_numi] = (cth_mean[wo_numi] / numb[wo_numi]) / 1000.
     IF(n_wo_numi GT 0) THEN ctt_mean[wo_numi] = ctt_mean[wo_numi] / numb[wo_numi]
     IF(n_wo_numi GT 0) THEN cph_mean[wo_numi] = cph_mean[wo_numi] / numb[wo_numi]
     IF(n_wo_numi GT 0) THEN cph_mean_bin[wo_numi] = cph_mean_bin[wo_numi] / numb[wo_numi]
+
 
     ; cloud fraction divided by number of files read = numb_raw
     cfc_mean = cfc_mean / numb_raw
     cfc_mean_bin = cfc_mean_bin / numb_raw
 
 
+    ; convert LWP,IWP from 'kg/m2' to 'g/m2' (CCI conform), i.e. multiply with 1000.
+
     ; LWP & IWP grid mean
     idx_liq = WHERE(numb_lwp GT 0, nidx_liq)
-    IF(nidx_liq GT 0) THEN lwp_mean[idx_liq] = lwp_mean[idx_liq] / numb_lwp[idx_liq]
+    IF(nidx_liq GT 0) THEN lwp_mean[idx_liq] = (lwp_mean[idx_liq] / numb_lwp[idx_liq])*1000.
 
     idx_ice = WHERE(numb_iwp GT 0, nidx_ice)
-    IF(nidx_ice GT 0) THEN iwp_mean[idx_ice] = iwp_mean[idx_ice] / numb_iwp[idx_ice]
+    IF(nidx_ice GT 0) THEN iwp_mean[idx_ice] = (iwp_mean[idx_ice] / numb_iwp[idx_ice])*1000.
 
     ; LWP & IWP binary grid mean
     idx_cph_liq = WHERE(numb_lwp_bin GT 0, nidx_cph_liq)
-    IF(nidx_cph_liq GT 0) THEN lwp_mean_bin[idx_cph_liq] = lwp_mean_bin[idx_cph_liq] / numb_lwp_bin[idx_cph_liq]
+    IF(nidx_cph_liq GT 0) THEN lwp_mean_bin[idx_cph_liq] = (lwp_mean_bin[idx_cph_liq] / numb_lwp_bin[idx_cph_liq])*1000.
 
     idx_cph_ice = WHERE(numb_iwp_bin GT 0, nidx_cph_ice)
-    IF(nidx_cph_ice GT 0) THEN iwp_mean_bin[idx_cph_ice] = iwp_mean_bin[idx_cph_ice] / numb_iwp_bin[idx_cph_ice]
+    IF(nidx_cph_ice GT 0) THEN iwp_mean_bin[idx_cph_ice] = (iwp_mean_bin[idx_cph_ice] / numb_iwp_bin[idx_cph_ice])*1000.
 
 
     ; lwp and iwp incloud based on lwp and iwp
     wo_lwp = WHERE(numb_lwp_inc GT 0, nlwp)
-    IF (nlwp GT 0) THEN lwp_incloud[wo_lwp] = lwp_incloud[wo_lwp] / numb_lwp_inc[wo_lwp]
+    IF (nlwp GT 0) THEN lwp_incloud[wo_lwp] = (lwp_incloud[wo_lwp] / numb_lwp_inc[wo_lwp])*1000.
 
     wo_iwp = WHERE(numb_iwp_inc GT 0, niwp)
-    IF (niwp GT 0) THEN iwp_incloud[wo_iwp] = iwp_incloud[wo_iwp] / numb_iwp_inc[wo_iwp]
+    IF (niwp GT 0) THEN iwp_incloud[wo_iwp] = (iwp_incloud[wo_iwp] / numb_iwp_inc[wo_iwp])*1000.
 
 
     ; lwp and iwp incloud based on binary decision of cph
     wo_lwp_bin = WHERE(numb_lwp_inc_bin GT 0, nlwp_bin)
     IF (nlwp_bin GT 0) THEN $
-        lwp_incloud_bin[wo_lwp_bin] = lwp_incloud_bin[wo_lwp_bin] / numb_lwp_inc_bin[wo_lwp_bin]
+        lwp_incloud_bin[wo_lwp_bin] = (lwp_incloud_bin[wo_lwp_bin] / numb_lwp_inc_bin[wo_lwp_bin])*1000.
 
     wo_iwp_bin = WHERE(numb_iwp_inc_bin GT 0, niwp_bin)
     IF (niwp_bin GT 0) THEN $
-        iwp_incloud_bin[wo_iwp_bin] = iwp_incloud_bin[wo_iwp_bin] / numb_iwp_inc_bin[wo_iwp_bin]
+        iwp_incloud_bin[wo_iwp_bin] = (iwp_incloud_bin[wo_iwp_bin] / numb_iwp_inc_bin[wo_iwp_bin])*1000.
 
 
     ; fill_value for grid cells with no observations

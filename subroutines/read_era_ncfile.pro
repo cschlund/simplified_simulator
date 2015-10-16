@@ -22,19 +22,21 @@ PRO READ_ERA_NCFILE, ncfile, plevel, diff_pressure, lon, lat, $
     ; latitude
     varID=NCDF_VARID(fileID,'lat')    & NCDF_VARGET,fileID,varID,lat
     
-    ; liquid water content
-    varID=NCDF_VARID(fileID,'var246') & NCDF_VARGET,fileID,varID,lwc 
+    ; liquid water content [kg kg**-1] 
+    ; It is typically measured per volume of air (g/m3) or mass of air (g/kg)
+    varID=NCDF_VARID(fileID,'var246') & NCDF_VARGET,fileID,varID,lwc
     
-    ; ice water content
+    ; ice water content [kg kg**-1]
+    ; It is typically measured per volume of air (g/m3) or mass of air (g/kg)
     varID=NCDF_VARID(fileID,'var247') & NCDF_VARGET,fileID,varID,iwc
     
     ; cloud cover
     varID=NCDF_VARID(fileID,'var248') & NCDF_VARGET,fileID,varID,cc
     
-    ; geopotential height
+    ; geopotential height [m2/s2]
     varID=NCDF_VARID(fileID,'var129') & NCDF_VARGET,fileID,varID,geop
     
-    ; temperature
+    ; temperature [K]
     varID=NCDF_VARID(fileID,'var130') & NCDF_VARGET,fileID,varID,temp
     
     NCDF_CLOSE,(fileID)
@@ -53,5 +55,6 @@ PRO READ_ERA_NCFILE, ncfile, plevel, diff_pressure, lon, lat, $
 
     cc_idx = WHERE(cc LT 0., ncc)
     IF (ncc GT 0) THEN cc[cc_idx] = 0.
+
 
 END
