@@ -1,5 +1,5 @@
 # Ignore following files
-config_era_simulator.pro
+config_cloudcci_simulator.pro
 *~
 *test*
 *log
