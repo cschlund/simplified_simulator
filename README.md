@@ -5,9 +5,9 @@
   
   * cd simplified_simulator/
   
-  * cp config_era_simulator.pro.template **config_era_simulator.pro**
+  * cp config_cloudcci_simulator.pro.template **config_cloudcci_simulator.pro**
   
-  * open config_era_simulator.pro and **modify the settings**
+  * open config_cloudcci_simulator.pro and **modify the settings**
   
-  * start IDL and run **era_simulator.pro**
+  * start IDL and run **cloudcci_simulator.pro**
 

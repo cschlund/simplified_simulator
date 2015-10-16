@@ -20,11 +20,6 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
                         iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
                         cfc_bin_era, cph_bin_era, cfc_bin_sat, cph_bin_sat
 
-	; convert cth form 'm' to 'km'
-	idx_era = WHERE(cth_era GT 0., nera)
-	IF(nera GT 0) THEN cth_era[idx_era] = cth_era[idx_era] / 1000.
-	idx_sat = WHERE(cth_sat GT 0., nsat)
-	IF(nsat GT 0) THEN cth_sat[idx_sat] = cth_sat[idx_sat] / 1000.
 
     dim_time   = 1
     fyear      = FLOAT(year)
@@ -90,22 +85,22 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'lwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_ori', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'lwp_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_bin_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_bin_ori', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_bin_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_bin_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'iwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_ori', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'iwp_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_bin_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_bin_ori', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_bin_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_bin_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'cph_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cph_ori', '_FillValue', -999.
@@ -141,7 +136,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'lwp_inc_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc_ori', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_inc_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_inc_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_ori', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_lwp_inc_ori', 'long_name', 'number of observations'
@@ -150,7 +145,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'iwp_inc_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_inc_ori', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_inc_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_inc_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_ori', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_iwp_inc_ori', 'long_name', 'number of observations'
@@ -160,7 +155,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'lwp_inc_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_bin_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc_bin_ori', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_inc_bin_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_inc_bin_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_bin_ori', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_lwp_inc_bin_ori', 'long_name', 'number of observations'
@@ -169,7 +164,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'iwp_inc_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_bin_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_inc_bin_ori', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_inc_bin_ori', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_inc_bin_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_bin_ori', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_iwp_inc_bin_ori', 'long_name', 'number of observations'
@@ -215,22 +210,22 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'lwp', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'lwp_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_bin', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_bin', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_bin', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_bin', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'iwp', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'iwp_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_bin', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_bin', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_bin', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_bin', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs', 'long_name', 'number of observations'
@@ -256,7 +251,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'lwp_inc', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_inc', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_inc', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_lwp_inc', 'long_name', 'number of observations'
@@ -265,7 +260,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'iwp_inc', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_inc', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_inc', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_inc', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_iwp_inc', 'long_name', 'number of observations'
@@ -275,7 +270,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'lwp_inc_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_bin', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc_bin', 'long_name', 'cloud liquid water path'
-    NCDF_ATTPUT, id, 'lwp_inc_bin', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'lwp_inc_bin', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_inc_bin', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_lwp_inc_bin', 'long_name', 'number of observations'
@@ -284,7 +279,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     vid  = NCDF_VARDEF(id, 'iwp_inc_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_inc_bin', '_FillValue', -999.
     NCDF_ATTPUT, id, 'iwp_inc_bin', 'long_name', 'cloud ice water path'
-    NCDF_ATTPUT, id, 'iwp_inc_bin', 'units', 'kg/m^2'
+    NCDF_ATTPUT, id, 'iwp_inc_bin', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_inc_bin', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_iwp_inc_bin', 'long_name', 'number of observations'
@@ -292,6 +287,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
 
     NCDF_CONTROL, id, /ENDEF ;Exit define mode
+
 
     NCDF_VARPUT, id, 'time', itime
     NCDF_VARPUT, id, 'lon', lon
