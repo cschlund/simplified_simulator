@@ -549,8 +549,9 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 			; -- Plot settings
 			ptitle = long_name
 
+
 			IF (N_TAGS(glob_att) NE 0) THEN ptitle = glob_att.SOURCE+': '+$
-				ptitle + ' for ' + glob_att.TIME_COVERAGE_START
+				ptitle + ' for ' + STRMID(glob_att.TIME_COVERAGE_START,0,6)
 			IF(ISA(cot_thv) NE 0) THEN BEGIN
 				ptitle = ptitle + ' (cot_thv=' + cot_thv+') ' + meastr
 			ENDIF ELSE BEGIN
