@@ -1,9 +1,25 @@
-
 ;-------------------------------------------------------------------
 ;-- read ERA-Interim netCDF file
+;-------------------------------------------------------------------
 ;
 ; in : ncfile
 ; out: str
+; 
+; IDL> help, ncfile
+; NCFILE          STRING    = '/path/to/data/200807/ERA_Interim_an_20080701_00+00_plev.nc'
+;
+; IDL> help, str, /str 
+; ** Structure <7525f8>, 10 tags, length=140365888, data length=140365888, refs=1:
+;    FILE            STRING    '/path/to/data/200807/ERA_Interim_an_20080701_00+00_plev.nc'
+;    PLEVEL          DOUBLE    Array[27]
+;    DPRES           DOUBLE    Array[26]
+;    LON             DOUBLE    Array[720]
+;    LAT             DOUBLE    Array[361]
+;    LWC             FLOAT     Array[720, 361, 27]
+;    IWC             FLOAT     Array[720, 361, 27]
+;    CC              FLOAT     Array[720, 361, 27]
+;    GEOP            FLOAT     Array[720, 361, 27]
+;    TEMP            FLOAT     Array[720, 361, 27]
 ;
 ;-------------------------------------------------------------------
 
@@ -11,30 +27,30 @@ PRO READ_ERA_NCFILE, ncfile, str
 
     fileID = NCDF_OPEN(ncfile)
 
-    ; pressure level [Pa]
+    ; -- pressure level [Pa]
     varID=NCDF_VARID(fileID,'lev')    & NCDF_VARGET,fileID,varID,plevel
 
-    ; longitude
+    ; -- longitude
     varID=NCDF_VARID(fileID,'lon')    & NCDF_VARGET,fileID,varID,lon 
     
-    ; latitude
+    ; -- latitude
     varID=NCDF_VARID(fileID,'lat')    & NCDF_VARGET,fileID,varID,lat
     
-    ; liquid water content [kg kg**-1] 
-    ; It is typically measured per volume of air (g/m3) or mass of air (g/kg)
+    ; -- liquid water content [kg kg**-1] 
+    ;    It is typically measured per volume of air (g/m3) or mass of air (g/kg)
     varID=NCDF_VARID(fileID,'var246') & NCDF_VARGET,fileID,varID,lwc
     
-    ; ice water content [kg kg**-1]
-    ; It is typically measured per volume of air (g/m3) or mass of air (g/kg)
+    ; -- ice water content [kg kg**-1]
+    ;    It is typically measured per volume of air (g/m3) or mass of air (g/kg)
     varID=NCDF_VARID(fileID,'var247') & NCDF_VARGET,fileID,varID,iwc
     
-    ; cloud cover
+    ; -- cloud cover
     varID=NCDF_VARID(fileID,'var248') & NCDF_VARGET,fileID,varID,cc
     
-    ; geopotential height [m2/s2]
+    ; -- geopotential height [m2/s2]
     varID=NCDF_VARID(fileID,'var129') & NCDF_VARGET,fileID,varID,geop
     
-    ; temperature [K]
+    ; -- temperature [K]
     varID=NCDF_VARID(fileID,'var130') & NCDF_VARGET,fileID,varID,temp
     
     NCDF_CLOSE,(fileID)
@@ -55,12 +71,9 @@ PRO READ_ERA_NCFILE, ncfile, str
     IF (ncc GT 0) THEN cc[cc_idx] = 0.
 
 
-    ;era interim structure
+    ; -- era interim structure
     str={file:ncfile, plevel:plevel, dpres:diff_pressure, $
          lon:lon, lat:lat, lwc:lwc, iwc:iwc, cc:cc, $
          geop:geop, temp:temp}
-
-;     HELP, str, /structure
-;     PRINT, TAG_NAMES(str)
 
 END

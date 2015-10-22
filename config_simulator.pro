@@ -7,7 +7,7 @@
 PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, ctp_histinfo
 
     ;-- era simulator output directory
-    out_base = 'v8_IDL_structs/run1/'
+    out_base = 'v8_IDL_structs/run2/'
     pwd_base = '/cmsaf/cmsaf-cld6/cschlund/cci_wp5001/ERA_simulator/'
     out_path = pwd_base + out_base
     validres = VALID_DIR( out_path )

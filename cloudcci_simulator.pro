@@ -34,11 +34,11 @@
 ;*******************************************************************************
 PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 ;*******************************************************************************
+    clock = TIC('TOTAL')
 
     ; -- import settings
     IF KEYWORD_SET(verbose) THEN $
         PRINT, ' * Import CONFIG_CLOUDCCI_SIMULATOR setttings'
-
     CONFIG_SIMULATOR, pwd, tim, thv, his
 
 
@@ -66,7 +66,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 
             year  = tim.yyyy[ii1]
             month = tim.mm[jj1]
-
+            mm_clock = TIC(year+'/'+month)
             counti = 0
 
             ff = FINDFILE(pwd.inp+year+month+'/'+'*'+year+month+'*plev')
@@ -109,7 +109,6 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                             INIT_OUT_ARRAYS, grid, his, mean_era, cnts_era
                             INIT_OUT_ARRAYS, grid, his, mean_sat, cnts_sat
                         ENDIF
-
                         counti++
 
                         ; -- lwc and iwc weighted by cc
@@ -130,10 +129,10 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                         SUMUP_CLOUD_PARAMS, mean_sat, cnts_sat, tmp_sat, his
 
                         ; -- count number of files
-                        cnts_era.numb_raw++
-                        cnts_sat.numb_raw++
+                        cnts_era.raw++
+                        cnts_sat.raw++
 
-                        ; delete tmp arrays
+                        ; -- delete tmp arrays
                         UNDEFINE, tmp_era, tmp_sat
 
                     ENDIF ;end of IF(is_file(file1))
@@ -161,10 +160,13 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
 
+           TOC, mm_clock
+
         ENDFOR ;end of month loop
     ENDFOR ;end of year loop
 
     ; End journaling:
 	IF KEYWORD_SET(logfile) THEN JOURNAL
 
+    TOC, clock
 END ;end of program

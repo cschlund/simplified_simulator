@@ -1,4 +1,3 @@
-
 ;-------------------------------------------------------------------
 ;-- write netcdf monthly mean (average) output
 ;-------------------------------------------------------------------
@@ -290,25 +289,25 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'iwp_ori', ave_era.iwp
     NCDF_VARPUT, id, 'cc_total_ori', ave_era.cfc
     NCDF_VARPUT, id, 'cc_total_bin_ori', ave_era.cfc_bin
-    NCDF_VARPUT, id, 'nobs_ori', cnt_era.numb
-    NCDF_VARPUT, id, 'nobs_lwp_ori', cnt_era.numb_lwp
-    NCDF_VARPUT, id, 'nobs_iwp_ori', cnt_era.numb_iwp
+    NCDF_VARPUT, id, 'nobs_ori', cnt_era.ctp
+    NCDF_VARPUT, id, 'nobs_lwp_ori', cnt_era.lwp
+    NCDF_VARPUT, id, 'nobs_iwp_ori', cnt_era.iwp
     NCDF_VARPUT, id, 'lwp_bin_ori', ave_era.lwp_bin
     NCDF_VARPUT, id, 'iwp_bin_ori', ave_era.iwp_bin
-    NCDF_VARPUT, id, 'nobs_lwp_bin_ori', cnt_era.numb_lwp_bin
-    NCDF_VARPUT, id, 'nobs_iwp_bin_ori', cnt_era.numb_iwp_bin
+    NCDF_VARPUT, id, 'nobs_lwp_bin_ori', cnt_era.lwp_bin
+    NCDF_VARPUT, id, 'nobs_iwp_bin_ori', cnt_era.iwp_bin
 
     ; -- model INCLOUD mean
     NCDF_VARPUT, id, 'lwp_inc_ori', ave_era.lwp_inc
     NCDF_VARPUT, id, 'iwp_inc_ori', ave_era.iwp_inc
-    NCDF_VARPUT, id, 'nobs_lwp_inc_ori', cnt_era.numb_lwp_inc
-    NCDF_VARPUT, id, 'nobs_iwp_inc_ori', cnt_era.numb_iwp_inc
+    NCDF_VARPUT, id, 'nobs_lwp_inc_ori', cnt_era.lwp_inc
+    NCDF_VARPUT, id, 'nobs_iwp_inc_ori', cnt_era.iwp_inc
 
     ; -- model INCLOUD mean: based on binary cph
     NCDF_VARPUT, id, 'lwp_inc_bin_ori', ave_era.lwp_inc_bin
     NCDF_VARPUT, id, 'iwp_inc_bin_ori', ave_era.iwp_inc_bin
-    NCDF_VARPUT, id, 'nobs_lwp_inc_bin_ori', cnt_era.numb_lwp_inc_bin
-    NCDF_VARPUT, id, 'nobs_iwp_inc_bin_ori', cnt_era.numb_iwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_lwp_inc_bin_ori', cnt_era.lwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_iwp_inc_bin_ori', cnt_era.iwp_inc_bin
 
 
     ; -- satellite GRID mean
@@ -319,11 +318,11 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'cph_bin', ave_sat.cph_bin
     NCDF_VARPUT, id, 'lwp', ave_sat.lwp
     NCDF_VARPUT, id, 'iwp', ave_sat.iwp
-    NCDF_VARPUT, id, 'nobs', cnt_sat.numb
-    NCDF_VARPUT, id, 'nobs_lwp', cnt_sat.numb_lwp
-    NCDF_VARPUT, id, 'nobs_iwp', cnt_sat.numb_iwp
-    NCDF_VARPUT, id, 'nobs_lwp_bin', cnt_sat.numb_lwp_bin
-    NCDF_VARPUT, id, 'nobs_iwp_bin', cnt_sat.numb_iwp_bin
+    NCDF_VARPUT, id, 'nobs', cnt_sat.ctp
+    NCDF_VARPUT, id, 'nobs_lwp', cnt_sat.lwp
+    NCDF_VARPUT, id, 'nobs_iwp', cnt_sat.iwp
+    NCDF_VARPUT, id, 'nobs_lwp_bin', cnt_sat.lwp_bin
+    NCDF_VARPUT, id, 'nobs_iwp_bin', cnt_sat.iwp_bin
     NCDF_VARPUT, id, 'cc_total', ave_sat.cfc
     NCDF_VARPUT, id, 'cc_total_bin', ave_sat.cfc_bin
     NCDF_VARPUT, id, 'lwp_bin', ave_sat.lwp_bin
@@ -332,14 +331,14 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     ; -- satellite INCLOUD mean
     NCDF_VARPUT, id, 'lwp_inc', ave_sat.lwp_inc
     NCDF_VARPUT, id, 'iwp_inc', ave_sat.iwp_inc
-    NCDF_VARPUT, id, 'nobs_lwp_inc', cnt_sat.numb_lwp_inc
-    NCDF_VARPUT, id, 'nobs_iwp_inc', cnt_sat.numb_iwp_inc
+    NCDF_VARPUT, id, 'nobs_lwp_inc', cnt_sat.lwp_inc
+    NCDF_VARPUT, id, 'nobs_iwp_inc', cnt_sat.iwp_inc
 
     ; -- satellite INCLOUD mean: based on binary cph
     NCDF_VARPUT, id, 'lwp_inc_bin', ave_sat.lwp_inc_bin
     NCDF_VARPUT, id, 'iwp_inc_bin', ave_sat.iwp_inc_bin
-    NCDF_VARPUT, id, 'nobs_lwp_inc_bin', cnt_sat.numb_lwp_inc_bin
-    NCDF_VARPUT, id, 'nobs_iwp_inc_bin', cnt_sat.numb_iwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_lwp_inc_bin', cnt_sat.lwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_iwp_inc_bin', cnt_sat.iwp_inc_bin
 
     NCDF_CLOSE, id ;Close netCDF output file
 

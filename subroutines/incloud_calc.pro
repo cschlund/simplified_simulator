@@ -1,22 +1,36 @@
-
 ;---------------------------------------------------------------
 ; incloud_calc: lwc and iwc weighting by means of cc at plevels
 ;               i.e. cloud-cover weighted cloud water content
+;---------------------------------------------------------------
 ;
 ; in : inp, grd
 ; out: cwc_inc
 ;
-;---------------------------------------------------------------
+; IDL> help, inp
+; ** Structure <7523d8>, 10 tags, length=140365888, data length=140365888, refs=1:
+;    FILE            STRING    '/path/to/data/200807/ERA_Interim_an_20080701_00+00_plev.nc'
+;    PLEVEL          DOUBLE    Array[27]
+;    DPRES           DOUBLE    Array[26]
+;    LON             DOUBLE    Array[720]
+;    LAT             DOUBLE    Array[361]
+;    LWC             FLOAT     Array[720, 361, 27]
+;    IWC             FLOAT     Array[720, 361, 27]
+;    CC              FLOAT     Array[720, 361, 27]
+;    GEOP            FLOAT     Array[720, 361, 27]
+;    TEMP            FLOAT     Array[720, 361, 27]
 ;
-; inp.lwc ... liquid water content
-; inp.iwc ... ice water content
-; inp.cc  ... cloud cover
-; grd.grd.xdim .. x-dimension (longitude)
-; grd.grd.ydim .. y-dimension (latitude)
-; grd.grd.zdim .. z-dimension (pressure levels)
+; IDL> help, grd
+; ** Structure <752a58>, 5 tags, length=2079368, data length=2079366, refs=1:
+;    LON2D           FLOAT     Array[720, 361]
+;    LAT2D           FLOAT     Array[720, 361]
+;    XDIM            INT            720
+;    YDIM            INT            361
+;    ZDIM            INT             27
 ;
-; cwc_inc.lwc_inc ... incloud liquid water content
-; cwc_inc.iwc_inc ... incloud ice water content
+; IDL> help, cwc_inc ... incloud cloud water content
+; ** Structure <753788>, 2 tags, length=56142720, data length=56142720, refs=1:
+;    LWC             FLOAT     Array[720, 361, 27]
+;    IWC             FLOAT     Array[720, 361, 27]
 ;
 ;---------------------------------------------------------------
 
