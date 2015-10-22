@@ -3,11 +3,8 @@
 ;-- write netcdf monthly histogram output
 ;-------------------------------------------------------------------
 
-PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
-                        xdim, ydim, zdim, dim_ctp, lon, lat, $
-                        ctp_limits_final1d, ctp_limits_final2d, $
-                        ctp_hist_era, ctp_hist_sat, $
-                        cot_thv_era, cot_thv_sat
+PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
+                        thvs, hist, ave_era, ave_sat
 
     dim_time   = 1
     fyear      = FLOAT(year)
@@ -22,28 +19,28 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
     tbo[1,0]   = tttt2-tref
     itime      = tttt-tref
 
-    erg_plev = ctp_limits_final1d[1:n_elements(ctp_limits_final1d)-1] * 0.5 + $
-               ctp_limits_final1d[0:n_elements(ctp_limits_final1d)-2] * 0.5
+    erg_plev = hist.ctp1d[1:n_elements(hist.ctp1d)-1] * 0.5 + $
+               hist.ctp1d[0:n_elements(hist.ctp1d)-2] * 0.5
 
-    erg_plev_bnds = ctp_limits_final2d;*100.
-        
+    erg_plev_bnds = hist.ctp2d
 
-    file_out='SimpSimu_MH'+year+month+'_'+crit_str+'_CTP.nc'
+
+    file_out='SimpSimu_MH'+year+month+'_'+thvs.str+'_CTP.nc'
     clobber=1
     PRINT,'creating netcdf file: '+file_out
-    
+
     id = NCDF_CREATE(path_out+file_out, CLOBBER = clobber)
-    
+
     NCDF_ATTPUT, id, /GLOBAL, "Source" , "ERA-Interim" ;
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_START" , ""+year+month ;
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_RESOLUTION", "P1M"
-    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_era", cot_thv_era
-    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_sat", cot_thv_sat
+    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_era", thvs.era
+    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_sat", thvs.sat
     
     dim_tb_id  = NCDF_DIMDEF(id, 'gsize', 2)
-    dim_p_id  = NCDF_DIMDEF(id, 'plev', dim_ctp)
-    dim_x_id  = NCDF_DIMDEF(id, 'lon', xdim)
-    dim_y_id  = NCDF_DIMDEF(id, 'lat', ydim)
+    dim_p_id  = NCDF_DIMDEF(id, 'plev', hist.dim_ctp)
+    dim_x_id  = NCDF_DIMDEF(id, 'lon', grd.xdim)
+    dim_y_id  = NCDF_DIMDEF(id, 'lat', grd.ydim)
     dim_b_id  = NCDF_DIMDEF(id, 'bnds', 2)
     time_id  = NCDF_DIMDEF(id, 'time', dim_time)
     
@@ -59,12 +56,12 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, crit_str, $
     NCDF_CONTROL, id, /ENDEF
 
     NCDF_VARPUT, id, 'time',itime
-    NCDF_VARPUT, id, 'lon',lon
-    NCDF_VARPUT, id, 'lat',lat
+    NCDF_VARPUT, id, 'lon',inp.lon
+    NCDF_VARPUT, id, 'lat',inp.lat
     NCDF_VARPUT, id, 'ctp',erg_plev
     NCDF_VARPUT, id, 'ctp_bnds',erg_plev_bnds
-    NCDF_VARPUT, id, 'ctp_hist_era',ctp_hist_era
-    NCDF_VARPUT, id, 'ctp_hist_sat',ctp_hist_sat
+    NCDF_VARPUT, id, 'ctp_hist_era',ave_era.ctp_hist
+    NCDF_VARPUT, id, 'ctp_hist_sat',ave_sat.ctp_hist
     NCDF_CLOSE, id
 
 END

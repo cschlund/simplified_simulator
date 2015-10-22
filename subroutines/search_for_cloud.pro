@@ -3,52 +3,51 @@
 ;-- search bottom-up, where is a cloud using COT threshold value
 ;-------------------------------------------------------------------
 ;
-; in : lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim,
-;      geop, temp, lwp_lay, iwp_lay, plevel, cc
+; in : inp, grd, cwp, cot, thv
+; out: tmp
 ;
-; out: ctp_tmp, cth_tmp, ctt_tmp, cph_tmp, lwp_tmp, iwp_tmp, cfc_tmp,
-;      cph_tmp_bin, cfc_tmp_bin, lwp_tmp_bin, iwp_tmp_bin
+; inp ... input era interim 3d reanalysis fields
+; grd ... era interim grid information
+; cwp ... liquid and ice water path per layer
+; cot ... incloud liquid and ice cloud optical thickness per layer
+; thv ... COT threshold
+; tmp ... temporary arrays
 ;
 ;-------------------------------------------------------------------
 
-PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
-                      geop, temp, lwp_lay, iwp_lay, plevel, cc, $
-                      ctp_tmp, cth_tmp, ctt_tmp, cph_tmp, $
-                      lwp_tmp, iwp_tmp, cfc_tmp, $
-                      cfc_tmp_bin, cph_tmp_bin, $
-                      lwp_tmp_bin, iwp_tmp_bin
+PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
 
 
     ; initialize arrays
-    ctp_tmp = FLTARR(xdim,ydim) & ctp_tmp[*,*] = -999.
-    cth_tmp = FLTARR(xdim,ydim) & cth_tmp[*,*] = -999.
-    ctt_tmp = FLTARR(xdim,ydim) & ctt_tmp[*,*] = -999.
-    cph_tmp = FLTARR(xdim,ydim) & cph_tmp[*,*] = -999.
-    lwp_tmp = FLTARR(xdim,ydim) & lwp_tmp[*,*] = 0.
-    iwp_tmp = FLTARR(xdim,ydim) & iwp_tmp[*,*] = 0.
-    cfc_tmp = FLTARR(xdim,ydim) & cfc_tmp[*,*] = 0.
+    ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = -999.
+    cth_tmp = FLTARR(grd.xdim,grd.ydim) & cth_tmp[*,*] = -999.
+    ctt_tmp = FLTARR(grd.xdim,grd.ydim) & ctt_tmp[*,*] = -999.
+    cph_tmp = FLTARR(grd.xdim,grd.ydim) & cph_tmp[*,*] = -999.
+    lwp_tmp = FLTARR(grd.xdim,grd.ydim) & lwp_tmp[*,*] = 0.
+    iwp_tmp = FLTARR(grd.xdim,grd.ydim) & iwp_tmp[*,*] = 0.
+    cfc_tmp = FLTARR(grd.xdim,grd.ydim) & cfc_tmp[*,*] = 0.
     ; binary based cfc and cph
-    cfc_tmp_bin = FLTARR(xdim,ydim) & cfc_tmp_bin[*,*] = 0.
-    cph_tmp_bin = FLTARR(xdim,ydim) & cph_tmp_bin[*,*] = -999.
+    cfc_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cfc_tmp_bin[*,*] = 0.
+    cph_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cph_tmp_bin[*,*] = -999.
     ; lwp and iwp based on binary decision of cph
-    lwp_tmp_bin = FLTARR(xdim,ydim) & lwp_tmp_bin[*,*] = 0.
-    iwp_tmp_bin = FLTARR(xdim,ydim) & iwp_tmp_bin[*,*] = 0.
+    lwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_bin[*,*] = 0.
+    iwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_bin[*,*] = 0.
 
 
-    FOR z=zdim-2,1,-1 DO BEGIN
+    FOR z=grd.zdim-2,1,-1 DO BEGIN
 
-      total_cot = total((lcot_lay+icot_lay)[*,*,0:z],3)
-      where_cot = where(total_cot GT cot_thv, cnt)
+      total_cot = total((cot.liq + cot.ice)[*,*,0:z],3)
+      where_cot = where(total_cot GT thv, cnt)
 
 
       IF(cnt GT 0) THEN BEGIN
 
-        geop_tmp    = reform(geop[*,*,z])/9.81
-        temp_tmp    = reform(temp[*,*,z])
-        lwp_lay_tmp = reform(lwp_lay[*,*,z])
-        iwp_lay_tmp = reform(iwp_lay[*,*,z])
+        geop_tmp    = reform(inp.geop[*,*,z])/9.81
+        temp_tmp    = reform(inp.temp[*,*,z])
+        lwp_lay_tmp = reform(cwp.lwp[*,*,z])
+        iwp_lay_tmp = reform(cwp.iwp[*,*,z])
 
-        ctp_tmp[where_cot] = plevel[z]/100.
+        ctp_tmp[where_cot] = inp.plevel[z]/100.
         cth_tmp[where_cot] = geop_tmp[where_cot]
         ctt_tmp[where_cot] = temp_tmp[where_cot]
 
@@ -70,21 +69,21 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
 
 
         ; layer between two levels
-        IF(z LT zdim-2) THEN BEGIN
+        IF(z LT grd.zdim-2) THEN BEGIN
 
-          lwp_tmp[where_cot] = (total(lwp_lay[*,*,z:*],3))[where_cot]
-          iwp_tmp[where_cot] = (total(iwp_lay[*,*,z:*],3))[where_cot]
-          cfc_tmp[where_cot] = (0. > ( (max(cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
-          cfc_tmp_bin[where_cot] = ROUND( (0. > ( (max(cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
+          lwp_tmp[where_cot] = (total(cwp.lwp[*,*,z:*],3))[where_cot]
+          iwp_tmp[where_cot] = (total(cwp.iwp[*,*,z:*],3))[where_cot]
+          cfc_tmp[where_cot] = (0. > ( (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
+          cfc_tmp_bin[where_cot] = ROUND( (0. > ( (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
 
 
         ; lowest layer, to be checked
         ENDIF ELSE BEGIN
 
-          lwp_tmp[where_cot] = (lwp_lay[*,*,z])[where_cot]
-          iwp_tmp[where_cot] = (iwp_lay[*,*,z])[where_cot]
-          cfc_tmp[where_cot] = (0. > ( (cc[*,*,z])[where_cot] ) < 1.0 )
-          cfc_tmp_bin[where_cot] = ROUND( (0. > ( (cc[*,*,z])[where_cot] ) < 1.0 ) )
+          lwp_tmp[where_cot] = (cwp.lwp[*,*,z])[where_cot]
+          iwp_tmp[where_cot] = (cwp.iwp[*,*,z])[where_cot]
+          cfc_tmp[where_cot] = (0. > ( (inp.cc[*,*,z])[where_cot] ) < 1.0 )
+          cfc_tmp_bin[where_cot] = ROUND( (0. > ( (inp.cc[*,*,z])[where_cot] ) < 1.0 ) )
 
         ENDELSE
 
@@ -113,5 +112,11 @@ PRO SEARCH_FOR_CLOUD, lcot_lay, icot_lay, cot_thv, xdim, ydim, zdim, $
         iwp_tmp_bin[wo_ice] = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
     ENDIF
 
+
+    ; output structure
+    tmp = {ctp:ctp_tmp, cth:cth_tmp, ctt:ctt_tmp, cph:cph_tmp,$
+           lwp:lwp_tmp, iwp:iwp_tmp, cfc:cfc_tmp, $
+           cfc_bin:cfc_tmp_bin, cph_bin:cph_tmp_bin, $
+           lwp_bin:lwp_tmp_bin, iwp_bin:iwp_tmp_bin}
 
 END

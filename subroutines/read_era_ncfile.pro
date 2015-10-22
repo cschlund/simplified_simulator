@@ -3,13 +3,11 @@
 ;-- read ERA-Interim netCDF file
 ;
 ; in : ncfile
-;
-; out: plevel, diff_pressure, lon, lat, lwc, iwc, cc, geop, temp
+; out: str
 ;
 ;-------------------------------------------------------------------
 
-PRO READ_ERA_NCFILE, ncfile, plevel, diff_pressure, lon, lat, $
-                     lwc, iwc, cc, geop, temp
+PRO READ_ERA_NCFILE, ncfile, str
 
     fileID = NCDF_OPEN(ncfile)
 
@@ -56,5 +54,13 @@ PRO READ_ERA_NCFILE, ncfile, plevel, diff_pressure, lon, lat, $
     cc_idx = WHERE(cc LT 0., ncc)
     IF (ncc GT 0) THEN cc[cc_idx] = 0.
 
+
+    ;era interim structure
+    str={file:ncfile, plevel:plevel, dpres:diff_pressure, $
+         lon:lon, lat:lat, lwc:lwc, iwc:iwc, cc:cc, $
+         geop:geop, temp:temp}
+
+;     HELP, str, /structure
+;     PRINT, TAG_NAMES(str)
 
 END

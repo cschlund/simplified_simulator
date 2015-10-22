@@ -3,29 +3,27 @@
 ;-- from bottom-up find liquid and ice COT from lwc & iwc
 ;-------------------------------------------------------------------
 ;
-; in : lwc, iwc, pres_diff, xdim, ydim, zdim
+; in : lwc, iwc, pres_diff, grd(structure)
+; out: cwp_lay, cot_lay
 ;
-; out: lcot_lay, icot_lay, lwp_lay, iwp_lay
-;
-;       lwc ... liquid water content at each pressure level (zdim)
-;       iwc ... ice water content at each pressure level (zdim)
-; pres_diff ... pressure increment between 2 layers in the atmospher
-;   lwp_lay ... liquid water path per layer
-;   iwp_lay  ... ice water path per layer
-;  lcot_lay ... liquid cloud optical thickness per layer
-;  icot_lay ... ice cloud optical thickness per layer
+;       lwc   ... liquid water content at each pressure level (grd.zdim)
+;       iwc   ... ice water content at each pressure level (grd.zdim)
+; pres_diff   ... pressure increment between 2 layers in the atmosphere
+; cwp_lay.lwp ... liquid water path per layer
+; cwp_lay.iwp ... ice water path per layer
+; cot_lay.liq ... liquid cloud optical thickness per layer
+; cot_lay.ice ... ice cloud optical thickness per layer
 ;
 ;-------------------------------------------------------------------
 
-PRO CWP_COT_PER_LAYER, lwc, iwc, pres_diff, xdim, ydim, zdim, $
-                       lcot_lay, icot_lay, lwp_lay, iwp_lay
+PRO CWP_COT_PER_LAYER, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
 
-    lwp_lay  = FLTARR(xdim,ydim,zdim-1)
-    iwp_lay  = FLTARR(xdim,ydim,zdim-1)
-    lcot_lay = FLTARR(xdim,ydim,zdim-1)
-    icot_lay = FLTARR(xdim,ydim,zdim-1)
+    lwp_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    iwp_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    lcot_lay = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    icot_lay = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
 
-    FOR z=zdim-2,0,-1 DO BEGIN
+    FOR z=grd.zdim-2,0,-1 DO BEGIN
 
       ; liquid/ice water content (lwc/iwc) between two pressure levels,
       ; i.e., LWC of the layer between the levels (middle)
@@ -57,5 +55,10 @@ PRO CWP_COT_PER_LAYER, lwc, iwc, pres_diff, xdim, ydim, zdim, $
       icot_lay[*,*,z] = (3. * iwp_lay[*,*,z] * qext_ice) / (4. * reff_ice * rho_ice)
 
     ENDFOR
+
+
+    ; -- output structures
+    cwp_lay = {lwp:lwp_lay,  iwp:iwp_lay}
+    cot_lay = {liq:lcot_lay, ice:icot_lay}
 
 END

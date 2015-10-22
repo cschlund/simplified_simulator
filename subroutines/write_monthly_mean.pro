@@ -1,25 +1,10 @@
 
 ;-------------------------------------------------------------------
-;-- write netcdf monthly mean output
+;-- write netcdf monthly mean (average) output
 ;-------------------------------------------------------------------
 
-PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
-                        xdim, ydim, zdim, lon, lat, $
-                        cph_era, ctt_era, cth_era, ctp_era,  $
-                        lwp_era, iwp_era, cfc_era, numb_era, $
-                        numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
-                        cph_sat, ctt_sat, cth_sat, ctp_sat,  $
-                        lwp_sat, iwp_sat, cfc_sat, numb_sat, $
-                        numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
-                        lwp_inc_era, iwp_inc_era, numb_lwp_inc_era, numb_iwp_inc_era, $
-                        lwp_inc_sat, iwp_inc_sat, numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                        cot_thv_era, cot_thv_sat, $
-                        lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
-                        iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
-                        lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
-                        iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
-                        cfc_bin_era, cph_bin_era, cfc_bin_sat, cph_bin_sat
-
+PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
+                        ave_era, cnt_era, ave_sat, cnt_sat
 
     dim_time   = 1
     fyear      = FLOAT(year)
@@ -34,29 +19,30 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     tbo[1,0]   = tttt2-tref
     itime      = tttt-tref
 
-    file_out = 'SimpSimu_MM'+year+month+'_'+crit_str+'_CTP.nc'
+    file_out = 'SimpSimu_MM'+year+month+'_'+thv.str+'_CTP.nc'
     clobber  = 1
     PRINT, ' *** Creating netCDF file: ' + file_out
-    
-    ; Create netCDF output file
+
+
+    ; -- Create netCDF output file
     id = NCDF_CREATE(path_out + file_out, CLOBBER = clobber)
-    
+
     NCDF_ATTPUT, id, /GLOBAL, "Source" , "ERA-Interim" ;
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_START" , "" + year + month
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_RESOLUTION", "P1M"
-    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_ori", cot_thv_era
-    NCDF_ATTPUT, id, /GLOBAL, "cot_thv", cot_thv_sat
-    
-    dim_x_id  = NCDF_DIMDEF(id, 'lon', xdim) 	   ;Define x-dimension
-    dim_y_id  = NCDF_DIMDEF(id, 'lat', ydim) 	   ;Define y-dimension
-    time_id   = NCDF_DIMDEF(id, 'time', dim_time)  ;Define time-dimension
-    
-    vid  = NCDF_VARDEF(id, 'lon', [dim_x_id], /FLOAT)     ;Define data variable
-    vid  = NCDF_VARDEF(id, 'lat', [dim_y_id], /FLOAT)     ;Define data variable
-    vid  = NCDF_VARDEF(id, 'time', [time_id], /DOUBLE)    ;Define data variable
-    
+    NCDF_ATTPUT, id, /GLOBAL, "cot_thv_ori", thv.era
+    NCDF_ATTPUT, id, /GLOBAL, "cot_thv", thv.sat
 
-    ; model like output (original ERA-Interim)
+    dim_x_id  = NCDF_DIMDEF(id, 'lon', grd.xdim)
+    dim_y_id  = NCDF_DIMDEF(id, 'lat', grd.ydim)
+    time_id   = NCDF_DIMDEF(id, 'time', dim_time)
+
+    vid  = NCDF_VARDEF(id, 'lon', [dim_x_id], /FLOAT)
+    vid  = NCDF_VARDEF(id, 'lat', [dim_y_id], /FLOAT)
+    vid  = NCDF_VARDEF(id, 'time', [time_id], /DOUBLE)
+
+
+    ; -- model like output (original ERA-Interim)
     vid  = NCDF_VARDEF(id, 'ctp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctp_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'ctp_ori', 'long_name', 'cloud top pressure'
@@ -132,7 +118,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs_iwp_bin_ori', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_iwp_bin_ori', 'units', ' '
 
-    ; incloud parameters
+    ; -- incloud parameters
     vid  = NCDF_VARDEF(id, 'lwp_inc_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc_ori', 'long_name', 'cloud liquid water path'
@@ -151,7 +137,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs_iwp_inc_ori', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_iwp_inc_ori', 'units', ' '
 
-    ; incloud parameters of binary cph based lwp and iwp arrays
+    ; -- incloud parameters of binary cph based lwp and iwp arrays
     vid  = NCDF_VARDEF(id, 'lwp_inc_bin_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_bin_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc_bin_ori', 'long_name', 'cloud liquid water path'
@@ -171,7 +157,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs_iwp_inc_bin_ori', 'units', ' '
 
 
-    ; satellite like output
+    ; -- satellite like output
     vid  = NCDF_VARDEF(id, 'ctp', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctp', '_FillValue', -999.
     NCDF_ATTPUT, id, 'ctp', 'long_name', 'cloud top pressure'
@@ -247,7 +233,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs_iwp_bin', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_iwp_bin', 'units', ' '
 
-    ; incloud parameters
+    ; -- incloud parameters
     vid  = NCDF_VARDEF(id, 'lwp_inc', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc', 'long_name', 'cloud liquid water path'
@@ -266,7 +252,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
     NCDF_ATTPUT, id, 'nobs_iwp_inc', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_iwp_inc', 'units', ' '
 
-    ; incloud parameters: lwp and iwp based on binary cph
+    ; -- incloud parameters: lwp and iwp based on binary cph
     vid  = NCDF_VARDEF(id, 'lwp_inc_bin', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_inc_bin', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp_inc_bin', 'long_name', 'cloud liquid water path'
@@ -290,67 +276,70 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, crit_str, $
 
 
     NCDF_VARPUT, id, 'time', itime
-    NCDF_VARPUT, id, 'lon', lon
-    NCDF_VARPUT, id, 'lat', lat
-
-    ; model GRID mean
-    NCDF_VARPUT, id, 'ctp_ori',ctp_era
-    NCDF_VARPUT, id, 'cth_ori',cth_era
-    NCDF_VARPUT, id, 'ctt_ori',ctt_era
-    NCDF_VARPUT, id, 'cph_ori',cph_era
-    NCDF_VARPUT, id, 'cph_bin_ori',cph_bin_era
-    NCDF_VARPUT, id, 'lwp_ori',lwp_era
-    NCDF_VARPUT, id, 'iwp_ori',iwp_era
-    NCDF_VARPUT, id, 'nobs_ori',numb_era
-    NCDF_VARPUT, id, 'nobs_lwp_ori',numb_lwp_era
-    NCDF_VARPUT, id, 'nobs_iwp_ori',numb_iwp_era
-    NCDF_VARPUT, id, 'nobs_lwp_bin_ori',numb_lwp_bin_era
-    NCDF_VARPUT, id, 'nobs_iwp_bin_ori',numb_iwp_bin_era
-    NCDF_VARPUT, id, 'cc_total_ori',cfc_era
-    NCDF_VARPUT, id, 'cc_total_bin_ori',cfc_bin_era
-    NCDF_VARPUT, id, 'lwp_bin_ori',lwp_bin_era
-    NCDF_VARPUT, id, 'iwp_bin_ori',iwp_bin_era
-
-    ; model INCLOUD mean
-    NCDF_VARPUT, id, 'lwp_inc_ori',lwp_inc_era
-    NCDF_VARPUT, id, 'iwp_inc_ori',iwp_inc_era
-    NCDF_VARPUT, id, 'nobs_lwp_inc_ori',numb_lwp_inc_era
-    NCDF_VARPUT, id, 'nobs_iwp_inc_ori',numb_iwp_inc_era
-    ; model INCLOUD mean: based on binary cph
-    NCDF_VARPUT, id, 'lwp_inc_bin_ori',lwp_inc_bin_era
-    NCDF_VARPUT, id, 'iwp_inc_bin_ori',iwp_inc_bin_era
-    NCDF_VARPUT, id, 'nobs_lwp_inc_bin_ori',numb_lwp_inc_bin_era
-    NCDF_VARPUT, id, 'nobs_iwp_inc_bin_ori',numb_iwp_inc_bin_era
+    NCDF_VARPUT, id, 'lon', inp.lon
+    NCDF_VARPUT, id, 'lat', inp.lat
 
 
-    ; satellite GRID mean
-    NCDF_VARPUT, id, 'ctp',ctp_sat
-    NCDF_VARPUT, id, 'cth',cth_sat
-    NCDF_VARPUT, id, 'ctt',ctt_sat
-    NCDF_VARPUT, id, 'cph',cph_sat
-    NCDF_VARPUT, id, 'cph_bin',cph_bin_sat
-    NCDF_VARPUT, id, 'lwp',lwp_sat
-    NCDF_VARPUT, id, 'iwp',iwp_sat
-    NCDF_VARPUT, id, 'nobs',numb_sat
-    NCDF_VARPUT, id, 'nobs_lwp',numb_lwp_sat
-    NCDF_VARPUT, id, 'nobs_iwp',numb_iwp_sat
-    NCDF_VARPUT, id, 'nobs_lwp_bin',numb_lwp_bin_sat
-    NCDF_VARPUT, id, 'nobs_iwp_bin',numb_iwp_bin_sat
-    NCDF_VARPUT, id, 'cc_total',cfc_sat
-    NCDF_VARPUT, id, 'cc_total_bin',cfc_bin_sat
-    NCDF_VARPUT, id, 'lwp_bin',lwp_bin_sat
-    NCDF_VARPUT, id, 'iwp_bin',iwp_bin_sat
+    ; -- model GRID mean
+    NCDF_VARPUT, id, 'ctp_ori', ave_era.ctp
+    NCDF_VARPUT, id, 'cth_ori', ave_era.cth
+    NCDF_VARPUT, id, 'ctt_ori', ave_era.ctt
+    NCDF_VARPUT, id, 'cph_ori', ave_era.cph
+    NCDF_VARPUT, id, 'cph_bin_ori', ave_era.cph_bin
+    NCDF_VARPUT, id, 'lwp_ori', ave_era.lwp
+    NCDF_VARPUT, id, 'iwp_ori', ave_era.iwp
+    NCDF_VARPUT, id, 'cc_total_ori', ave_era.cfc
+    NCDF_VARPUT, id, 'cc_total_bin_ori', ave_era.cfc_bin
+    NCDF_VARPUT, id, 'nobs_ori', cnt_era.numb
+    NCDF_VARPUT, id, 'nobs_lwp_ori', cnt_era.numb_lwp
+    NCDF_VARPUT, id, 'nobs_iwp_ori', cnt_era.numb_iwp
+    NCDF_VARPUT, id, 'lwp_bin_ori', ave_era.lwp_bin
+    NCDF_VARPUT, id, 'iwp_bin_ori', ave_era.iwp_bin
+    NCDF_VARPUT, id, 'nobs_lwp_bin_ori', cnt_era.numb_lwp_bin
+    NCDF_VARPUT, id, 'nobs_iwp_bin_ori', cnt_era.numb_iwp_bin
 
-    ; satellite INCLOUD mean
-    NCDF_VARPUT, id, 'lwp_inc',lwp_inc_sat
-    NCDF_VARPUT, id, 'iwp_inc',iwp_inc_sat
-    NCDF_VARPUT, id, 'nobs_lwp_inc',numb_lwp_inc_sat
-    NCDF_VARPUT, id, 'nobs_iwp_inc',numb_iwp_inc_sat
-    ; satellite INCLOUD mean: based on binary cph
-    NCDF_VARPUT, id, 'lwp_inc_bin',lwp_inc_bin_sat
-    NCDF_VARPUT, id, 'iwp_inc_bin',iwp_inc_bin_sat
-    NCDF_VARPUT, id, 'nobs_lwp_inc_bin',numb_lwp_inc_bin_sat
-    NCDF_VARPUT, id, 'nobs_iwp_inc_bin',numb_iwp_inc_bin_sat
+    ; -- model INCLOUD mean
+    NCDF_VARPUT, id, 'lwp_inc_ori', ave_era.lwp_inc
+    NCDF_VARPUT, id, 'iwp_inc_ori', ave_era.iwp_inc
+    NCDF_VARPUT, id, 'nobs_lwp_inc_ori', cnt_era.numb_lwp_inc
+    NCDF_VARPUT, id, 'nobs_iwp_inc_ori', cnt_era.numb_iwp_inc
+
+    ; -- model INCLOUD mean: based on binary cph
+    NCDF_VARPUT, id, 'lwp_inc_bin_ori', ave_era.lwp_inc_bin
+    NCDF_VARPUT, id, 'iwp_inc_bin_ori', ave_era.iwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_lwp_inc_bin_ori', cnt_era.numb_lwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_iwp_inc_bin_ori', cnt_era.numb_iwp_inc_bin
+
+
+    ; -- satellite GRID mean
+    NCDF_VARPUT, id, 'ctp', ave_sat.ctp
+    NCDF_VARPUT, id, 'cth', ave_sat.cth
+    NCDF_VARPUT, id, 'ctt', ave_sat.ctt
+    NCDF_VARPUT, id, 'cph', ave_sat.cph
+    NCDF_VARPUT, id, 'cph_bin', ave_sat.cph_bin
+    NCDF_VARPUT, id, 'lwp', ave_sat.lwp
+    NCDF_VARPUT, id, 'iwp', ave_sat.iwp
+    NCDF_VARPUT, id, 'nobs', cnt_sat.numb
+    NCDF_VARPUT, id, 'nobs_lwp', cnt_sat.numb_lwp
+    NCDF_VARPUT, id, 'nobs_iwp', cnt_sat.numb_iwp
+    NCDF_VARPUT, id, 'nobs_lwp_bin', cnt_sat.numb_lwp_bin
+    NCDF_VARPUT, id, 'nobs_iwp_bin', cnt_sat.numb_iwp_bin
+    NCDF_VARPUT, id, 'cc_total', ave_sat.cfc
+    NCDF_VARPUT, id, 'cc_total_bin', ave_sat.cfc_bin
+    NCDF_VARPUT, id, 'lwp_bin', ave_sat.lwp_bin
+    NCDF_VARPUT, id, 'iwp_bin', ave_sat.iwp_bin
+
+    ; -- satellite INCLOUD mean
+    NCDF_VARPUT, id, 'lwp_inc', ave_sat.lwp_inc
+    NCDF_VARPUT, id, 'iwp_inc', ave_sat.iwp_inc
+    NCDF_VARPUT, id, 'nobs_lwp_inc', cnt_sat.numb_lwp_inc
+    NCDF_VARPUT, id, 'nobs_iwp_inc', cnt_sat.numb_iwp_inc
+
+    ; -- satellite INCLOUD mean: based on binary cph
+    NCDF_VARPUT, id, 'lwp_inc_bin', ave_sat.lwp_inc_bin
+    NCDF_VARPUT, id, 'iwp_inc_bin', ave_sat.iwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_lwp_inc_bin', cnt_sat.numb_lwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_iwp_inc_bin', cnt_sat.numb_iwp_inc_bin
 
     NCDF_CLOSE, id ;Close netCDF output file
 

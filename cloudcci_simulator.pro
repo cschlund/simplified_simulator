@@ -3,7 +3,8 @@
 ;   CLOUDCCI_SIMULATOR
 ;
 ; PURPOSE:
-;   Calculates monthly means of cloud-cci like parameters based on ERA-Interim reanalysis
+;   Calculates monthly means of cloud-cci like parameters 
+;   based on ERA-Interim reanalysis
 ;
 ; AUTHOR:
 ;   Dr. Martin Stengel
@@ -24,78 +25,69 @@
 ;   C. Schlundt, Juli 2015: incloud_mean arrays added
 ;                           (LWP and IWP weighted with CFC)
 ;   C. Schlundt, September 2015: binary CFC, CPH added and applied to LWP/IWP
+;   C. Schlundt, Oktober 2015: implementation of structures
+;
+; ToDo: (1) add COT as output variable, 
+;       (2) COT/LWP/IWP dayside only, 
+;       (3) cloud overlap
 ;
 ;*******************************************************************************
-; Simulator NOTES:
-;
-; This is what I have so far implemented:
-; 1)  Retrieving 6 hourly ERA-Interim analysis fields of
-;     Psfc, lwc, iwc, cloud cover, geopotent. height and temperature
-; 2)  Calculating LWP and IWP for each layer
-; 3)  Calculating COT for each layer assuming effective radius of
-;     10mic for water and 20mic for ice using inverted formula
-;     we use for LWP/IWP calculation in CC4CL.
-; 4)  Finding the uppermost layer for which the total (layer to TOA)
-;     COT exceeds a certain threshold (e.g. 0.01, 1.0).
-;     Collect CTP, CTH, CTT and liquid cloud fraction from that level.
-; 5)  Adding up all layer IWP/LWP for total column IWP/LWP
-; 6)  Using collected values for creating monthly means and
-;     1-d histograms over all 4*30 files in a month
-;
-; ToDo: add COT as output variable
-;
-;*******************************************************************************
-PRO CLOUDCCI_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
-                        logfile=logfile
+PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 ;*******************************************************************************
 
     ; -- import settings
-    IF KEYWORD_SET(verbose) THEN PRINT, ' * Import CONFIG_CLOUDCCI_SIMULATOR setttings'
-    CONFIG_CLOUDCCI_SIMULATOR, era_path, out_path, years_list, nyears, $
-                          months_list, nmonths, dim_ctp, $
-                          ctp_limits_final1d, ctp_limits_final2d, $
-                          cot_thv_era, cot_thv_sat, crit_str
+    IF KEYWORD_SET(verbose) THEN $
+        PRINT, ' * Import CONFIG_CLOUDCCI_SIMULATOR setttings'
 
-	IF KEYWORD_SET(verbose) THEN BEGIN
-		HELP, era_path, out_path, cot_thv_era, cot_thv_sat
-	ENDIF
+    CONFIG_SIMULATOR, pwd, tim, thv, his
 
-	IF KEYWORD_SET(logfile) THEN $
-		JOURNAL, out_path + 'journal_' + crit_str + cgTimeStamp() + '.pro'
+
+    IF KEYWORD_SET(test) THEN BEGIN
+        pwd.inp = '/data/cschlund/MARS_data/ERA_simulator_testdata/'
+        pwd.out = pwd.out + 'testrun/'
+        validres = VALID_DIR( pwd.out)
+        IF(validres EQ 0) THEN creatres = CREATE_DIR( pwd.out )
+    ENDIF
+
+
+    IF KEYWORD_SET(verbose) THEN BEGIN
+        HELP, pwd, /structure
+        HELP, thv, /structure
+    ENDIF
+
+
+    IF KEYWORD_SET(logfile) THEN $
+        JOURNAL, pwd.out + 'journal_' + thv.str + cgTimeStamp() + '.pro'
+
 
     ; -- loop over years and months
-    
-    FOR ii1=0,nyears-1 DO BEGIN
-        FOR jj1=0,nmonths-1 DO BEGIN
-        
-            year  = years_list[ii1]
-            month = months_list[jj1]
-            
+    FOR ii1=0, tim.ny-1 DO BEGIN
+        FOR jj1=0, tim.nm-1 DO BEGIN
+
+            year  = tim.yyyy[ii1]
+            month = tim.mm[jj1]
+
             counti = 0
-            
-            ff = FINDFILE(era_path+year+month+'/'+'*'+$
-                          year+month+'*plev')
+
+            ff = FINDFILE(pwd.inp+year+month+'/'+'*'+year+month+'*plev')
             numff = N_ELEMENTS(ff)
-            
+
             PRINT, ''
             PRINT, ' *** ',STRTRIM(numff,2),' Number of files for ', year, '/', month
             PRINT, ''
-            
-            
+
             IF(N_ELEMENTS(ff) GT 1) THEN BEGIN
-            
-            
+
                 FOR fidx=0,N_ELEMENTS(ff)-1,1 DO BEGIN ;loop over files
-                
+
                     file0 = ff[fidx]
                     file1 = file0+'.nc'
-                    
+
                     IF(is_file(file0) AND (NOT is_file(file1))) THEN BEGIN
                         PRINT,' * Converting: ' + file0
                         SPAWN,'cdo -f nc copy ' + file0 + ' ' + file1
                     ENDIF
-                    
-                    
+
                     IF(is_file(file1)) THEN BEGIN
 
                         base = FSC_Base_Filename(file1,Directory=dir,Extension=ext)
@@ -104,203 +96,68 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, cot_thv_sat=cot_thv_sat, $
                             PRINT, ' * Input directory: ', dir
 
                         ; -- read netCDF file
-                        IF KEYWORD_SET(verbose) THEN PRINT,' * READ_ERA_NCFILE: ',$
-                            STRTRIM(counti,2),': ',base+'.'+ext
-                        READ_ERA_NCFILE, file1, plevel, dpres, lon, lat, $
-                                         lwc, iwc, cc, geop, temp
-
-
-                        IF(counti EQ 0) THEN BEGIN
-
-                            ; -- initialize grid
-                            INIT_ERA_GRID, lwc, lon, lat, $ 
-                                           lon2d, lat2d, xdim, ydim, zdim, verbose
-
-                            ; -- initialize mean arrays
-                            INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
-                                             cph_era, ctt_era, cth_era, $
-                                             ctp_era, lwp_era, iwp_era, $
-                                             cfc_era, lwp_inc_era, iwp_inc_era, $
-                                             numb_lwp_inc_era, numb_iwp_inc_era, $
-                                             ctp_hist_era, numb_era, numb_tmp, numb_raw, $
-                                             numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
-                                             lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
-                                             iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
-                                             cfc_bin_era, cph_bin_era
-
-                            INIT_OUT_ARRAYS, xdim, ydim, zdim, dim_ctp, $
-                                             cph_sat, ctt_sat, cth_sat, $
-                                             ctp_sat, lwp_sat, iwp_sat, $
-                                             cfc_sat, lwp_inc_sat, iwp_inc_sat, $
-                                             numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                             ctp_hist_sat, numb_sat, numb_tmp, numb_raw, $
-                                             numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
-                                             lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
-                                             iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
-                                             cfc_bin_sat, cph_bin_sat
-
+                        IF KEYWORD_SET(verbose) THEN BEGIN
+                            PRINT,' * READ_ERA_NCFILE: ',STRTRIM(counti,2),': ',base+'.'+ext
                         ENDIF
+
+                        ; -- returns structure containing the input variables
+                        READ_ERA_NCFILE, file1, input
+
+                        ; -- initialize grid and output arrays:
+                        IF(counti EQ 0) THEN BEGIN
+                            INIT_ERA_GRID, input, grid 
+                            INIT_OUT_ARRAYS, grid, his, mean_era, cnts_era
+                            INIT_OUT_ARRAYS, grid, his, mean_sat, cnts_sat
+                        ENDIF
+
                         counti++
 
-
                         ; -- lwc and iwc weighted by cc
-                        INCLOUD_CALC, lwc, iwc, cc, xdim, ydim, zdim, $
-                                      lwc_inc, iwc_inc
+                        INCLOUD_CALC, input, grid, cwc_inc
 
+                        ; -- get LWP/IWP/LCOT/ICOT per layer
+                        CWP_COT_PER_LAYER, input.lwc, input.iwc, input.dpres, grid, $
+                                           cwp_lay, cot_lay
+                        CWP_COT_PER_LAYER, cwc_inc.lwc, cwc_inc.iwc, input.dpres, grid, $
+                                           cwp_lay_inc, cot_lay_inc 
 
-                        ; -- get liquid & ice COTs
-                        ; -- goal: get lwp_lay & iwp_lay
-                        CWP_COT_PER_LAYER, lwc, iwc, dpres, xdim, ydim, zdim, $
-                                           liq_cot_lay, ice_cot_lay, $
-                                           lwp_lay, iwp_lay
-
-                        ; -- goal: get liq_cot_lay_inc & ice_cot_lay_inc
-                        CWP_COT_PER_LAYER, lwc_inc, iwc_inc, dpres, xdim, ydim, zdim, $
-                                           liq_cot_lay_inc, ice_cot_lay_inc, $
-                                           lwp_lay_inc, iwp_lay_inc
-
-
-                        ; -- get cloud parameters using incloud liquid + ice COT threshold
-                        SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_era, $
-                                          xdim, ydim, zdim, geop, temp, $
-                                          lwp_lay, iwp_lay, plevel, cc, $
-                                          ctp_tmp_era, cth_tmp_era, ctt_tmp_era, $
-                                          cph_tmp_era, lwp_tmp_era, iwp_tmp_era, cfc_tmp_era, $
-                                          cfc_tmp_bin_era, cph_tmp_bin_era, $
-                                          lwp_tmp_bin_era, iwp_tmp_bin_era
-
-                        SEARCH_FOR_CLOUD, liq_cot_lay_inc, ice_cot_lay_inc, cot_thv_sat, $
-                                          xdim, ydim, zdim, geop, temp, $
-                                          lwp_lay, iwp_lay, plevel, cc, $
-                                          ctp_tmp_sat, cth_tmp_sat, ctt_tmp_sat, $
-                                          cph_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, cfc_tmp_sat, $
-                                          cfc_tmp_bin_sat, cph_tmp_bin_sat, $
-                                          lwp_tmp_bin_sat, iwp_tmp_bin_sat
-
+                        ; -- get cloud parameters using incloud COT threshold
+                        SEARCH_FOR_CLOUD, input, grid, cwp_lay, cot_lay_inc, thv.era, tmp_era
+                        SEARCH_FOR_CLOUD, input, grid, cwp_lay, cot_lay_inc, thv.sat, tmp_sat
 
                         ; -- sum up cloud parameters
-                        SUMUP_CLOUD_PARAMS, cph_era, ctt_era, cth_era, ctp_era, $
-                                            lwp_era, iwp_era, cfc_era, $
-                                            lwp_inc_era, iwp_inc_era, $
-                                            numb_lwp_inc_era, numb_iwp_inc_era, $
-                                            cph_tmp_era, ctt_tmp_era, cth_tmp_era, $
-                                            ctp_tmp_era, lwp_tmp_era, iwp_tmp_era, $
-                                            cfc_tmp_era, ctp_hist_era, numb_era, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, $
-                                            numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
-                                            lwp_tmp_bin_era, lwp_bin_era, $
-                                            lwp_inc_bin_era, numb_lwp_inc_bin_era, $
-                                            iwp_tmp_bin_era, iwp_bin_era, $
-                                            iwp_inc_bin_era, numb_iwp_inc_bin_era, $
-                                            cfc_tmp_bin_era, cfc_bin_era, $
-                                            cph_tmp_bin_era, cph_bin_era
+                        SUMUP_CLOUD_PARAMS, mean_era, cnts_era, tmp_era, his
+                        SUMUP_CLOUD_PARAMS, mean_sat, cnts_sat, tmp_sat, his
 
-                        SUMUP_CLOUD_PARAMS, cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                                            lwp_sat, iwp_sat, cfc_sat, $
-                                            lwp_inc_sat, iwp_inc_sat, $
-                                            numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                            cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, $
-                                            ctp_tmp_sat, lwp_tmp_sat, iwp_tmp_sat, $
-                                            cfc_tmp_sat, ctp_hist_sat, numb_sat, $
-                                            numb_tmp, ctp_limits_final2d, dim_ctp, $
-                                            numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
-                                            lwp_tmp_bin_sat, lwp_bin_sat, $
-                                            lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
-                                            iwp_tmp_bin_sat, iwp_bin_sat, $
-                                            iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
-                                            cfc_tmp_bin_sat, cfc_bin_sat, $
-                                            cph_tmp_bin_sat, cph_bin_sat
+                        ; -- count number of files
+                        cnts_era.numb_raw++
+                        cnts_sat.numb_raw++
 
-                        
-                        numb_raw++
-                        
                         ; delete tmp arrays
-                        UNDEFINE, cph_tmp_era, ctt_tmp_era, cth_tmp_era, ctp_tmp_era, $
-                                  lwp_tmp_era, iwp_tmp_era, cfc_tmp_era
-                        UNDEFINE, cph_tmp_sat, ctt_tmp_sat, cth_tmp_sat, ctp_tmp_sat, $
-                                  lwp_tmp_sat, iwp_tmp_sat, cfc_tmp_sat
-                        UNDEFINE, lwp_tmp_bin_era, iwp_tmp_bin_era, $
-                                  lwp_tmp_bin_sat, iwp_tmp_bin_sat, $
-                                  cfc_tmp_bin_era, cph_tmp_bin_era, $
-                                  cfc_tmp_bin_sat, cph_tmp_bin_sat
+                        UNDEFINE, tmp_era, tmp_sat
 
                     ENDIF ;end of IF(is_file(file1))
-                
-                
+
                 ;-----------------------------------------------------------------------
                 ENDFOR ;end of file loop
                 ;-----------------------------------------------------------------------
-                
+
                 ; -- calculate averages
-                CALC_PARAMS_AVERAGES, cph_era, ctt_era, cth_era, ctp_era, $
-                                      lwp_era, iwp_era, cfc_era, $
-                                      lwp_inc_era, iwp_inc_era, $
-                                      numb_lwp_inc_era, numb_iwp_inc_era, $
-                                      numb_era, numb_raw, $
-                                      numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
-                                      lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
-                                      iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
-                                      cfc_bin_era, cph_bin_era
+                CALC_PARAMS_AVERAGES, mean_era, cnts_era
+                CALC_PARAMS_AVERAGES, mean_sat, cnts_sat
 
-                CALC_PARAMS_AVERAGES, cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                                      lwp_sat, iwp_sat, cfc_sat, $
-                                      lwp_inc_sat, iwp_inc_sat, $
-                                      numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                      numb_sat, numb_raw, $
-                                      numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
-                                      lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
-                                      iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
-                                      cfc_bin_sat, cph_bin_sat
-
-
-                PRINT,' * counti (number of files read): ', counti
-
+                ; -- write output files
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_MEAN'
-                WRITE_MONTHLY_MEAN, out_path, year, month, crit_str, $
-                                    xdim, ydim, zdim, lon, lat, $
-                                    cph_era, ctt_era, cth_era, ctp_era,  $
-                                    lwp_era, iwp_era, cfc_era, numb_era, $
-                                    numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era, $
-                                    cph_sat, ctt_sat, cth_sat, ctp_sat,  $
-                                    lwp_sat, iwp_sat, cfc_sat, numb_sat, $
-                                    numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat, $
-                                    lwp_inc_era, iwp_inc_era, numb_lwp_inc_era, numb_iwp_inc_era, $
-                                    lwp_inc_sat, iwp_inc_sat, numb_lwp_inc_sat, numb_iwp_inc_sat, $
-                                    cot_thv_era, cot_thv_sat, $
-                                    lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
-                                    iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era, $
-                                    lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
-                                    iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat, $
-                                    cfc_bin_era, cph_bin_era, cfc_bin_sat, cph_bin_sat
+                WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $
+                                    mean_era, cnts_era, mean_sat, cnts_sat
 
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_HIST'
-                WRITE_MONTHLY_HIST, out_path, year, month, crit_str, $
-                                    xdim, ydim, zdim, dim_ctp, lon, lat, $
-                                    ctp_limits_final1d, ctp_limits_final2d, $
-                                    ctp_hist_era, ctp_hist_sat, $
-                                    cot_thv_era, cot_thv_sat
-                
-                
-                ; delete final arrays before next cycle starts
-                ; UNDEFINE, var0, ..., var9 ;
-                UNDEFINE, cph_era, ctt_era, cth_era, ctp_era, $
-                          lwp_era, iwp_era, cfc_era
-                UNDEFINE, cph_sat, ctt_sat, cth_sat, ctp_sat, $
-                          lwp_sat, iwp_sat, cfc_sat
-                UNDEFINE, ctp_hist_era, ctp_hist_sat, $
-                          lwp_inc_era, iwp_inc_era, $
-                          lwp_inc_sat, iwp_inc_sat
-                UNDEFINE, numb_tmp, numb_raw, counti, numb_era, numb_sat
-                UNDEFINE, numb_lwp_era, numb_iwp_era, numb_lwp_bin_era, numb_iwp_bin_era
-                UNDEFINE, numb_lwp_sat, numb_iwp_sat, numb_lwp_bin_sat, numb_iwp_bin_sat
-                UNDEFINE, numb_lwp_inc_era, numb_iwp_inc_era, $
-                          numb_lwp_inc_sat, numb_iwp_inc_sat
-                UNDEFINE, lwp_bin_era, lwp_inc_bin_era, numb_lwp_inc_bin_era, $
-                          iwp_bin_era, iwp_inc_bin_era, numb_iwp_inc_bin_era
-                UNDEFINE, lwp_bin_sat, lwp_inc_bin_sat, numb_lwp_inc_bin_sat, $
-                          iwp_bin_sat, iwp_inc_bin_sat, numb_iwp_inc_bin_sat
-                UNDEFINE, cfc_bin_era, cph_bin_era, cfc_bin_sat, cph_bin_sat
+                WRITE_MONTHLY_HIST, pwd.out, year, month, grid, input, $
+                                    thv, his, mean_era, mean_sat
 
+
+                ; delete final arrays before next cycle starts
+                UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
 

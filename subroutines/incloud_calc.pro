@@ -1,40 +1,41 @@
 
 ;---------------------------------------------------------------
 ; incloud_calc: lwc and iwc weighting by means of cc at plevels
+;               i.e. cloud-cover weighted cloud water content
 ;
-; in : lwc, iwc, cc, xdim, ydim, zdim
+; in : inp, grd
+; out: cwc_inc
 ;
-; out: lwc_inc, iwc_inc
+;---------------------------------------------------------------
 ;
-; lwc ... liquid water content
-; iwc ... ice water content
-;  cc ... cloud cover
-; xdim .. x-dimension (longitude)
-; ydim .. y-dimension (latitude)
-; zdim .. z-dimension (pressure levels)
+; inp.lwc ... liquid water content
+; inp.iwc ... ice water content
+; inp.cc  ... cloud cover
+; grd.grd.xdim .. x-dimension (longitude)
+; grd.grd.ydim .. y-dimension (latitude)
+; grd.grd.zdim .. z-dimension (pressure levels)
 ;
-; lwc_inc ... incloud liquid water content
-; iwc_inc ... incloud ice water content
+; cwc_inc.lwc_inc ... incloud liquid water content
+; cwc_inc.iwc_inc ... incloud ice water content
 ;
 ;---------------------------------------------------------------
 
-PRO INCLOUD_CALC, lwc, iwc, cc, xdim, ydim, zdim, $
-                  lwc_inc, iwc_inc
+PRO INCLOUD_CALC, inp, grd, cwc_inc
 
-    lwc_inc = FLTARR(xdim,ydim,zdim) & lwc_inc[*,*,*] = 0.
-    iwc_inc = FLTARR(xdim,ydim,zdim) & iwc_inc[*,*,*] = 0.
-    lwc_inc_tmp = FLTARR(xdim,ydim)  & lwc_inc_tmp[*,*] = 0.
-    iwc_inc_tmp = FLTARR(xdim,ydim)  & iwc_inc_tmp[*,*] = 0.
+    lwc_inc = FLTARR(grd.xdim,grd.ydim,grd.zdim) & lwc_inc[*,*,*] = 0.
+    iwc_inc = FLTARR(grd.xdim,grd.ydim,grd.zdim) & iwc_inc[*,*,*] = 0.
+    lwc_inc_tmp = FLTARR(grd.xdim,grd.ydim) & lwc_inc_tmp[*,*] = 0.
+    iwc_inc_tmp = FLTARR(grd.xdim,grd.ydim) & iwc_inc_tmp[*,*] = 0.
 
-    FOR z=zdim-1,0,-1 DO BEGIN
+    FOR z=grd.zdim-1,0,-1 DO BEGIN
     
-      zidx_l = WHERE(cc[*,*,z] GT 0. AND lwc[*,*,z] GT 0.,num_zidx_l)
-      zidx_i = WHERE(cc[*,*,z] GT 0. AND iwc[*,*,z] GT 0.,num_zidx_i)
+      zidx_l = WHERE(inp.cc[*,*,z] GT 0. AND inp.lwc[*,*,z] GT 0.,num_zidx_l)
+      zidx_i = WHERE(inp.cc[*,*,z] GT 0. AND inp.iwc[*,*,z] GT 0.,num_zidx_i)
 
       IF(num_zidx_l GT 0 OR num_zidx_i GT 0) THEN BEGIN
-        lwc_2dtmp = REFORM(lwc[*,*,z])
-        iwc_2dtmp = REFORM(iwc[*,*,z])
-        cfc_2dtmp = REFORM(cc[*,*,z])
+        lwc_2dtmp = REFORM(inp.lwc[*,*,z])
+        iwc_2dtmp = REFORM(inp.iwc[*,*,z])
+        cfc_2dtmp = REFORM(inp.cc[*,*,z])
       ENDIF
 
       IF(num_zidx_l GT 0) THEN BEGIN
@@ -50,5 +51,8 @@ PRO INCLOUD_CALC, lwc, iwc, cc, xdim, ydim, zdim, $
       ENDIF
 
     ENDFOR
+
+    ; output structure
+    cwc_inc = {lwc:lwc_inc, iwc:iwc_inc}
 
 END
