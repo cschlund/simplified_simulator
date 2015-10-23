@@ -22,7 +22,6 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     clobber  = 1
     PRINT, ' *** Creating netCDF file: ' + file_out
 
-
     ; -- Create netCDF output file
     id = NCDF_CREATE(path_out + file_out, CLOBBER = clobber)
 
@@ -71,6 +70,11 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     vid  = NCDF_VARDEF(id, 'nobs_ori', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_ori', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_ori', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'cwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cwp_ori', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cwp_ori', 'long_name', 'cloud water path'
+    NCDF_ATTPUT, id, 'cwp_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'lwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_ori', '_FillValue', -999.
@@ -121,6 +125,11 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_ATTPUT, id, 'nobs', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs', 'units', ' '
 
+    vid  = NCDF_VARDEF(id, 'cwp', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cwp', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cwp', 'long_name', 'cloud water path'
+    NCDF_ATTPUT, id, 'cwp', 'units', 'g/m^2'
+
     vid  = NCDF_VARDEF(id, 'lwp', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp', '_FillValue', -999.
     NCDF_ATTPUT, id, 'lwp', 'long_name', 'cloud liquid water path'
@@ -153,6 +162,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'ctt_ori', ave_era.ctt
     NCDF_VARPUT, id, 'cph_ori', ave_era.cph
     NCDF_VARPUT, id, 'cc_total_ori', ave_era.cfc
+    NCDF_VARPUT, id, 'cwp_ori', ave_era.cwp
     NCDF_VARPUT, id, 'lwp_ori', ave_era.lwp
     NCDF_VARPUT, id, 'iwp_ori', ave_era.iwp
     NCDF_VARPUT, id, 'nobs_ori', cnt_era.ctp
@@ -165,6 +175,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'ctt', ave_sat.ctt
     NCDF_VARPUT, id, 'cph', ave_sat.cph_bin
     NCDF_VARPUT, id, 'cc_total', ave_sat.cfc_bin
+    NCDF_VARPUT, id, 'cwp', ave_sat.cwp
     NCDF_VARPUT, id, 'lwp', ave_sat.lwp_inc_bin
     NCDF_VARPUT, id, 'iwp', ave_sat.iwp_inc_bin
     NCDF_VARPUT, id, 'nobs', cnt_sat.ctp

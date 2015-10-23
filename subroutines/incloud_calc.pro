@@ -67,6 +67,6 @@ PRO INCLOUD_CALC, inp, grd, cwc_inc
     ENDFOR
 
     ; output structure
-    cwc_inc = {lwc:lwc_inc, iwc:iwc_inc}
+    cwc_inc = {incloud_cloud_water_path, lwc:lwc_inc, iwc:iwc_inc}
 
 END

@@ -8,6 +8,7 @@
 ; IDL> help, arrays, /str
 ; ** Structure <752e68>, 16 tags, length=30150720, data length=30150720, refs=1:
 ;    CTP_HIST        LONG      Array[720, 361, 14]
+;    CWP             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
 ;    CTH             FLOAT     Array[720, 361]
@@ -42,6 +43,7 @@
 
 PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
 
+    cwp = FLTARR(grid.xdim,grid.ydim) & cwp[*,*] = 0
     cph = FLTARR(grid.xdim,grid.ydim) & cph[*,*] = 0
     ctt = FLTARR(grid.xdim,grid.ydim) & ctt[*,*] = 0
     cth = FLTARR(grid.xdim,grid.ydim) & cth[*,*] = 0
@@ -77,7 +79,8 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
 
 
     ; create structure
-    arrays = {ctp_hist:ctp_hist, $
+    arrays = {final_output,$
+              ctp_hist:ctp_hist, cwp:cwp, $
               cph:cph, ctt:ctt, cth:cth, ctp:ctp, $
               lwp:lwp, iwp:iwp, cfc:cfc, $
               lwp_bin:lwp_bin, iwp_bin:iwp_bin, $
@@ -87,7 +90,8 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
               lwp_inc_bin:lwp_inc_bin, $
               iwp_inc_bin:iwp_inc_bin}
 
-    counts = {ctp:numb, $
+    counts = {final_counts,$
+              ctp:numb, $
               tmp:numb_tmp, $
               raw:numb_raw, $
               lwp:numb_lwp, $

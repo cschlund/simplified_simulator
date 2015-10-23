@@ -145,6 +145,13 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                 CALC_PARAMS_AVERAGES, mean_era, cnts_era
                 CALC_PARAMS_AVERAGES, mean_sat, cnts_sat
 
+                ; -- calculate total cwp, cot: liquid + ice
+                res = CALC_TOTAL(mean_era.cwp, mean_era.lwp, mean_era.iwp, -999.)
+                mean_era.cwp = res
+                res = CALC_TOTAL(mean_sat.cwp, mean_sat.lwp_inc_bin, $
+                                 mean_sat.iwp_inc_bin, -999.)
+                mean_sat.cwp = res
+
                 ; -- write output files
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_MEAN'
                 WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $

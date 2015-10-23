@@ -146,7 +146,8 @@ PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
 
 
     ; output structure
-    tmp = {ctp:ctp_tmp, cth:cth_tmp, ctt:ctt_tmp, cph:cph_tmp,$
+    tmp = {temp_arrays, $
+           ctp:ctp_tmp, cth:cth_tmp, ctt:ctt_tmp, cph:cph_tmp,$
            lwp:lwp_tmp, iwp:iwp_tmp, cfc:cfc_tmp, $
            cfc_bin:cfc_tmp_bin, cph_bin:cph_tmp_bin, $
            lwp_bin:lwp_tmp_bin, iwp_bin:iwp_tmp_bin}

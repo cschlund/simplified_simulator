@@ -75,7 +75,7 @@ PRO CWP_COT_PER_LAYER, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
     ENDFOR
 
     ; -- output structures
-    cwp_lay = {lwp:lwp_lay,  iwp:iwp_lay}
-    cot_lay = {liq:lcot_lay, ice:icot_lay}
+    cwp_lay = {cloud_water_path, lwp:lwp_lay, iwp:iwp_lay}
+    cot_lay = {cloud_optical_depth, liq:lcot_lay, ice:icot_lay}
 
 END

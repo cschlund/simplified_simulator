@@ -62,9 +62,16 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, ctp_histinfo
 
 
     ;-- create output structures
-    io_paths = {inp:era_path, out:out_path}
-    time_frame = {yyyy:years_list, mm:months_list, ny:nyears, nm:nmonths}
-    cot_thresholds = {era:cot_thv_era, sat:cot_thv_sat, str:crit_str}
-    ctp_histinfo = {dim_ctp:dim_ctp, ctp1d:ctp_limits_final1d, ctp2d:ctp_limits_final2d}
+    io_paths = {io_paths, $
+                inp:era_path, out:out_path}
+
+    time_frame = {time_frame, $
+                  yyyy:years_list, mm:months_list, ny:nyears, nm:nmonths}
+
+    cot_thresholds = {cot_thresholds, $
+                      era:cot_thv_era, sat:cot_thv_sat, str:crit_str}
+
+    ctp_histinfo = {ctp_histoinfo, $
+                    dim_ctp:dim_ctp, ctp1d:ctp_limits_final1d, ctp2d:ctp_limits_final2d}
 
 END

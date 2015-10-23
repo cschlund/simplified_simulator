@@ -40,7 +40,7 @@ PRO INIT_ERA_GRID, input, output
     FOR loi=0,xdim-1 DO longrd[loi,*]=input.lon[loi]-180.
     FOR lai=0,ydim-1 DO latgrd[*,lai]=input.lat[lai]
 
-    output = {lon2d:longrd, lat2d:latgrd, $
+    output = {era_grid, lon2d:longrd, lat2d:latgrd, $
               xdim:xdim, ydim:ydim, zdim:zdim}
 
 END

@@ -72,7 +72,8 @@ PRO READ_ERA_NCFILE, ncfile, str
 
 
     ; -- era interim structure
-    str={file:ncfile, plevel:plevel, dpres:diff_pressure, $
+    str={era_input, $
+         file:ncfile, plevel:plevel, dpres:diff_pressure, $
          lon:lon, lat:lat, lwc:lwc, iwc:iwc, cc:cc, $
          geop:geop, temp:temp}
 
