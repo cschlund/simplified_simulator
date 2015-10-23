@@ -531,19 +531,22 @@ PRO PLOT_SIMSIM, verbose=verbose, dir=dir, $
 
 			ENDIF
 
+			; -- gmean: validation_tool_box.pro: latitude weighted global mean
+			;    due to equal angular grid!
+			idx = WHERE(FINITE(img))
+			imean = STRING(gmean(img[idx],lat[idx]),f='(f11.4)')
 
 			; -- some info written onto plot
 			long_name = STRING(img_att.long_name)
-			imean = AVG(img, /NAN)
 			unit  = STRING(img_att.units)
 			IF(STRLEN(unit) LE 1 and unit NE 'K') THEN unit = unit ELSE unit = ' ['+unit+']'
-			minmax_range = MINMAX(img[WHERE(FINITE(img))])
+			minmax_range = MINMAX(img[idx])
 			minlim = minmax_range[0]
 			maxlim = minmax_range[1]
 			strfmt = '(F10.2)'
 			minstr = STRTRIM(STRING(minlim, FORMAT=strfmt),2)
 			maxstr = STRTRIM(STRING(maxlim, FORMAT=strfmt),2)
-			meastr = 'MEAN='+STRTRIM(STRING(imean, FORMAT=strfmt),2)
+			meastr = 'MEAN='+STRTRIM(imean,2)
 			minmaxstr = 'Min/Max'+' : '+minstr+'/'+maxstr
 
 			; -- Plot settings
