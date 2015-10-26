@@ -45,7 +45,7 @@ FUNCTION GET_NCDF_VARLIST, fil
     RETURN, varList
 END
 
-@/home/cschlund/programs/idl/vali_gui_rv/plot_l3.pro
+@/home/cschlund/Programme/idl/vali_gui_rv/plot_l3.pro
 ; -- main program -------------------------------------------------------------------------------
 ; 
 ; Use ncdf_browser from Stefan for comparing with reference data and Cloud_cci results
