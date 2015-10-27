@@ -1,3 +1,4 @@
+@/home/cschlund/Programme/idl/vali_gui_rv/vali_pre_compile.pro
 ;+
 ; NAME:
 ;   CLOUDCCI_SIMULATOR
@@ -21,15 +22,17 @@
 ; MODIFICATION HISTORY:
 ;   Written by Dr. Martin Stengel, 2014; 
 ;     grid_mean arrays as output; for comparison with model results
-;   C. Schlundt, Juli 2015: program modifications - subroutines added
-;   C. Schlundt, Juli 2015: incloud_mean arrays added
+;   C. Schlundt, July 2015: program modifications - subroutines added
+;   C. Schlundt, July 2015: incloud_mean arrays added
 ;                           (LWP and IWP weighted with CFC)
 ;   C. Schlundt, September 2015: binary CFC, CPH added and applied to LWP/IWP
-;   C. Schlundt, Oktober 2015: implementation of structures
+;   C. Schlundt, October 2015: implementation of structures
+;   C. Schlundt, October 2015: implementation of CWP
+;   C. Schlundt, October 2015: implementation of COT
 ;
-; ToDo: (1) add COT as output variable, 
-;       (2) COT/LWP/IWP dayside only, 
-;       (3) cloud overlap
+; ToDo:
+;       (1) COT dayside only, thus LWP, IWP, CWP dayside only 
+;       (2) cloud overlap
 ;
 ;*******************************************************************************
 PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
@@ -115,15 +118,18 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                         INCLOUD_CALC, input, grid, cwc_inc
 
                         ; -- get LWP/IWP/LCOT/ICOT per layer
-                        CWP_COT_PER_LAYER, input.lwc, input.iwc, input.dpres, grid, $
-                                           cwp_lay, cot_lay
-                        CWP_COT_PER_LAYER, cwc_inc.lwc, cwc_inc.iwc, input.dpres, grid, $
-                                           cwp_lay_inc, cot_lay_inc 
+                        CWP_COT_PER_LAYER, input.lwc, input.iwc, input.dpres, $ 
+                                            grid, cwp_lay, cot_lay
+                        CWP_COT_PER_LAYER, cwc_inc.lwc, cwc_inc.iwc, input.dpres, $ 
+                                            grid, cwp_lay_inc, cot_lay_inc 
 
                         ; -- get cloud parameters using incloud COT threshold
                         SEARCH_FOR_CLOUD, input, grid, cwp_lay, cot_lay_inc, thv.era, tmp_era
                         SEARCH_FOR_CLOUD, input, grid, cwp_lay, cot_lay_inc, thv.sat, tmp_sat
 
+                        ; -- scale COT and thus CWP like in CC4CL for tmp_sat only
+                        SCALE_COT_CWP, tmp_sat, grid
+                        
                         ; -- sum up cloud parameters
                         SUMUP_CLOUD_PARAMS, mean_era, cnts_era, tmp_era, his
                         SUMUP_CLOUD_PARAMS, mean_sat, cnts_sat, tmp_sat, his
@@ -145,12 +151,19 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                 CALC_PARAMS_AVERAGES, mean_era, cnts_era
                 CALC_PARAMS_AVERAGES, mean_sat, cnts_sat
 
-                ; -- calculate total cwp, cot: liquid + ice
+                ; -- calculate total CWP: liquid + ice
                 res = CALC_TOTAL(mean_era.cwp, mean_era.lwp, mean_era.iwp, -999.)
                 mean_era.cwp = res
                 res = CALC_TOTAL(mean_sat.cwp, mean_sat.lwp_inc_bin, $
                                  mean_sat.iwp_inc_bin, -999.)
                 mean_sat.cwp = res
+
+                ; -- calculate total COT: liquid + ice
+                res = CALC_TOTAL(mean_era.cot, mean_era.cot_liq, mean_era.cot_ice, -999.)
+                mean_era.cot = res
+                res = CALC_TOTAL(mean_sat.cot, mean_sat.cot_liq_bin, $
+                                 mean_sat.cot_ice_bin, -999.)
+                mean_sat.cot = res
 
                 ; -- write output files
                 IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_MEAN'
@@ -163,7 +176,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 
 
                 ; delete final arrays before next cycle starts
-                UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat
+                UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat, res
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
 

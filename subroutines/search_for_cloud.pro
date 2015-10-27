@@ -52,12 +52,16 @@
 ;    CPH_BIN         FLOAT     Array[720, 361]
 ;    LWP_BIN         FLOAT     Array[720, 361]
 ;    IWP_BIN         FLOAT     Array[720, 361]
+;    COT_LIQ         FLOAT     Array[720, 361]
+;    COT_ICE         FLOAT     Array[720, 361]
+;    COT_LIQ_BIN     FLOAT     Array[720, 361]
+;    COT_ICE_BIN     FLOAT     Array[720, 361]
 ;
 ;-------------------------------------------------------------------
 
 PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
 
-    ; initialize arrays
+    ; -- initialize arrays
     ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = -999.
     cth_tmp = FLTARR(grd.xdim,grd.ydim) & cth_tmp[*,*] = -999.
     ctt_tmp = FLTARR(grd.xdim,grd.ydim) & ctt_tmp[*,*] = -999.
@@ -71,6 +75,12 @@ PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
     ; lwp and iwp based on binary decision of cph
     lwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_bin[*,*] = 0.
     iwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_bin[*,*] = 0.
+    ; liquid and ice COT for ori. model output
+    lcot_tmp = FLTARR(grd.xdim,grd.ydim) & lcot_tmp[*,*] = 0.
+    icot_tmp = FLTARR(grd.xdim,grd.ydim) & icot_tmp[*,*] = 0.
+    ; liquid and ice COT for pseudo-satellite output, based on cph_tmp_bin
+    lcot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lcot_tmp_bin[*,*] = 0.
+    icot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & icot_tmp_bin[*,*] = 0.
 
 
     FOR z=grd.zdim-2,1,-1 DO BEGIN
@@ -94,9 +104,10 @@ PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
         lwp_idx = WHERE(lwp_lay_tmp[where_cot] GT 0., cnt_lwp_idx)
 
         ; cloud top phase
-        cph_tmp[where_cot[lwp_idx]] = (0.0 > $
+        cph_tmp[where_cot[lwp_idx]] = ( 0.0 > $
             ( lwp_lay_tmp[where_cot[lwp_idx]] / $
-            ( lwp_lay_tmp[where_cot[lwp_idx]] + iwp_lay_tmp[where_cot[lwp_idx]] ) ) < 1.0)
+            ( lwp_lay_tmp[where_cot[lwp_idx]] + $
+            iwp_lay_tmp[where_cot[lwp_idx]] ) ) < 1.0 )
 
         nanidx = WHERE( ~FINITE(cph_tmp), cnt_nan )
         IF (cnt_nan GT 0) THEN cph_tmp[nanidx] = -999.
@@ -109,16 +120,34 @@ PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
 
           lwp_tmp[where_cot] = (total(cwp.lwp[*,*,z:*],3))[where_cot]
           iwp_tmp[where_cot] = (total(cwp.iwp[*,*,z:*],3))[where_cot]
-          cfc_tmp[where_cot] = (0. > ( (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
-          cfc_tmp_bin[where_cot] = ROUND( (0. > ( (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
+
+          lcot_tmp[where_cot] = (total(cot.liq[*,*,z:*],3))[where_cot]
+          icot_tmp[where_cot] = (total(cot.ice[*,*,z:*],3))[where_cot]
+
+          ; normal cloud fraction
+          cfc_tmp[where_cot] = ( 0. > ( $
+              (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
+
+          ; binary cloud fraction
+          cfc_tmp_bin[where_cot] = ROUND( ( 0. > ( $
+              (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
 
         ; lowest layer, to be checked
         ENDIF ELSE BEGIN
 
           lwp_tmp[where_cot] = (cwp.lwp[*,*,z])[where_cot]
           iwp_tmp[where_cot] = (cwp.iwp[*,*,z])[where_cot]
-          cfc_tmp[where_cot] = (0. > ( (inp.cc[*,*,z])[where_cot] ) < 1.0 )
-          cfc_tmp_bin[where_cot] = ROUND( (0. > ( (inp.cc[*,*,z])[where_cot] ) < 1.0 ) )
+          
+          lcot_tmp[where_cot] = (cot.liq[*,*,z])[where_cot]
+          icot_tmp[where_cot] = (cot.ice[*,*,z])[where_cot]
+
+          ; normal cloud fraction
+          cfc_tmp[where_cot] = ( 0. > ( $
+              (inp.cc[*,*,z])[where_cot] ) < 1.0 )
+
+          ; binary cloud fraction
+          cfc_tmp_bin[where_cot] = ROUND( ( 0. > ( $
+              (inp.cc[*,*,z])[where_cot] ) < 1.0 ) )
 
         ENDELSE
 
@@ -134,14 +163,20 @@ PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
     wo_liq = WHERE(cph_tmp_bin EQ 1., nliq)
     wo_ice = WHERE(cph_tmp_bin EQ 0., nice)
 
+    ; TOP = liquid
     IF (nliq GT 0) THEN BEGIN
-        lwp_tmp_bin[wo_liq] = lwp_tmp[wo_liq] + iwp_tmp[wo_liq]
-        iwp_tmp_bin[wo_liq] = 0.
+        lwp_tmp_bin[wo_liq]  = lwp_tmp[wo_liq] + iwp_tmp[wo_liq]
+        iwp_tmp_bin[wo_liq]  = 0.
+        lcot_tmp_bin[wo_liq] = lcot_tmp[wo_liq] + icot_tmp[wo_liq] 
+        icot_tmp_bin[wo_liq] = 0.
     ENDIF
 
+    ; TOP = ice
     IF (nice GT 0) THEN BEGIN
-        lwp_tmp_bin[wo_ice] = 0.
-        iwp_tmp_bin[wo_ice] = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
+        lwp_tmp_bin[wo_ice]  = 0.
+        iwp_tmp_bin[wo_ice]  = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
+        lcot_tmp_bin[wo_ice] = 0.
+        icot_tmp_bin[wo_ice] = lcot_tmp[wo_ice] + icot_tmp[wo_ice]
     ENDIF
 
 
@@ -149,7 +184,13 @@ PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
     tmp = {temp_arrays, $
            ctp:ctp_tmp, cth:cth_tmp, ctt:ctt_tmp, cph:cph_tmp,$
            lwp:lwp_tmp, iwp:iwp_tmp, cfc:cfc_tmp, $
-           cfc_bin:cfc_tmp_bin, cph_bin:cph_tmp_bin, $
-           lwp_bin:lwp_tmp_bin, iwp_bin:iwp_tmp_bin}
+           cfc_bin:cfc_tmp_bin, $
+           cph_bin:cph_tmp_bin, $
+           lwp_bin:lwp_tmp_bin, $
+           iwp_bin:iwp_tmp_bin, $
+           cot_liq:lcot_tmp, $
+           cot_ice:icot_tmp, $
+           cot_liq_bin:lcot_tmp_bin, $
+           cot_ice_bin:icot_tmp_bin}
 
 END

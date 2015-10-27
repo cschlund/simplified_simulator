@@ -71,6 +71,21 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_ATTPUT, id, 'nobs_ori', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_ori', 'units', ' '
 
+    vid  = NCDF_VARDEF(id, 'cot_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cot_ori', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cot_ori', 'long_name', 'cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_ori', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'cot_liq_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cot_liq_ori', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cot_liq_ori', 'long_name', 'liquid cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_liq_ori', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'cot_ice_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cot_ice_ori', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cot_ice_ori', 'long_name', 'ice cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_ice_ori', 'units', ' '
+
     vid  = NCDF_VARDEF(id, 'cwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cwp_ori', '_FillValue', -999.
     NCDF_ATTPUT, id, 'cwp_ori', 'long_name', 'cloud water path'
@@ -125,6 +140,21 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_ATTPUT, id, 'nobs', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs', 'units', ' '
 
+    vid  = NCDF_VARDEF(id, 'cot', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cot', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cot', 'long_name', 'cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'cot_liq', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cot_liq', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cot_liq', 'long_name', 'liquid cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_liq', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'cot_ice', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'cot_ice', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'cot_ice', 'long_name', 'ice cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_ice', 'units', ' '
+
     vid  = NCDF_VARDEF(id, 'cwp', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cwp', '_FillValue', -999.
     NCDF_ATTPUT, id, 'cwp', 'long_name', 'cloud water path'
@@ -163,6 +193,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'cph_ori', ave_era.cph
     NCDF_VARPUT, id, 'cc_total_ori', ave_era.cfc
     NCDF_VARPUT, id, 'cwp_ori', ave_era.cwp
+    NCDF_VARPUT, id, 'cot_ori', ave_era.cot
+    NCDF_VARPUT, id, 'cot_liq_ori', ave_era.cot_liq
+    NCDF_VARPUT, id, 'cot_ice_ori', ave_era.cot_ice
     NCDF_VARPUT, id, 'lwp_ori', ave_era.lwp
     NCDF_VARPUT, id, 'iwp_ori', ave_era.iwp
     NCDF_VARPUT, id, 'nobs_ori', cnt_era.ctp
@@ -176,6 +209,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'cph', ave_sat.cph_bin
     NCDF_VARPUT, id, 'cc_total', ave_sat.cfc_bin
     NCDF_VARPUT, id, 'cwp', ave_sat.cwp
+    NCDF_VARPUT, id, 'cot', ave_sat.cot
+    NCDF_VARPUT, id, 'cot_liq', ave_sat.cot_liq_bin
+    NCDF_VARPUT, id, 'cot_ice', ave_sat.cot_ice_bin
     NCDF_VARPUT, id, 'lwp', ave_sat.lwp_inc_bin
     NCDF_VARPUT, id, 'iwp', ave_sat.iwp_inc_bin
     NCDF_VARPUT, id, 'nobs', cnt_sat.ctp

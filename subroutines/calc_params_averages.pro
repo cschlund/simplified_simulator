@@ -24,6 +24,10 @@
 ;    IWP_INC         FLOAT     Array[720, 361]
 ;    LWP_INC_BIN     FLOAT     Array[720, 361]
 ;    IWP_INC_BIN     FLOAT     Array[720, 361]
+;    COT_LIQ         FLOAT     Array[720, 361]
+;    COT_ICE         FLOAT     Array[720, 361]
+;    COT_LIQ_BIN     FLOAT     Array[720, 361]
+;    COT_ICE_BIN     FLOAT     Array[720, 361]
 ;
 ; IDL> help, counts ... structure containing the final counters
 ;
@@ -39,6 +43,10 @@
 ;    IWP_INC         LONG      Array[720, 361]
 ;    LWP_INC_BIN     LONG      Array[720, 361]
 ;    IWP_INC_BIN     LONG      Array[720, 361]
+;    COT_LIQ         LONG      Array[720, 361]
+;    COT_ICE         LONG      Array[720, 361]
+;    COT_LIQ_BIN     LONG      Array[720, 361]
+;    COT_ICE_BIN     LONG      Array[720, 361]
 ;
 ;-------------------------------------------------------------------
 
@@ -111,6 +119,27 @@ PRO CALC_PARAMS_AVERAGES, means, counts
                                          counts.iwp_inc_bin[wo_iwp_bin])*1000.
 
 
+    ; -- cloud optical thickness
+
+    lcot = WHERE(counts.cot_liq GT 0, nlcot)
+    IF (nlcot GT 0) THEN $
+        means.cot_liq[lcot] = means.cot_liq[lcot] / counts.cot_liq[lcot]
+
+    icot = WHERE(counts.cot_ice GT 0, nicot)
+    IF (nicot GT 0) THEN $
+        means.cot_ice[icot] = means.cot_ice[icot] / counts.cot_ice[icot]
+
+    lcotbin = WHERE(counts.cot_liq_bin GT 0, nlcotbin)
+    IF (nlcotbin GT 0) THEN $
+        means.cot_liq_bin[lcotbin] = means.cot_liq_bin[lcotbin] / $
+                                    counts.cot_liq_bin[lcotbin]
+
+    icotbin = WHERE(counts.cot_ice_bin GT 0, nicotbin)
+    IF (nicotbin GT 0) THEN $
+        means.cot_ice_bin[icotbin] = means.cot_ice_bin[icotbin] / $
+                                    counts.cot_ice_bin[icotbin]
+
+
     ; -- fill_value for grid cells with no observations
 
     wo_numi0 = WHERE(counts.ctp EQ 0, n_wo_numi0)
@@ -145,5 +174,17 @@ PRO CALC_PARAMS_AVERAGES, means, counts
 
     wo_iwp_nix_bin = WHERE(counts.iwp_inc_bin EQ 0, niwp_nix_bin)
     IF (niwp_nix_bin GT 0) THEN means.iwp_inc_bin[wo_iwp_nix_bin] = -999.
+
+    lcot0 = WHERE(counts.cot_liq EQ 0, nlcot0)
+    IF (nlcot0 GT 0) THEN means.cot_liq[lcot0] = -999.
+
+    icot0 = WHERE(counts.cot_ice EQ 0, nicot0)
+    IF (nicot0 GT 0) THEN means.cot_ice[icot0] = -999.
+
+    lcotbin0 = WHERE(counts.cot_liq_bin EQ 0, nlcotbin0)
+    IF (nlcotbin0 GT 0) THEN means.cot_liq_bin[lcotbin0] = -999.
+
+    icotbin0 = WHERE(counts.cot_ice_bin EQ 0, nicotbin0)
+    IF (nicotbin0 GT 0) THEN means.cot_ice_bin[icotbin0] = -999.
 
 END

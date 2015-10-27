@@ -24,6 +24,10 @@
 ;    IWP_INC         FLOAT     Array[720, 361]
 ;    LWP_INC_BIN     FLOAT     Array[720, 361]
 ;    IWP_INC_BIN     FLOAT     Array[720, 361]
+;    COT_LIQ         FLOAT     Array[720, 361]
+;    COT_ICE         FLOAT     Array[720, 361]
+;    COT_LIQ_BIN     FLOAT     Array[720, 361]
+;    COT_ICE_BIN     FLOAT     Array[720, 361]
 ;
 ; IDL> help, counts ... structure containing the counters
 ;
@@ -39,6 +43,10 @@
 ;    IWP_INC         LONG      Array[720, 361]
 ;    LWP_INC_BIN     LONG      Array[720, 361]
 ;    IWP_INC_BIN     LONG      Array[720, 361]
+;    COT_LIQ         LONG      Array[720, 361]
+;    COT_ICE         LONG      Array[720, 361]
+;    COT_LIQ_BIN     LONG      Array[720, 361]
+;    COT_ICE_BIN     LONG      Array[720, 361]
 ;
 ; IDL> help, temps ... structure containing the temp. arrays
 ;
@@ -54,6 +62,10 @@
 ;    CPH_BIN         FLOAT     Array[720, 361]
 ;    LWP_BIN         FLOAT     Array[720, 361]
 ;    IWP_BIN         FLOAT     Array[720, 361]
+;    COT_LIQ         FLOAT     Array[720, 361]
+;    COT_ICE         FLOAT     Array[720, 361]
+;    COT_LIQ_BIN     FLOAT     Array[720, 361]
+;    COT_ICE_BIN     FLOAT     Array[720, 361]
 ;
 ; IDL> help, histo ... structure containing the histogram information
 ;
@@ -88,6 +100,28 @@ PRO SUMUP_CLOUD_PARAMS, means, counts, temps, histo
     means.cph_bin[wo_ctp] = means.cph_bin[wo_ctp] + temps.cph_bin[wo_ctp]
 
     counts.ctp[wo_ctp] = counts.ctp[wo_ctp] + 1l
+
+    ; COT_LIQ (model)
+    wo_lcot = WHERE(temps.cot_liq GT 0., nwo_lcot)
+    means.cot_liq[wo_lcot] = means.cot_liq[wo_lcot] + temps.cot_liq[wo_lcot]
+    counts.cot_liq[wo_lcot] = counts.cot_liq[wo_lcot] + 1l
+
+    ; COT_ICE (model)
+    wo_icot = WHERE(temps.cot_ice GT 0., nwo_icot)
+    means.cot_ice[wo_icot] = means.cot_ice[wo_icot] + temps.cot_ice[wo_icot]
+    counts.cot_ice[wo_icot] = counts.cot_ice[wo_icot] + 1l
+
+    ; COT_LIQ_BIN (pseudo-satellite)
+    wo_lcot_bin = WHERE(temps.cot_liq_bin GT 0., nwo_lcot_bin)
+    means.cot_liq_bin[wo_lcot_bin] = means.cot_liq_bin[wo_lcot_bin] + $
+                                     temps.cot_liq_bin[wo_lcot_bin]
+    counts.cot_liq_bin[wo_lcot_bin] = counts.cot_liq_bin[wo_lcot_bin] + 1l
+
+    ; COT_ICE_BIN (pseudo-satellite)
+    wo_icot_bin = WHERE(temps.cot_ice_bin GT 0., nwo_icot_bin)
+    means.cot_ice_bin[wo_icot_bin] = means.cot_ice_bin[wo_icot_bin] + $
+                                     temps.cot_ice_bin[wo_icot_bin]
+    counts.cot_ice_bin[wo_icot_bin] = counts.cot_ice_bin[wo_icot_bin] + 1l
 
 
     ; lwp grid mean
