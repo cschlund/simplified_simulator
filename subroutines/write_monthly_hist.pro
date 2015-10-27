@@ -20,13 +20,10 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
 
     erg_plev = hist.ctp1d[1:n_elements(hist.ctp1d)-1] * 0.5 + $
                hist.ctp1d[0:n_elements(hist.ctp1d)-2] * 0.5
-
     erg_plev_bnds = hist.ctp2d
-
 
     file_out='SimpSimu_MH'+year+month+'_'+thvs.str+'_CTP.nc'
     clobber=1
-    PRINT,'creating netcdf file: '+file_out
 
     id = NCDF_CREATE(path_out+file_out, CLOBBER = clobber)
 
@@ -62,5 +59,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
     NCDF_VARPUT, id, 'ctp_hist_era',ave_era.ctp_hist
     NCDF_VARPUT, id, 'ctp_hist_sat',ave_sat.ctp_hist
     NCDF_CLOSE, id
+
+    PRINT,'** CREATED: ', path_out + file_out
 
 END

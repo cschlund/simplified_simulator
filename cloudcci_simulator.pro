@@ -40,8 +40,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
     clock = TIC('TOTAL')
 
     ; -- import settings
-    IF KEYWORD_SET(verbose) THEN $
-        PRINT, ' * Import CONFIG_CLOUDCCI_SIMULATOR setttings'
+    IF KEYWORD_SET(verbose) THEN PRINT, '** Import user setttings'
     CONFIG_SIMULATOR, pwd, tim, thv, his
 
 
@@ -53,10 +52,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
     ENDIF
 
 
-    IF KEYWORD_SET(verbose) THEN BEGIN
-        HELP, pwd, /structure
-        HELP, thv, /structure
-    ENDIF
+    IF KEYWORD_SET(verbose) THEN HELP, pwd, /structure
+    IF KEYWORD_SET(verbose) THEN HELP, thv, /structure
 
 
     IF KEYWORD_SET(logfile) THEN $
@@ -73,11 +70,12 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
             counti = 0
 
             ff = FINDFILE(pwd.inp+year+month+'/'+'*'+year+month+'*plev')
-            numff = N_ELEMENTS(ff)
 
-            PRINT, ''
-            PRINT, ' *** ',STRTRIM(numff,2),' Number of files for ', year, '/', month
-            PRINT, ''
+            numff = N_ELEMENTS(ff)
+            strff = STRTRIM(numff,2)
+            strym = STRING(year) + '/' + STRING(month)
+
+            PRINT, '** ', strff, ' ERA-Interim InputFiles for ', strym
 
             IF(N_ELEMENTS(ff) GT 1) THEN BEGIN
 
@@ -87,26 +85,21 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                     file1 = file0+'.nc'
 
                     IF(is_file(file0) AND (NOT is_file(file1))) THEN BEGIN
-                        PRINT,' * Converting: ' + file0
+                        PRINT,'** Converting: ' + file0
                         SPAWN,'cdo -f nc copy ' + file0 + ' ' + file1
                     ENDIF
 
                     IF(is_file(file1)) THEN BEGIN
 
-                        base = FSC_Base_Filename(file1,Directory=dir,Extension=ext)
-
-                        IF KEYWORD_SET(verbose) AND (counti EQ 0) THEN $
-                            PRINT, ' * Input directory: ', dir
-
-                        ; -- read netCDF file
-                        IF KEYWORD_SET(verbose) THEN BEGIN
-                            PRINT,' * READ_ERA_NCFILE: ',STRTRIM(counti,2),': ',base+'.'+ext
-                        ENDIF
+                        strcnt = STRTRIM(counti+1,2)
 
                         ; -- returns structure containing the input variables
                         READ_ERA_NCFILE, file1, input
 
-                        ; -- initialize grid and output arrays:
+                        IF KEYWORD_SET(verbose) THEN $
+                            PRINT, '** ',strcnt,'.LOADED: ', input.file 
+
+                        ; -- initialize grid and arrays for monthly mean output:
                         IF(counti EQ 0) THEN BEGIN
                             INIT_ERA_GRID, input, grid 
                             INIT_OUT_ARRAYS, grid, his, mean_era, cnts_era
@@ -140,6 +133,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 
                         ; -- delete tmp arrays
                         UNDEFINE, tmp_era, tmp_sat
+                        UNDEFINE, cwp_lay, cot_lay
+                        UNDEFINE, cwp_lay_inc, cot_lay_inc
 
                     ENDIF ;end of IF(is_file(file1))
 
@@ -166,11 +161,9 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                 mean_sat.cot = res
 
                 ; -- write output files
-                IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_MEAN'
                 WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $
                                     mean_era, cnts_era, mean_sat, cnts_sat
 
-                IF KEYWORD_SET(verbose) THEN PRINT, ' * WRITE_MONTHLY_HIST'
                 WRITE_MONTHLY_HIST, pwd.out, year, month, grid, input, $
                                     thv, his, mean_era, mean_sat
 

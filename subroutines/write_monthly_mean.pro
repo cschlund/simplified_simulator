@@ -20,7 +20,6 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
 
     file_out = 'SimpSimu_MM'+year+month+'_'+thv.str+'_CTP.nc'
     clobber  = 1
-    PRINT, ' *** Creating netCDF file: ' + file_out
 
     ; -- Create netCDF output file
     id = NCDF_CREATE(path_out + file_out, CLOBBER = clobber)
@@ -219,5 +218,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'nobs_iwp', cnt_sat.iwp_inc_bin
 
     NCDF_CLOSE, id ;Close netCDF output file
+
+    PRINT, '** CREATED: ', path_out + file_out
 
 END
