@@ -59,7 +59,7 @@
 ;
 ;-------------------------------------------------------------------
 
-PRO SEARCH_FOR_CLOUD, inp, grd, cwp, cot, thv, tmp
+PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
 
     ; -- initialize arrays
     ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = -999.
