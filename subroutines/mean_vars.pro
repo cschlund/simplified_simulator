@@ -7,8 +7,10 @@
 ;
 ; IDL> help, means ... structure containing the final output arrays
 ;
-; ** Structure <74e708>, 16 tags, length=30150720, data length=30150720, refs=1:
+; ** Structure FINAL_OUTPUT, 22 tags, length=36388800, data length=36388800:
 ;    CTP_HIST        LONG      Array[720, 361, 14]
+;    CWP             FLOAT     Array[720, 361]
+;    COT             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
 ;    CTH             FLOAT     Array[720, 361]
@@ -31,8 +33,10 @@
 ;
 ; IDL> help, counts ... structure containing the final counters
 ;
-; ** Structure <755128>, 11 tags, length=10396804, data length=10396804, refs=1:
+; ** Structure FINAL_COUNTS, 17 tags, length=16634884, data length=16634884:
 ;    CTP             LONG      Array[720, 361]
+;    COT             LONG      Array[720, 361]
+;    CWP             LONG      Array[720, 361]
 ;    TMP             LONG      Array[720, 361]
 ;    RAW             LONG                 0
 ;    LWP             LONG      Array[720, 361]
@@ -50,7 +54,7 @@
 ;
 ;-------------------------------------------------------------------
 
-PRO CALC_PARAMS_AVERAGES, means, counts
+PRO MEAN_VARS, means, counts
 
     ; -- weight mean with number of observations
     wo_numi  = WHERE(counts.ctp GT 0, n_wo_numi)
