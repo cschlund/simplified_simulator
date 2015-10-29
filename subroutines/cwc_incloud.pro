@@ -1,6 +1,6 @@
 ;---------------------------------------------------------------
-; incloud_calc: lwc and iwc weighting by means of cc at plevels
-;               i.e. cloud-cover weighted cloud water content
+; cwc_incloud: lwc and iwc weighting by means of cc at plevels
+;              i.e. cloud-cover weighted cloud water content
 ;---------------------------------------------------------------
 ;
 ; in : inp, grd
@@ -34,7 +34,7 @@
 ;
 ;---------------------------------------------------------------
 
-PRO INCLOUD_CALC, inp, grd, cwc_inc
+PRO CWC_INCLOUD, inp, grd, cwc_inc
 
     lwc_inc = FLTARR(grd.xdim,grd.ydim,grd.zdim) & lwc_inc[*,*,*] = 0.
     iwc_inc = FLTARR(grd.xdim,grd.ydim,grd.zdim) & iwc_inc[*,*,*] = 0.
