@@ -34,7 +34,7 @@
 ;
 ;-------------------------------------------------------------------
 
-PRO CWP_COT_PER_LAYER, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
+PRO CWP_COT_LAYERS, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
 
     lwp_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
     iwp_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
