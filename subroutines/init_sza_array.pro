@@ -4,7 +4,7 @@
 ;   based on year, month, day, time (UTC), lat, lon
 ;---------------------------------------------------------------
 
-FUNCTION INIT_SZA_ARRAY, fil, grd
+FUNCTION INIT_SZA_ARRAY, fil, grd, map=map, pwd=pwd
 
     base = FSC_Base_Filename(fil,Directory=dir,Extension=ext)
 
@@ -22,26 +22,24 @@ FUNCTION INIT_SZA_ARRAY, fil, grd
 
     ZENSUN, day2d, utc2d, grd.lat2d, grd.lon2d, sza2d
 
-    ;; Save device settings and tell IDL to use a color table
-    ;DEVICE, GET_DECOMPOSED=old_decomposed
-    ;DEVICE, DECOMPOSED=0
-    ;cgLoadCT, 33, /REVERSE
+    IF KEYWORD_SET(map) AND KEYWORD_SET(pwd) THEN BEGIN
 
-    ;; Create an image and display it
-    ;WINDOW, 0, XSIZE=1200, YSIZE=800, TITLE='SZA2d'
-    ;MAP_IMAGE, sza2d, grd.lat2d, grd.lon2d, $
-    ;    /BOX_AXES, /MAGNIFY, /GRID, $
-    ;    MINI=0., MAXI=180., CHARSIZE=3., $
-    ;    TITLE='SZA for '+splt[3]+' UTC '+splt[4]
+        DEVICE, GET_DECOMPOSED=old_decomposed
+        DEVICE, DECOMPOSED=0
+        cgLoadCT, 33, /REVERSE
 
-    ;; Write a PNG file to the temporary directory
-    ;; Note the use of the TRUE keyword to TVRD
-    ;filename = '/data/cschlund/figs/'+base+'_sza.png'
-    ;WRITE_PNG, filename, TVRD(/TRUE)
-    ;PRINT, 'File written to ', filename
+        WINDOW, 0, XSIZE=1200, YSIZE=800, TITLE='SZA2d'
+        MAP_IMAGE, sza2d, grd.lat2d, grd.lon2d, $
+            /BOX_AXES, /MAGNIFY, /GRID, $
+            MINI=0., MAXI=180., CHARSIZE=3., $
+            TITLE='SZA for '+splt[3]+' UTC '+splt[4]
 
-    ;; Restore device settings.
-    ;DEVICE, DECOMPOSED=old_decomposed
+        filename = pwd+base+'_sza.png'
+        WRITE_PNG, filename, TVRD(/TRUE)
+        PRINT, 'File written to ', filename
+
+        DEVICE, DECOMPOSED=old_decomposed
+    ENDIF
 
     RETURN, sza2d
 

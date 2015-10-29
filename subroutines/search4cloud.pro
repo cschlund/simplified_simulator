@@ -40,7 +40,7 @@
 ; THV             FLOAT     =     0.0100000
 ;
 ; IDL> help, tmp  ... temporary arrays
-; ** Structure <758c78>, 11 tags, length=11436480, data length=11436480, refs=1:
+; ** Structure TEMP_ARRAYS, 19 tags, length=19753920, data length=19753920:
 ;    CTP             FLOAT     Array[720, 361]
 ;    CTH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
@@ -48,10 +48,14 @@
 ;    LWP             FLOAT     Array[720, 361]
 ;    IWP             FLOAT     Array[720, 361]
 ;    CFC             FLOAT     Array[720, 361]
+;    COT             FLOAT     Array[720, 361]
+;    CWP             FLOAT     Array[720, 361]
 ;    CFC_BIN         FLOAT     Array[720, 361]
 ;    CPH_BIN         FLOAT     Array[720, 361]
 ;    LWP_BIN         FLOAT     Array[720, 361]
 ;    IWP_BIN         FLOAT     Array[720, 361]
+;    LWP_INC_BIN     FLOAT     Array[720, 361]
+;    IWP_INC_BIN     FLOAT     Array[720, 361]
 ;    COT_LIQ         FLOAT     Array[720, 361]
 ;    COT_ICE         FLOAT     Array[720, 361]
 ;    COT_LIQ_BIN     FLOAT     Array[720, 361]
@@ -62,6 +66,8 @@
 PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
 
     ; -- initialize arrays
+    cot_tmp = FLTARR(grd.xdim,grd.ydim) & cot_tmp[*,*] = 0.
+    cwp_tmp = FLTARR(grd.xdim,grd.ydim) & cwp_tmp[*,*] = 0.
     ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = -999.
     cth_tmp = FLTARR(grd.xdim,grd.ydim) & cth_tmp[*,*] = -999.
     ctt_tmp = FLTARR(grd.xdim,grd.ydim) & ctt_tmp[*,*] = -999.
@@ -81,6 +87,11 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
     ; liquid and ice COT for pseudo-satellite output, based on cph_tmp_bin
     lcot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lcot_tmp_bin[*,*] = 0.
     icot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & icot_tmp_bin[*,*] = 0.
+
+    ; incloud lwp and iwp based on binary decision of cph
+    ; required in sumup_vars.pro
+    lwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_inc_bin[*,*] = 0.
+    iwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_inc_bin[*,*] = 0.
 
 
     FOR z=grd.zdim-2,1,-1 DO BEGIN
@@ -184,10 +195,13 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
     tmp = {temp_arrays, $
            ctp:ctp_tmp, cth:cth_tmp, ctt:ctt_tmp, cph:cph_tmp,$
            lwp:lwp_tmp, iwp:iwp_tmp, cfc:cfc_tmp, $
+           cot:cot_tmp, cwp:cwp_tmp, $
            cfc_bin:cfc_tmp_bin, $
            cph_bin:cph_tmp_bin, $
            lwp_bin:lwp_tmp_bin, $
            iwp_bin:iwp_tmp_bin, $
+           lwp_inc_bin:lwp_tmp_inc_bin, $
+           iwp_inc_bin:iwp_tmp_inc_bin, $
            cot_liq:lcot_tmp, $
            cot_ice:icot_tmp, $
            cot_liq_bin:lcot_tmp_bin, $

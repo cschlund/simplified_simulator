@@ -65,7 +65,8 @@ PRO COMPARE_ORI_VS_SIM, verbose=verbose, dir=dir, LIMIT=limit, PORTRAIT=portrait
 
 	IF KEYWORD_SET(plotlist) THEN BEGIN
 
-		vlist1 = ['ctp','ctt','cth','cph','cc_total','lwp','iwp']
+		vlist1 = ['ctp','ctt','cth','cph','cc_total',$
+                          'cwp','lwp','iwp','cot','cot_liq','cot_ice']
 		vlist2 = LIST()
 
 		; attach *_ori variables

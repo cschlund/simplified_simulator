@@ -191,7 +191,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'ctt_ori', ave_era.ctt
     NCDF_VARPUT, id, 'cph_ori', ave_era.cph
     NCDF_VARPUT, id, 'cc_total_ori', ave_era.cfc
+    ; lwp + iwp
     NCDF_VARPUT, id, 'cwp_ori', ave_era.cwp
+    ; cot_liq + cot_ice
     NCDF_VARPUT, id, 'cot_ori', ave_era.cot
     NCDF_VARPUT, id, 'cot_liq_ori', ave_era.cot_liq
     NCDF_VARPUT, id, 'cot_ice_ori', ave_era.cot_ice
@@ -207,7 +209,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'ctt', ave_sat.ctt
     NCDF_VARPUT, id, 'cph', ave_sat.cph_bin
     NCDF_VARPUT, id, 'cc_total', ave_sat.cfc_bin
+    ; lwp_inc_bin + iwp_inc_bin
     NCDF_VARPUT, id, 'cwp', ave_sat.cwp
+    ; cot_liq_bin + cot_ice_bin
     NCDF_VARPUT, id, 'cot', ave_sat.cot
     NCDF_VARPUT, id, 'cot_liq', ave_sat.cot_liq_bin
     NCDF_VARPUT, id, 'cot_ice', ave_sat.cot_ice_bin

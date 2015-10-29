@@ -29,10 +29,11 @@
 ;   C. Schlundt, October 2015: implementation of structures
 ;   C. Schlundt, October 2015: implementation of CWP
 ;   C. Schlundt, October 2015: implementation of COT
+;   C. Schlundt, October 2015: implementation of SZA2d
+;   C. Schlundt, October 2015: implementation of COT/CWP dayside only
 ;
 ; ToDo:
-;       (1) COT dayside only, thus LWP, IWP, CWP dayside only 
-;       (2) cloud overlap
+;       (1) cloud overlap
 ;
 ;*******************************************************************************
 PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
@@ -79,7 +80,9 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 
             IF(N_ELEMENTS(ff) GT 1) THEN BEGIN
 
+                ;---------------------------------------------------------------
                 FOR fidx=0,N_ELEMENTS(ff)-1,1 DO BEGIN ;loop over files
+                ;---------------------------------------------------------------
 
                     file0 = ff[fidx]
                     file1 = file0+'.nc'
@@ -107,58 +110,60 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                         ENDIF
                         counti++
 
+                        ; -- initialize solar zenith angle 2D array
+                        IF KEYWORD_SET(test) THEN BEGIN
+                            sza2d = INIT_SZA_ARRAY(file1,grid,/map,pwd=pwd.fig)
+                        ENDIF ELSE BEGIN
+                            sza2d = INIT_SZA_ARRAY(file1,grid)
+                        ENDELSE
+
                         ; -- lwc and iwc weighted by cc
-                        INCLOUD_CALC, input, grid, cwc_inc
+                        CWC_INCLOUD, input, grid, cwc_inc
 
                         ; -- get LWP/IWP/LCOT/ICOT per layer
-                        CWP_COT_PER_LAYER, input.lwc, input.iwc, input.dpres, $ 
-                                            grid, cwp_lay, cot_lay
-                        CWP_COT_PER_LAYER, cwc_inc.lwc, cwc_inc.iwc, input.dpres, $ 
-                                            grid, cwp_lay_inc, cot_lay_inc 
+                        CWP_COT_LAYERS, input.lwc, input.iwc, input.dpres, $
+                                        grid, cwp_lay, cot_lay
+                        CWP_COT_LAYERS, cwc_inc.lwc, cwc_inc.iwc, input.dpres, $ 
+                                        grid, cwp_lay_inc, cot_lay_inc 
 
                         ; -- get cloud parameters using incloud COT threshold
-                        SEARCH_FOR_CLOUD, input, grid, cwp_lay, cot_lay_inc, thv.era, tmp_era
-                        SEARCH_FOR_CLOUD, input, grid, cwp_lay, cot_lay_inc, thv.sat, tmp_sat
+                        SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
+                                      thv.era, tmp_era
+                        SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
+                                      thv.sat, tmp_sat
 
                         ; -- scale COT and thus CWP like in CC4CL for tmp_sat only
                         SCALE_COT_CWP, tmp_sat, grid
-                        
+
+                        ; -- sunlit region only for COT and CWP
+                        IF KEYWORD_SET(test) THEN BEGIN
+                            SOLAR_COT_CWP, tmp_sat, sza2d, grid, pwd.out, file1
+                        ENDIF ELSE BEGIN
+                            SOLAR_COT_CWP, tmp_sat, sza2d
+                        ENDELSE
+
                         ; -- sum up cloud parameters
-                        SUMUP_CLOUD_PARAMS, mean_era, cnts_era, tmp_era, his
-                        SUMUP_CLOUD_PARAMS, mean_sat, cnts_sat, tmp_sat, his
+                        SUMUP_VARS, 'ori', mean_era, cnts_era, tmp_era, his
+                        SUMUP_VARS, 'sat', mean_sat, cnts_sat, tmp_sat, his
 
                         ; -- count number of files
                         cnts_era.raw++
                         cnts_sat.raw++
 
                         ; -- delete tmp arrays
-                        UNDEFINE, tmp_era, tmp_sat
+                        UNDEFINE, sza2d, tmp_era, tmp_sat
                         UNDEFINE, cwp_lay, cot_lay
                         UNDEFINE, cwp_lay_inc, cot_lay_inc
 
                     ENDIF ;end of IF(is_file(file1))
 
-                ;-----------------------------------------------------------------------
+                ;---------------------------------------------------------------
                 ENDFOR ;end of file loop
-                ;-----------------------------------------------------------------------
+                ;---------------------------------------------------------------
 
                 ; -- calculate averages
-                CALC_PARAMS_AVERAGES, mean_era, cnts_era
-                CALC_PARAMS_AVERAGES, mean_sat, cnts_sat
-
-                ; -- calculate total CWP: liquid + ice
-                res = CALC_TOTAL(mean_era.cwp, mean_era.lwp, mean_era.iwp, -999.)
-                mean_era.cwp = res
-                res = CALC_TOTAL(mean_sat.cwp, mean_sat.lwp_inc_bin, $
-                                 mean_sat.iwp_inc_bin, -999.)
-                mean_sat.cwp = res
-
-                ; -- calculate total COT: liquid + ice
-                res = CALC_TOTAL(mean_era.cot, mean_era.cot_liq, mean_era.cot_ice, -999.)
-                mean_era.cot = res
-                res = CALC_TOTAL(mean_sat.cot, mean_sat.cot_liq_bin, $
-                                 mean_sat.cot_ice_bin, -999.)
-                mean_sat.cot = res
+                MEAN_VARS, mean_era, cnts_era
+                MEAN_VARS, mean_sat, cnts_sat
 
                 ; -- write output files
                 WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $
@@ -169,7 +174,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 
 
                 ; delete final arrays before next cycle starts
-                UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat, res
+                UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
 
@@ -182,4 +187,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
 	IF KEYWORD_SET(logfile) THEN JOURNAL
 
     TOC, clock
+
+;*******************************************************************************
 END ;end of program
+;*******************************************************************************

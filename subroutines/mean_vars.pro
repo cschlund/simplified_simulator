@@ -5,8 +5,6 @@
 ; in : means, counts
 ; out: means, counts
 ;
-; IDL> help, means ... structure containing the final output arrays
-;
 ; ** Structure FINAL_OUTPUT, 22 tags, length=36388800, data length=36388800:
 ;    CTP_HIST        LONG      Array[720, 361, 14]
 ;    CWP             FLOAT     Array[720, 361]
@@ -30,8 +28,6 @@
 ;    COT_ICE         FLOAT     Array[720, 361]
 ;    COT_LIQ_BIN     FLOAT     Array[720, 361]
 ;    COT_ICE_BIN     FLOAT     Array[720, 361]
-;
-; IDL> help, counts ... structure containing the final counters
 ;
 ; ** Structure FINAL_COUNTS, 17 tags, length=16634884, data length=16634884:
 ;    CTP             LONG      Array[720, 361]
@@ -76,6 +72,9 @@ PRO MEAN_VARS, means, counts
     ; -- convert LWP,IWP from 'kg/m2' to 'g/m2' (CCI conform), 
     ;    i.e. multiply with 1000.
 
+    tcwp = WHERE(counts.cwp GT 0, ntcwp)
+    IF (ntcwp GT 0) THEN $
+        means.cwp[tcwp] = (means.cwp[tcwp] / counts.cwp[tcwp])*1000.
 
     ; -- LWP & IWP grid mean
     idx_liq = WHERE(counts.lwp GT 0, nidx_liq)
@@ -124,6 +123,9 @@ PRO MEAN_VARS, means, counts
 
 
     ; -- cloud optical thickness
+    tcot = WHERE(counts.cot GT 0, ntcot)
+    IF (ntcot GT 0) THEN $
+        means.cot[tcot] = means.cot[tcot] / counts.cot[tcot]
 
     lcot = WHERE(counts.cot_liq GT 0, nlcot)
     IF (nlcot GT 0) THEN $
@@ -178,6 +180,12 @@ PRO MEAN_VARS, means, counts
 
     wo_iwp_nix_bin = WHERE(counts.iwp_inc_bin EQ 0, niwp_nix_bin)
     IF (niwp_nix_bin GT 0) THEN means.iwp_inc_bin[wo_iwp_nix_bin] = -999.
+
+    tcwp0 = WHERE(counts.cwp EQ 0, ntcwp0)
+    IF (ntcwp0 GT 0) THEN means.cwp[tcwp0] = -999.
+
+    tcot0 = WHERE(counts.cot EQ 0, ntcot0)
+    IF (ntcot0 GT 0) THEN means.cot[tcot0] = -999.
 
     lcot0 = WHERE(counts.cot_liq EQ 0, nlcot0)
     IF (nlcot0 GT 0) THEN means.cot_liq[lcot0] = -999.

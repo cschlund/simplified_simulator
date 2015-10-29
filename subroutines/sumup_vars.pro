@@ -2,13 +2,21 @@
 ;-- sum up cloud parameters from current file processed
 ;-------------------------------------------------------------------
 ;
-; in : means, temps, counts, histo
+; in : flag, means, temps, counts, histo
 ; out: means, counts
+;
+; flag ... either 'ori' or 'sat'
+;           this is required for the sumup total COT & CWP
+;           because for model (ori) : cot_liq+cot_ice & lwp+iwp
+;                   for simu. (sat) : cot_liq_bin+cot_ice_bin & 
+;                                     lwp_inc_bin+iwp_inc_bin
 ;
 ; IDL> help, means ... structure containing the final output arrays
 ;
-; ** Structure <752db8>, 16 tags, length=30150720, data length=30150720, refs=1:
+; ** Structure FINAL_OUTPUT, 22 tags, length=36388800, data length=36388800:
 ;    CTP_HIST        LONG      Array[720, 361, 14]
+;    CWP             FLOAT     Array[720, 361]
+;    COT             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
 ;    CTH             FLOAT     Array[720, 361]
@@ -31,8 +39,10 @@
 ;
 ; IDL> help, counts ... structure containing the counters
 ;
-; ** Structure <755128>, 11 tags, length=10396804, data length=10396804, refs=1:
+; ** Structure FINAL_COUNTS, 17 tags, length=16634884, data length=16634884:
 ;    CTP             LONG      Array[720, 361]
+;    COT             LONG      Array[720, 361]
+;    CWP             LONG      Array[720, 361]
 ;    TMP             LONG      Array[720, 361]
 ;    RAW             LONG                 0
 ;    LWP             LONG      Array[720, 361]
@@ -50,7 +60,7 @@
 ;
 ; IDL> help, temps ... structure containing the temp. arrays
 ;
-; ** Structure <758958>, 11 tags, length=11436480, data length=11436480, refs=1:
+; ** Structure TEMP_ARRAYS, 19 tags, length=19753920, data length=19753920:
 ;    CTP             FLOAT     Array[720, 361]
 ;    CTH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
@@ -58,10 +68,14 @@
 ;    LWP             FLOAT     Array[720, 361]
 ;    IWP             FLOAT     Array[720, 361]
 ;    CFC             FLOAT     Array[720, 361]
+;    COT             FLOAT     Array[720, 361]
+;    CWP             FLOAT     Array[720, 361]
 ;    CFC_BIN         FLOAT     Array[720, 361]
 ;    CPH_BIN         FLOAT     Array[720, 361]
 ;    LWP_BIN         FLOAT     Array[720, 361]
 ;    IWP_BIN         FLOAT     Array[720, 361]
+;    LWP_INC_BIN     FLOAT     Array[720, 361]
+;    IWP_INC_BIN     FLOAT     Array[720, 361]
 ;    COT_LIQ         FLOAT     Array[720, 361]
 ;    COT_ICE         FLOAT     Array[720, 361]
 ;    COT_LIQ_BIN     FLOAT     Array[720, 361]
@@ -76,7 +90,7 @@
 ; 
 ;-------------------------------------------------------------------
 
-PRO SUMUP_VARS, means, counts, temps, histo
+PRO SUMUP_VARS, flag, means, counts, temps, histo
 
     ; no condition for cloud fraction [0;1]: clear or cloudy
     means.cfc = means.cfc + temps.cfc
@@ -100,6 +114,27 @@ PRO SUMUP_VARS, means, counts, temps, histo
     means.cph_bin[wo_ctp] = means.cph_bin[wo_ctp] + temps.cph_bin[wo_ctp]
 
     counts.ctp[wo_ctp] = counts.ctp[wo_ctp] + 1l
+
+
+    ; TOTAL COT (liquid + ice)
+    IF ( flag EQ 'ori' ) THEN BEGIN
+
+        temps.cot = temps.cot_liq + temps.cot_ice
+
+        wo_cot = WHERE(temps.cot GT 0., nwo_cot)
+        means.cot[wo_cot] = means.cot[wo_cot] + temps.cot[wo_cot]
+        counts.cot[wo_cot] = counts.cot[wo_cot] + 1l
+
+    ENDIF ELSE BEGIN
+
+        temps.cot = temps.cot_liq_bin + temps.cot_ice_bin
+
+        wo_cot = WHERE(temps.cot GT 0., nwo_cot)
+        means.cot[wo_cot] = means.cot[wo_cot] + temps.cot[wo_cot]
+        counts.cot[wo_cot] = counts.cot[wo_cot] + 1l
+
+    ENDELSE
+
 
     ; COT_LIQ (model)
     wo_lcot = WHERE(temps.cot_liq GT 0., nwo_lcot)
@@ -163,16 +198,39 @@ PRO SUMUP_VARS, means, counts, temps, histo
     ; lwp_mean_incloud_bin
     idx3 = WHERE(temps.cfc GT 0. AND temps.lwp_bin GT 0., nidx3)
     IF (nidx3 GT 0) THEN BEGIN
-        means.lwp_inc_bin[idx3] = means.lwp_inc_bin[idx3] + temps.lwp_bin[idx3]/temps.cfc[idx3]
+        temps.lwp_inc_bin[idx3] = temps.lwp_bin[idx3] / temps.cfc[idx3]
+        means.lwp_inc_bin[idx3] = means.lwp_inc_bin[idx3] + temps.lwp_inc_bin[idx3]
         counts.lwp_inc_bin[idx3] = counts.lwp_inc_bin[idx3] + 1l
     ENDIF
 
     ; iwp_mean_incloud_bin
     idx4 = WHERE(temps.cfc GT 0. AND temps.iwp_bin GT 0., nidx4)
     IF (nidx4 GT 0) THEN BEGIN
-        means.iwp_inc_bin[idx4] = means.iwp_inc_bin[idx4] + temps.iwp_bin[idx4]/temps.cfc[idx4]
+        temps.iwp_inc_bin[idx4] = temps.iwp_bin[idx4] / temps.cfc[idx4]
+        means.iwp_inc_bin[idx4] = means.iwp_inc_bin[idx4] + temps.iwp_inc_bin[idx4]
         counts.iwp_inc_bin[idx4] = counts.iwp_inc_bin[idx4] + 1l
     ENDIF
+
+
+    ; TOTAL CWP (liquid + ice)
+    IF ( flag EQ 'ori' ) THEN BEGIN
+
+        temps.cwp = temps.lwp + temps.iwp
+
+        wo_cwp = WHERE(temps.cwp GT 0., nwo_cwp)
+        means.cwp[wo_cwp] = means.cwp[wo_cwp] + temps.cwp[wo_cwp]
+        counts.cwp[wo_cwp] = counts.cwp[wo_cwp] + 1l
+
+
+    ENDIF ELSE BEGIN
+
+        temps.cwp = temps.lwp_inc_bin + temps.iwp_inc_bin
+
+        wo_cwp = WHERE(temps.cwp GT 0., nwo_cwp)
+        means.cwp[wo_cwp] = means.cwp[wo_cwp] + temps.cwp[wo_cwp]
+        counts.cwp[wo_cwp] = counts.cwp[wo_cwp] + 1l
+
+    ENDELSE
 
 
     FOR gu=0, histo.dim_ctp-1 DO BEGIN

@@ -33,6 +33,8 @@
 ; IDL> help, counts, /str
 ; ** Structure <7551e8>, 11 tags, length=10396804, data length=10396804, refs=1:
 ;    CTP             LONG      Array[720, 361]
+;    COT             LONG      Array[720, 361]
+;    CWP             LONG      Array[720, 361]
 ;    TMP             LONG      Array[720, 361]
 ;    RAW             LONG                 0
 ;    LWP             LONG      Array[720, 361]
@@ -70,6 +72,8 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
     numb_raw = 0l
     numb_tmp = LONARR(grid.xdim,grid.ydim)
     numb = LONARR(grid.xdim,grid.ydim) & numb[*,*] = 0
+    numb_cot = LONARR(grid.xdim,grid.ydim) & numb_cot[*,*] = 0
+    numb_cwp = LONARR(grid.xdim,grid.ydim) & numb_cwp[*,*] = 0
     numb_lwp = LONARR(grid.xdim,grid.ydim) & numb_lwp[*,*] = 0
     numb_iwp = LONARR(grid.xdim,grid.ydim) & numb_iwp[*,*] = 0
     numb_lwp_bin = LONARR(grid.xdim,grid.ydim) & numb_lwp_bin[*,*] = 0
@@ -115,6 +119,7 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
 
     counts = {final_counts,$ 
                 ctp:numb, $
+                cot:numb_cot, cwp:numb_cwp, $
                 tmp:numb_tmp, raw:numb_raw, $
                 lwp:numb_lwp, iwp:numb_iwp, $ 
                 lwp_bin:numb_lwp_bin, $ 

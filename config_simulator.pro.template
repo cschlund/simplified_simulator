@@ -7,16 +7,19 @@
 PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, ctp_histinfo
 
     ;-- era simulator output directory
-    out_base = 'v8_IDL_structs/run1/'
-    pwd_base = '/cmsaf/cmsaf-cld6/cschlund/cci_wp5001/ERA_simulator/'
+    out_base = 'v3_further_devs/v3.5_add_sza2d/'
+    pwd_base = '/data/cschlund/output/simplified_simulator/'
     out_path = pwd_base + out_base
     validres = VALID_DIR( out_path )
     IF(validres EQ 0) THEN creatres = CREATE_DIR( out_path )
 
     ;-- ERA-Interim input files
-    era_base = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/'
+;     era_base = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/'
+    era_base = '/data/cschlund/'
     era_path = era_base  + 'MARS_data/ERA_simulator/'
 
+    ;-- path for figs
+    fig_path = '/data/cschlund/figs/'
 
     ;-- Set list of years to be processed
     ;years_list = ['1979','1980',$
@@ -63,7 +66,7 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, ctp_histinfo
 
     ;-- create output structures
     io_paths = {io_paths, $
-                inp:era_path, out:out_path}
+                inp:era_path, out:out_path, fig:fig_path}
 
     time_frame = {time_frame, $
                   yyyy:years_list, mm:months_list, ny:nyears, nm:nmonths}
