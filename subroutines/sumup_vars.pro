@@ -76,7 +76,7 @@
 ; 
 ;-------------------------------------------------------------------
 
-PRO SUMUP_CLOUD_PARAMS, means, counts, temps, histo
+PRO SUMUP_VARS, means, counts, temps, histo
 
     ; no condition for cloud fraction [0;1]: clear or cloudy
     means.cfc = means.cfc + temps.cfc
