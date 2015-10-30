@@ -52,69 +52,69 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     ; -- model like output (original ERA-Interim)
     vid  = NCDF_VARDEF(id, 'ctp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctp_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'ctp_ori', 'long_name', 'cloud top pressure'
+    NCDF_ATTPUT, id, 'ctp_ori', 'long_name', 'cloud top pressure (era)'
     NCDF_ATTPUT, id, 'ctp_ori', 'units', 'hPa'
 
     vid  = NCDF_VARDEF(id, 'cth_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cth_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cth_ori', 'long_name', 'cloud top height'
+    NCDF_ATTPUT, id, 'cth_ori', 'long_name', 'cloud top height (era)'
     NCDF_ATTPUT, id, 'cth_ori', 'units', 'km'
 
     vid  = NCDF_VARDEF(id, 'ctt_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'ctt_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'ctt_ori', 'long_name', 'cloud top temperature'
+    NCDF_ATTPUT, id, 'ctt_ori', 'long_name', 'cloud top temperature (era)'
     NCDF_ATTPUT, id, 'ctt_ori', 'units', 'K'
 
     vid  = NCDF_VARDEF(id, 'cc_total_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cc_total_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cc_total_ori', 'long_name', 'cloud fraction'
+    NCDF_ATTPUT, id, 'cc_total_ori', 'long_name', 'cloud fraction (era)'
     NCDF_ATTPUT, id, 'cc_total_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'cph_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cph_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cph_ori', 'long_name', 'cloud phase'
+    NCDF_ATTPUT, id, 'cph_ori', 'long_name', 'cloud phase (era)'
     NCDF_ATTPUT, id, 'cph_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'nobs_ori', [dim_x_id,dim_y_id,time_id], /LONG)
-    NCDF_ATTPUT, id, 'nobs_ori', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_ori', 'long_name', 'number of observations (era)'
     NCDF_ATTPUT, id, 'nobs_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'cot_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cot_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cot_ori', 'long_name', 'cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_ori', 'long_name', 'cloud optical thickness (era)'
     NCDF_ATTPUT, id, 'cot_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'cot_liq_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cot_liq_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cot_liq_ori', 'long_name', 'liquid cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_liq_ori', 'long_name', 'liquid cloud optical thickness (era)'
     NCDF_ATTPUT, id, 'cot_liq_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'cot_ice_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cot_ice_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cot_ice_ori', 'long_name', 'ice cloud optical thickness'
+    NCDF_ATTPUT, id, 'cot_ice_ori', 'long_name', 'ice cloud optical thickness (era)'
     NCDF_ATTPUT, id, 'cot_ice_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'cwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'cwp_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'cwp_ori', 'long_name', 'cloud water path'
+    NCDF_ATTPUT, id, 'cwp_ori', 'long_name', 'cloud water path (era)'
     NCDF_ATTPUT, id, 'cwp_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'lwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'lwp_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'lwp_ori', 'long_name', 'cloud liquid water path'
+    NCDF_ATTPUT, id, 'lwp_ori', 'long_name', 'cloud liquid water path (era)'
     NCDF_ATTPUT, id, 'lwp_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_lwp_ori', [dim_x_id,dim_y_id,time_id], /LONG)
-    NCDF_ATTPUT, id, 'nobs_lwp_ori', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_lwp_ori', 'long_name', 'number of observations (era)'
     NCDF_ATTPUT, id, 'nobs_lwp_ori', 'units', ' '
 
     vid  = NCDF_VARDEF(id, 'iwp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
     NCDF_ATTPUT, id, 'iwp_ori', '_FillValue', -999.
-    NCDF_ATTPUT, id, 'iwp_ori', 'long_name', 'cloud ice water path'
+    NCDF_ATTPUT, id, 'iwp_ori', 'long_name', 'cloud ice water path (era)'
     NCDF_ATTPUT, id, 'iwp_ori', 'units', 'g/m^2'
 
     vid  = NCDF_VARDEF(id, 'nobs_iwp_ori', [dim_x_id,dim_y_id,time_id], /LONG)
-    NCDF_ATTPUT, id, 'nobs_iwp_ori', 'long_name', 'number of observations'
+    NCDF_ATTPUT, id, 'nobs_iwp_ori', 'long_name', 'number of observations (era)'
     NCDF_ATTPUT, id, 'nobs_iwp_ori', 'units', ' '
 
 

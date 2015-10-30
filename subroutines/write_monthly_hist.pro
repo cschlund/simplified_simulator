@@ -106,7 +106,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
 
     vid  = NCDF_VARDEF(id, 'hist1d_ctp_ori', $
         [dim_x_id, dim_y_id, dim_ctp_bin1d, dim_phase, time_id], /LONG)
-    NCDF_ATTPUT, id, 'hist1d_ctp_ori', 'long_name', 'hist1d_ctp'
+    NCDF_ATTPUT, id, 'hist1d_ctp_ori', 'long_name', 'hist1d_ctp (era)'
     NCDF_ATTPUT, id, 'hist1d_ctp_ori', 'units', 'counts'
     NCDF_ATTPUT, id, 'hist1d_ctp_ori', '_FillValue', -999l, /LONG
 
@@ -128,7 +128,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
 
     vid  = NCDF_VARDEF(id, 'hist1d_ctt_ori', $
         [dim_x_id, dim_y_id, dim_ctt_bin1d, dim_phase, time_id], /LONG)
-    NCDF_ATTPUT, id, 'hist1d_ctt_ori', 'long_name', 'hist1d_ctt'
+    NCDF_ATTPUT, id, 'hist1d_ctt_ori', 'long_name', 'hist1d_ctt (era)'
     NCDF_ATTPUT, id, 'hist1d_ctt_ori', 'units', 'counts'
     NCDF_ATTPUT, id, 'hist1d_ctt_ori', '_FillValue', -999l, /LONG
 
@@ -150,7 +150,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
 
     vid  = NCDF_VARDEF(id, 'hist1d_cwp_ori', $
         [dim_x_id, dim_y_id, dim_cwp_bin1d, dim_phase, time_id], /LONG)
-    NCDF_ATTPUT, id, 'hist1d_cwp_ori', 'long_name', 'hist1d_cwp'
+    NCDF_ATTPUT, id, 'hist1d_cwp_ori', 'long_name', 'hist1d_cwp (era)'
     NCDF_ATTPUT, id, 'hist1d_cwp_ori', 'units', 'counts'
     NCDF_ATTPUT, id, 'hist1d_cwp_ori', '_FillValue', -999l, /LONG
 
@@ -172,7 +172,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
 
     vid  = NCDF_VARDEF(id, 'hist1d_cot_ori', $
         [dim_x_id, dim_y_id, dim_cot_bin1d, dim_phase, time_id], /LONG)
-    NCDF_ATTPUT, id, 'hist1d_cot_ori', 'long_name', 'hist1d_cot'
+    NCDF_ATTPUT, id, 'hist1d_cot_ori', 'long_name', 'hist1d_cot (era)'
     NCDF_ATTPUT, id, 'hist1d_cot_ori', 'units', 'counts'
     NCDF_ATTPUT, id, 'hist1d_cot_ori', '_FillValue', -999l, /LONG
 
