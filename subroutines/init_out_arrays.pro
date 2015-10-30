@@ -2,12 +2,45 @@
 ;--  era_simulator: initialize output arrays
 ;-------------------------------------------------------------------
 ;
-; in : grid, histo
+; in : grid, hist
 ; out: arrays, counts
 ;
-; IDL> help, arrays, /str
-; ** Structure <752e68>, 16 tags, length=30150720, data length=30150720, refs=1:
-;    CTP_HIST        LONG      Array[720, 361, 14]
+; ** Structure ERA_GRID, 5 tags, length=2079368, data length=2079366:
+; LON2D           FLOAT     Array[720, 361]
+; LAT2D           FLOAT     Array[720, 361]
+; XDIM            INT            720
+; YDIM            INT            361
+; ZDIM            INT             27
+;
+; ** Structure HISTOGRAMS, 22 tags, length=984, data length=966:
+;    PHASE           INT       Array[2]
+;    PHASE_DIM       INT              2
+;    CTP2D           FLOAT     Array[2, 15]
+;    CTP1D           FLOAT     Array[16]
+;    CTP1D_DIM       INT             16
+;    CTP_BIN1D       FLOAT     Array[15]
+;    CTP_BIN1D_DIM   INT             15
+;    COT2D           FLOAT     Array[2, 13]
+;    COT1D           FLOAT     Array[14]
+;    COT1D_DIM       INT             14
+;    COT_BIN1D       FLOAT     Array[13]
+;    COT_BIN1D_DIM   INT             13
+;    CTT2D           FLOAT     Array[2, 16]
+;    CTT1D           FLOAT     Array[17]
+;    CTT1D_DIM       INT             17
+;    CTT_BIN1D       FLOAT     Array[16]
+;    CTT_BIN1D_DIM   INT             16
+;    CWP2D           FLOAT     Array[2, 14]
+;    CWP1D           FLOAT     Array[15]
+;    CWP1D_DIM       INT             15
+;    CWP_BIN1D       FLOAT     Array[14]
+;    CWP_BIN1D_DIM   INT             14
+;
+; ** Structure FINAL_OUTPUT, 25 tags, length=142436160, data length=142436160:
+;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
+;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
+;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
+;    HIST1D_COT      LONG      Array[720, 361, 13, 2]
 ;    CWP             FLOAT     Array[720, 361]
 ;    COT             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
@@ -25,17 +58,15 @@
 ;    IWP_INC         FLOAT     Array[720, 361]
 ;    LWP_INC_BIN     FLOAT     Array[720, 361]
 ;    IWP_INC_BIN     FLOAT     Array[720, 361]
-;    COT_LIQ         FLOAT     Array[720, 361] ;based on incloud COT
-;    COT_ICE         FLOAT     Array[720, 361] ;based on incloud COT
-;    COT_LIQ_BIN     FLOAT     Array[720, 361] ;based on incloud COT
-;    COT_ICE_BIN     FLOAT     Array[720, 361] ;based on incloud COT
-; 
-; IDL> help, counts, /str
-; ** Structure <7551e8>, 11 tags, length=10396804, data length=10396804, refs=1:
+;    COT_LIQ         FLOAT     Array[720, 361]
+;    COT_ICE         FLOAT     Array[720, 361]
+;    COT_LIQ_BIN     FLOAT     Array[720, 361]
+;    COT_ICE_BIN     FLOAT     Array[720, 361]
+;
+; ** Structure FINAL_COUNTS, 17 tags, length=16634884, data length=16634884:
 ;    CTP             LONG      Array[720, 361]
 ;    COT             LONG      Array[720, 361]
 ;    CWP             LONG      Array[720, 361]
-;    TMP             LONG      Array[720, 361]
 ;    RAW             LONG                 0
 ;    LWP             LONG      Array[720, 361]
 ;    IWP             LONG      Array[720, 361]
@@ -52,7 +83,7 @@
 ;
 ;-------------------------------------------------------------------
 
-PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
+PRO INIT_OUT_ARRAYS, grid, hist, arrays, counts
 
     cot = FLTARR(grid.xdim,grid.ydim) & cot[*,*] = 0
     cwp = FLTARR(grid.xdim,grid.ydim) & cwp[*,*] = 0
@@ -67,10 +98,19 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
     iwp_bin = FLTARR(grid.xdim,grid.ydim) & iwp_bin[*,*] = 0
     cfc_bin = FLTARR(grid.xdim,grid.ydim) & cfc_bin[*,*] = 0
     cph_bin = FLTARR(grid.xdim,grid.ydim) & cph_bin[*,*] = 0
-    ctp_hist = LONARR(grid.xdim,grid.ydim,histo.dim_ctp) & ctp_hist[*,*,*] = 0l
 
+    ; hist1d [lon,lat,bins,phase] = [720,361,15,2]
+    hist1d_ctp = LONARR(grid.xdim,grid.ydim,hist.ctp_bin1d_dim,hist.phase_dim) 
+    hist1d_ctp[*,*,*,*] = 0l
+    hist1d_ctt = LONARR(grid.xdim,grid.ydim,hist.ctt_bin1d_dim,hist.phase_dim) 
+    hist1d_ctt[*,*,*,*] = 0l
+    hist1d_cwp = LONARR(grid.xdim,grid.ydim,hist.cwp_bin1d_dim,hist.phase_dim) 
+    hist1d_cwp[*,*,*,*] = 0l
+    hist1d_cot = LONARR(grid.xdim,grid.ydim,hist.cot_bin1d_dim,hist.phase_dim) 
+    hist1d_cot[*,*,*,*] = 0l
+
+    ; counts
     numb_raw = 0l
-    numb_tmp = LONARR(grid.xdim,grid.ydim)
     numb = LONARR(grid.xdim,grid.ydim) & numb[*,*] = 0
     numb_cot = LONARR(grid.xdim,grid.ydim) & numb_cot[*,*] = 0
     numb_cwp = LONARR(grid.xdim,grid.ydim) & numb_cwp[*,*] = 0
@@ -79,6 +119,7 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
     numb_lwp_bin = LONARR(grid.xdim,grid.ydim) & numb_lwp_bin[*,*] = 0
     numb_iwp_bin = LONARR(grid.xdim,grid.ydim) & numb_iwp_bin[*,*] = 0
 
+
     ; -- lwp & iwp incloud, 
     ;    i.e. in sumup_cloud_params: lwp_tmp/cfc_tmp; iwp_tmp/cfc_tmp
     lwp_inc = FLTARR(grid.xdim,grid.ydim) & lwp_inc[*,*] = 0
@@ -86,10 +127,12 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
     lwp_inc_bin = FLTARR(grid.xdim,grid.ydim) & lwp_inc_bin[*,*] = 0
     iwp_inc_bin = FLTARR(grid.xdim,grid.ydim) & iwp_inc_bin[*,*] = 0
 
+    ; counts
     numb_lwp_inc = LONARR(grid.xdim,grid.ydim) & numb_lwp_inc[*,*] = 0
     numb_iwp_inc = LONARR(grid.xdim,grid.ydim) & numb_iwp_inc[*,*] = 0
     numb_lwp_inc_bin = LONARR(grid.xdim,grid.ydim) & numb_lwp_inc_bin[*,*] = 0
     numb_iwp_inc_bin = LONARR(grid.xdim,grid.ydim) & numb_iwp_inc_bin[*,*] = 0
+
 
     ; -- cot incloud: because the incloud COT is used in search_for_cloud.pro
     ; incloud ori. model
@@ -99,14 +142,19 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
     cot_liq_bin = FLTARR(grid.xdim,grid.ydim) & cot_liq_bin[*,*] = 0
     cot_ice_bin = FLTARR(grid.xdim,grid.ydim) & cot_ice_bin[*,*] = 0
 
+    ; counts
     numb_cot_liq = LONARR(grid.xdim,grid.ydim) & numb_cot_liq[*,*] = 0
     numb_cot_ice = LONARR(grid.xdim,grid.ydim) & numb_cot_ice[*,*] = 0
     numb_cot_liq_bin = LONARR(grid.xdim,grid.ydim) & numb_cot_liq_bin[*,*] = 0
     numb_cot_ice_bin = LONARR(grid.xdim,grid.ydim) & numb_cot_ice_bin[*,*] = 0
 
-    ; create structure
+
+    ; -- create structure
     arrays = {final_output, $
-                ctp_hist:ctp_hist, $ 
+                hist1d_ctp:hist1d_ctp, $ 
+                hist1d_ctt:hist1d_ctt, $ 
+                hist1d_cwp:hist1d_cwp, $ 
+                hist1d_cot:hist1d_cot, $ 
                 cwp:cwp, cot:cot, $ 
                 cph:cph, ctt:ctt, cth:cth, ctp:ctp, $ 
                 lwp:lwp, iwp:iwp, cfc:cfc, $ 
@@ -120,7 +168,7 @@ PRO INIT_OUT_ARRAYS, grid, histo, arrays, counts
     counts = {final_counts,$ 
                 ctp:numb, $
                 cot:numb_cot, cwp:numb_cwp, $
-                tmp:numb_tmp, raw:numb_raw, $
+                raw:numb_raw, $
                 lwp:numb_lwp, iwp:numb_iwp, $ 
                 lwp_bin:numb_lwp_bin, $ 
                 iwp_bin:numb_iwp_bin, $ 

@@ -5,8 +5,11 @@
 ; in : means, counts
 ; out: means, counts
 ;
-; ** Structure FINAL_OUTPUT, 22 tags, length=36388800, data length=36388800:
-;    CTP_HIST        LONG      Array[720, 361, 14]
+; ** Structure FINAL_OUTPUT, 25 tags, length=142436160, data length=142436160:
+;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
+;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
+;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
+;    HIST1D_COT      LONG      Array[720, 361, 13, 2]
 ;    CWP             FLOAT     Array[720, 361]
 ;    COT             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
@@ -33,7 +36,6 @@
 ;    CTP             LONG      Array[720, 361]
 ;    COT             LONG      Array[720, 361]
 ;    CWP             LONG      Array[720, 361]
-;    TMP             LONG      Array[720, 361]
 ;    RAW             LONG                 0
 ;    LWP             LONG      Array[720, 361]
 ;    IWP             LONG      Array[720, 361]
@@ -198,5 +200,24 @@ PRO MEAN_VARS, means, counts
 
     icotbin0 = WHERE(counts.cot_ice_bin EQ 0, nicotbin0)
     IF (nicotbin0 GT 0) THEN means.cot_ice_bin[icotbin0] = -999.
+
+
+    ; -- 1D histograms
+
+    ; HIST1D_CTP      LONG      Array[720, 361, 15, 2]
+    h1ctp = WHERE(means.hist1d_ctp EQ 0, nh1ctp)
+    IF (nh1ctp GT 0) THEN means.hist1d_ctp[h1ctp] = -999l
+
+    ; HIST1D_CTT      LONG      Array[720, 361, 16, 2]
+    h1ctt = WHERE(means.hist1d_ctt EQ 0, nh1ctt)
+    IF (nh1ctt GT 0) THEN means.hist1d_ctt[h1ctt] = -999l
+
+    ; HIST1D_CWP      LONG      Array[720, 361, 14, 2]
+    h1cwp = WHERE(means.hist1d_cwp EQ 0, nh1cwp)
+    IF (nh1cwp GT 0) THEN means.hist1d_cwp[h1cwp] = -999l
+
+    ; HIST1D_COT      LONG      Array[720, 361, 13, 2]
+    h1cot = WHERE(means.hist1d_cot EQ 0, nh1cot)
+    IF (nh1cot GT 0) THEN means.hist1d_cot[h1cot] = -999l
 
 END

@@ -11,10 +11,11 @@
 ;                   for simu. (sat) : cot_liq_bin+cot_ice_bin & 
 ;                                     lwp_inc_bin+iwp_inc_bin
 ;
-; IDL> help, means ... structure containing the final output arrays
-;
-; ** Structure FINAL_OUTPUT, 22 tags, length=36388800, data length=36388800:
-;    CTP_HIST        LONG      Array[720, 361, 14]
+; ** Structure FINAL_OUTPUT, 25 tags, length=142436160, data length=142436160:
+;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
+;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
+;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
+;    HIST1D_COT      LONG      Array[720, 361, 13, 2]
 ;    CWP             FLOAT     Array[720, 361]
 ;    COT             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
@@ -37,13 +38,10 @@
 ;    COT_LIQ_BIN     FLOAT     Array[720, 361]
 ;    COT_ICE_BIN     FLOAT     Array[720, 361]
 ;
-; IDL> help, counts ... structure containing the counters
-;
 ; ** Structure FINAL_COUNTS, 17 tags, length=16634884, data length=16634884:
 ;    CTP             LONG      Array[720, 361]
 ;    COT             LONG      Array[720, 361]
 ;    CWP             LONG      Array[720, 361]
-;    TMP             LONG      Array[720, 361]
 ;    RAW             LONG                 0
 ;    LWP             LONG      Array[720, 361]
 ;    IWP             LONG      Array[720, 361]
@@ -57,8 +55,6 @@
 ;    COT_ICE         LONG      Array[720, 361]
 ;    COT_LIQ_BIN     LONG      Array[720, 361]
 ;    COT_ICE_BIN     LONG      Array[720, 361]
-;
-; IDL> help, temps ... structure containing the temp. arrays
 ;
 ; ** Structure TEMP_ARRAYS, 19 tags, length=19753920, data length=19753920:
 ;    CTP             FLOAT     Array[720, 361]
@@ -81,13 +77,30 @@
 ;    COT_LIQ_BIN     FLOAT     Array[720, 361]
 ;    COT_ICE_BIN     FLOAT     Array[720, 361]
 ;
-; IDL> help, histo ... structure containing the histogram information
+; ** Structure HISTOGRAMS, 22 tags, length=984, data length=966:
+;    PHASE           INT       Array[2]
+;    PHASE_DIM       INT              2
+;    CTP2D           FLOAT     Array[2, 15]
+;    CTP1D           FLOAT     Array[16]
+;    CTP1D_DIM       INT             16
+;    CTP_BIN1D       FLOAT     Array[15]
+;    CTP_BIN1D_DIM   INT             15
+;    COT2D           FLOAT     Array[2, 13]
+;    COT1D           FLOAT     Array[14]
+;    COT1D_DIM       INT             14
+;    COT_BIN1D       FLOAT     Array[13]
+;    COT_BIN1D_DIM   INT             13
+;    CTT2D           FLOAT     Array[2, 16]
+;    CTT1D           FLOAT     Array[17]
+;    CTT1D_DIM       INT             17
+;    CTT_BIN1D       FLOAT     Array[16]
+;    CTT_BIN1D_DIM   INT             16
+;    CWP2D           FLOAT     Array[2, 14]
+;    CWP1D           FLOAT     Array[15]
+;    CWP1D_DIM       INT             15
+;    CWP_BIN1D       FLOAT     Array[14]
+;    CWP_BIN1D_DIM   INT             14
 ;
-; ** Structure <741998>, 3 tags, length=176, data length=176, refs=1:
-;    DIM_CTP         LONG                14
-;    CTP1D           FLOAT     Array[15]
-;    CTP2D           FLOAT     Array[2, 14]
-; 
 ;-------------------------------------------------------------------
 
 PRO SUMUP_VARS, flag, means, counts, temps, histo
@@ -233,13 +246,42 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
     ENDELSE
 
 
-    FOR gu=0, histo.dim_ctp-1 DO BEGIN
-      counts.tmp[*,*] = 0l
-      wohi = WHERE(temps.ctp GE histo.ctp2d[0,gu] AND temps.ctp LT histo.ctp2d[1,gu],nwohi)
-      IF(nwohi GT 0) THEN counts.tmp[wohi] = 1l
-      means.ctp_hist[*,*,gu]=means.ctp_hist[*,*,gu] + counts.tmp
-    ENDFOR
+    ; -- collect counts for 1D histograms
 
-    counts.tmp[*,*] = 0l
+    ; -- hist1d_ctp
+    res = SUMUP_HIST1D( bin1d_dim=histo.ctp_bin1d_dim, $
+                        hist_var2d=histo.ctp2d, $
+                        var_tmp=temps.ctp, $
+                        cph_dim=histo.phase_dim, $
+                        phase=temps.cph_bin)
+    means.hist1d_ctp = means.hist1d_ctp + res
+    UNDEFINE, res
+
+    ; -- hist1d_ctt
+    res = SUMUP_HIST1D( bin1d_dim=histo.ctt_bin1d_dim, $
+                        hist_var2d=histo.ctt2d, $
+                        var_tmp=temps.ctt, $
+                        cph_dim=histo.phase_dim, $
+                        phase=temps.cph_bin)
+    means.hist1d_ctt = means.hist1d_ctt + res
+    UNDEFINE, res
+
+    ; -- hist1d_cot
+    res = SUMUP_HIST1D( bin1d_dim=histo.cot_bin1d_dim, $
+                        hist_var2d=histo.cot2d, $
+                        var_tmp=temps.cot, $
+                        cph_dim=histo.phase_dim, $
+                        phase=temps.cph_bin)
+    means.hist1d_cot = means.hist1d_cot + res
+    UNDEFINE, res
+
+    ; -- hist1d_cwp: bins [g/m2], temps [kg/m2]
+    res = SUMUP_HIST1D( bin1d_dim=histo.cwp_bin1d_dim, $
+                        hist_var2d=histo.cwp2d, $
+                        var_tmp=temps.cwp*1000., $
+                        cph_dim=histo.phase_dim, $
+                        phase=temps.cph_bin)
+    means.hist1d_cwp = means.hist1d_cwp + res
+    UNDEFINE, res
 
 END

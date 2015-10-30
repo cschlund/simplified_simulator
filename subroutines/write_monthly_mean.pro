@@ -21,6 +21,10 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     file_out = 'SimpSimu_MM'+year+month+'_'+thv.str+'_CTP.nc'
     clobber  = 1
 
+    ; inp.lon [0;359.5]
+    lon = inp.lon - 180.    ;degrees_east
+    lat = inp.lat           ;degrees_north
+
     ; -- Create netCDF output file
     id = NCDF_CREATE(path_out + file_out, CLOBBER = clobber)
 
@@ -35,10 +39,15 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     dim_y_id  = NCDF_DIMDEF(id, 'lat', grd.ydim)
     time_id   = NCDF_DIMDEF(id, 'time', dim_time)
 
-    vid  = NCDF_VARDEF(id, 'lon', [dim_x_id], /FLOAT)
-    vid  = NCDF_VARDEF(id, 'lat', [dim_y_id], /FLOAT)
     vid  = NCDF_VARDEF(id, 'time', [time_id], /DOUBLE)
 
+    vid  = NCDF_VARDEF(id, 'lon', [dim_x_id], /FLOAT)
+    NCDF_ATTPUT, id, 'lon', 'long_name', 'longitude'
+    NCDF_ATTPUT, id, 'lon', 'units', 'degrees_east'
+
+    vid  = NCDF_VARDEF(id, 'lat', [dim_y_id], /FLOAT)
+    NCDF_ATTPUT, id, 'lat', 'long_name', 'latitude'
+    NCDF_ATTPUT, id, 'lat', 'units', 'degrees_north'
 
     ; -- model like output (original ERA-Interim)
     vid  = NCDF_VARDEF(id, 'ctp_ori', [dim_x_id,dim_y_id,time_id], /FLOAT)
@@ -182,8 +191,8 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
 
     ; -- general
     NCDF_VARPUT, id, 'time', itime
-    NCDF_VARPUT, id, 'lon', inp.lon
-    NCDF_VARPUT, id, 'lat', inp.lat
+    NCDF_VARPUT, id, 'lon', lon
+    NCDF_VARPUT, id, 'lat', lat
 
     ; -- based on thv.era: original model output
     NCDF_VARPUT, id, 'ctp_ori', ave_era.ctp

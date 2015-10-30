@@ -31,12 +31,13 @@
 ;   C. Schlundt, October 2015: implementation of COT
 ;   C. Schlundt, October 2015: implementation of SZA2d
 ;   C. Schlundt, October 2015: implementation of COT/CWP dayside only
+;   C. Schlundt, October 2015: implementation of 1D Histograms
 ;
 ; ToDo:
 ;       (1) cloud overlap
 ;
 ;*******************************************************************************
-PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
+PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 ;*******************************************************************************
     clock = TIC('TOTAL')
 
@@ -111,7 +112,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                         counti++
 
                         ; -- initialize solar zenith angle 2D array
-                        IF KEYWORD_SET(test) THEN BEGIN
+                        IF KEYWORD_SET(test) AND KEYWORD_SET(map) THEN BEGIN
                             sza2d = INIT_SZA_ARRAY(file1,grid,/map,pwd=pwd.fig)
                         ENDIF ELSE BEGIN
                             sza2d = INIT_SZA_ARRAY(file1,grid)
@@ -136,8 +137,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                         SCALE_COT_CWP, tmp_sat, grid
 
                         ; -- sunlit region only for COT and CWP
-                        IF KEYWORD_SET(test) THEN BEGIN
-                            SOLAR_COT_CWP, tmp_sat, sza2d, grid, pwd.out, file1
+                        IF KEYWORD_SET(test) AND KEYWORD_SET(map) THEN BEGIN
+                            SOLAR_COT_CWP, tmp_sat, sza2d, grid, pwd.fig, file1
                         ENDIF ELSE BEGIN
                             SOLAR_COT_CWP, tmp_sat, sza2d
                         ENDELSE
@@ -170,7 +171,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test
                                     mean_era, cnts_era, mean_sat, cnts_sat
 
                 WRITE_MONTHLY_HIST, pwd.out, year, month, grid, input, $
-                                    thv, his, mean_era, mean_sat
+                                    thv, his, mean_era, mean_sat, $
+                                    cnts_era, cnts_sat
 
 
                 ; delete final arrays before next cycle starts
