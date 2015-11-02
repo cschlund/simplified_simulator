@@ -6,8 +6,15 @@
 
 PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
 
+    ;-- model = 0.01, e.g. ERA = original input data
+    cot_thv_era = 0.01 
+    ;-- satellite sensitivity threshold
+    cot_thv_sat = 5.0
+    ;-- crit_str
+    crit_str = 'cot_thv_'+STRTRIM(STRING(cot_thv_sat, FORMAT='(F4.2)'),2)
+
     ;-- era simulator output directory
-    out_base = 'v3_further_devs/v3.6_add_1dhistograms/'
+    out_base = 'v3_further_devs/v3.8_add_2dhistogram/'
     pwd_base = '/data/cschlund/output/simplified_simulator/'
     out_path = pwd_base + out_base
     validres = VALID_DIR( out_path )
@@ -30,25 +37,10 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
     years_list = ['2008']
     nyears = N_ELEMENTS(years_list)
 
-
     ;-- Set list of month to be processed
     ;months_list = ['01','02','03','04','05','06','07','08','09','10','11','12']
     months_list = ['07']
     nmonths = N_ELEMENTS(months_list)
-
-
-    ;-- model = 0.01, e.g. ERA = original input data
-    cot_thv_era = 0.01 
-
-    ;-- satellite sensitivity threshold
-    IF KEYWORD_SET(cot_thv_sat) THEN BEGIN
-	cot_thv_sat = cot_thv_sat
-    ENDIF ELSE BEGIN
-	cot_thv_sat = 0.3
-    ENDELSE
-
-    ;-- crit_str = 'cot_thv_'+strtrim(cot_thv_sat,1)
-    crit_str = 'cot_thv_'+STRTRIM(STRING(cot_thv_sat, FORMAT='(F4.2)'),2)
 
 
     ;-- Set cloud top pressure limits for 1D and 2D output, same as in Cloud_cci
@@ -88,19 +80,6 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
 
 
     ; -- hist1d_ctt [K] --
-
-    ; L3C Cloud_cci
-    ;IDL> print, hist_ctt1d_axis
-    ;      200.000      210.000      220.000      230.000      235.000
-    ;      240.000      245.000      250.000      255.000      260.000      
-    ;      265.000      270.000      280.000      290.000      300.000      
-    ;      310.000      350.000
-    ;IDL> print, hist_ctt_bin1d_axis
-    ;      205.000      215.000      225.000      232.500      237.500      
-    ;      242.500      247.500      252.500      257.500      262.500      
-    ;      267.500      275.000      285.000      295.000      305.000      
-    ;      330.000
-
     ctt1d = [200., 210., 220., 230., 235., 240., 245., $
              250., 255., 260., 265., 270., 280., $
              290., 300., 310., 350.]
@@ -118,17 +97,6 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
 
 
     ; -- hist1d_cwp [g/m2] --
-
-    ; L3C Cloud_cci
-    ;IDL> print, hist_cwp1d_axis
-    ;      0.00000      5.00000      10.0000      20.0000      35.0000      50.0000
-    ;      75.0000      100.000      150.000      200.000      300.000      500.000
-    ;      1000.00      2000.00      100000.
-    ;IDL> print, hist_cwp_bin1d_axis
-    ;      2.50000      7.50000      15.0000      27.5000      42.5000      62.5000
-    ;      87.5000      125.000      175.000      250.000      400.000      750.000
-    ;      1500.00      51000.0
-
     cwp1d = [0., 5., 10., 20., 35., 50., 75., 100., $
              150., 200., 300., 500., 1000., 2000., 100000.]
     cwp2d = FLTARR(2,N_ELEMENTS(cwp1d)-1)
