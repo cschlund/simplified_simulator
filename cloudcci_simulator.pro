@@ -47,6 +47,10 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
     CONFIG_SIMULATOR, pwd, tim, thv, his
 
 
+    IF KEYWORD_SET(logfile) THEN $
+        JOURNAL, pwd.out + 'journal_' + thv.str + cgTimeStamp() + '.pro'
+
+
     IF KEYWORD_SET(test) THEN BEGIN
         pwd.inp = '/data/cschlund/MARS_data/ERA_simulator_testdata/'
         pwd.out = pwd.out + 'testrun/'
@@ -57,10 +61,6 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
     IF KEYWORD_SET(verbose) THEN HELP, pwd, /structure
     IF KEYWORD_SET(verbose) THEN HELP, thv, /structure
-
-
-    IF KEYWORD_SET(logfile) THEN $
-        JOURNAL, pwd.out + 'journal_' + thv.str + cgTimeStamp() + '.pro'
 
 
     ; -- loop over years and months
