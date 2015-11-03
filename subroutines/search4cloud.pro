@@ -2,8 +2,10 @@
 ;-- search bottom-up, where is a cloud using COT threshold value
 ;-------------------------------------------------------------------
 ;
-; in : inp, grd, cwp, cot, thv
+; in : inp, grd, cwp, cot, flg, thv
 ; out: tmp
+;
+; flg: flag, either 'ori' (model) or 'sat' (simulated)
 ;
 ; IDL> help, inp ... input era interim 3d reanalysis fields
 ; ** Structure <752348>, 10 tags, length=140365888, data length=140365888, refs=1:
@@ -63,39 +65,47 @@
 ;
 ;-------------------------------------------------------------------
 
-PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
+PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
+
+    ; -- fill_value
+    fillvalue = -999.
 
     ; -- initialize arrays
-    cot_tmp = FLTARR(grd.xdim,grd.ydim) & cot_tmp[*,*] = 0.
-    cwp_tmp = FLTARR(grd.xdim,grd.ydim) & cwp_tmp[*,*] = 0.
-    ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = -999.
-    cth_tmp = FLTARR(grd.xdim,grd.ydim) & cth_tmp[*,*] = -999.
-    ctt_tmp = FLTARR(grd.xdim,grd.ydim) & ctt_tmp[*,*] = -999.
-    cph_tmp = FLTARR(grd.xdim,grd.ydim) & cph_tmp[*,*] = -999.
-    lwp_tmp = FLTARR(grd.xdim,grd.ydim) & lwp_tmp[*,*] = 0.
-    iwp_tmp = FLTARR(grd.xdim,grd.ydim) & iwp_tmp[*,*] = 0.
-    cfc_tmp = FLTARR(grd.xdim,grd.ydim) & cfc_tmp[*,*] = 0.
+    cot_tmp = FLTARR(grd.xdim,grd.ydim) & cot_tmp[*,*] = fillvalue
+    cwp_tmp = FLTARR(grd.xdim,grd.ydim) & cwp_tmp[*,*] = fillvalue
+    ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = fillvalue
+    cth_tmp = FLTARR(grd.xdim,grd.ydim) & cth_tmp[*,*] = fillvalue
+    ctt_tmp = FLTARR(grd.xdim,grd.ydim) & ctt_tmp[*,*] = fillvalue
+    cph_tmp = FLTARR(grd.xdim,grd.ydim) & cph_tmp[*,*] = fillvalue
+    lwp_tmp = FLTARR(grd.xdim,grd.ydim) & lwp_tmp[*,*] = fillvalue
+    iwp_tmp = FLTARR(grd.xdim,grd.ydim) & iwp_tmp[*,*] = fillvalue
+    cfc_tmp = FLTARR(grd.xdim,grd.ydim) & cfc_tmp[*,*] = fillvalue
+
     ; binary based cfc and cph
-    cfc_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cfc_tmp_bin[*,*] = 0.
-    cph_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cph_tmp_bin[*,*] = -999.
+    cfc_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cfc_tmp_bin[*,*] = fillvalue
+    cph_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cph_tmp_bin[*,*] = fillvalue
+
     ; lwp and iwp based on binary decision of cph
-    lwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_bin[*,*] = 0.
-    iwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_bin[*,*] = 0.
+    lwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_bin[*,*] = fillvalue
+    iwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_bin[*,*] = fillvalue
+
     ; liquid and ice COT for ori. model output
-    lcot_tmp = FLTARR(grd.xdim,grd.ydim) & lcot_tmp[*,*] = 0.
-    icot_tmp = FLTARR(grd.xdim,grd.ydim) & icot_tmp[*,*] = 0.
+    lcot_tmp = FLTARR(grd.xdim,grd.ydim) & lcot_tmp[*,*] = fillvalue
+    icot_tmp = FLTARR(grd.xdim,grd.ydim) & icot_tmp[*,*] = fillvalue
+
     ; liquid and ice COT for pseudo-satellite output, based on cph_tmp_bin
-    lcot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lcot_tmp_bin[*,*] = 0.
-    icot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & icot_tmp_bin[*,*] = 0.
+    lcot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lcot_tmp_bin[*,*] = fillvalue
+    icot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & icot_tmp_bin[*,*] = fillvalue
 
     ; incloud lwp and iwp based on binary decision of cph
     ; required in sumup_vars.pro
-    lwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_inc_bin[*,*] = 0.
-    iwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_inc_bin[*,*] = 0.
+    lwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_inc_bin[*,*] = fillvalue
+    iwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_inc_bin[*,*] = fillvalue
 
 
     FOR z=grd.zdim-2,1,-1 DO BEGIN
 
+      cnt = 0
       total_cot = total((cot.liq + cot.ice)[*,*,0:z],3)
       where_cot = where(total_cot GT thv, cnt)
 
@@ -121,7 +131,7 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
             iwp_lay_tmp[where_cot[lwp_idx]] ) ) < 1.0 )
 
         nanidx = WHERE( ~FINITE(cph_tmp), cnt_nan )
-        IF (cnt_nan GT 0) THEN cph_tmp[nanidx] = -999.
+        IF (cnt_nan GT 0) THEN cph_tmp[nanidx] = fillvalue
 
         ; cloud top phase via binary decision
         cph_tmp_bin[where_cot[lwp_idx]] = ROUND( cph_tmp[where_cot[lwp_idx]] )
@@ -191,11 +201,47 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, thv, tmp
     ENDIF
 
 
+    ; conistent output w.r.t. cloud fraction
+    IF (flg EQ 'ori') THEN BEGIN
+        f = WHERE(cfc_tmp EQ 0., fcnt)
+    ENDIF ELSE BEGIN
+        f = WHERE(cfc_tmp_bin EQ 0., fcnt)
+    ENDELSE 
+
+    IF (fcnt GT 0) THEN BEGIN
+        ctp_tmp[f] = fillvalue
+        cth_tmp[f] = fillvalue
+        ctt_tmp[f] = fillvalue
+        cph_tmp[f] = fillvalue
+        lwp_tmp[f] = fillvalue
+        iwp_tmp[f] = fillvalue
+        cfc_tmp[f] = fillvalue
+        ; initialized here but used in sumup_vars.pro
+        ;cot_tmp[f] = fillvalue
+        ;cwp_tmp[f] = fillvalue
+        cfc_tmp_bin[f] = fillvalue
+        cph_tmp_bin[f] = fillvalue
+        lwp_tmp_bin[f] = fillvalue
+        iwp_tmp_bin[f] = fillvalue
+        lwp_tmp_inc_bin[f] = fillvalue
+        iwp_tmp_inc_bin[f] = fillvalue
+        lcot_tmp[f] = fillvalue
+        icot_tmp[f] = fillvalue
+        lcot_tmp_bin[f] = fillvalue
+        icot_tmp_bin[f] = fillvalue
+    ENDIF
+
     ; output structure
     tmp = {temp_arrays, $
-           ctp:ctp_tmp, cth:cth_tmp, ctt:ctt_tmp, cph:cph_tmp,$
-           lwp:lwp_tmp, iwp:iwp_tmp, cfc:cfc_tmp, $
-           cot:cot_tmp, cwp:cwp_tmp, $
+           ctp:ctp_tmp, $
+           cth:cth_tmp, $
+           ctt:ctt_tmp, $
+           cph:cph_tmp, $
+           lwp:lwp_tmp, $
+           iwp:iwp_tmp, $
+           cfc:cfc_tmp, $
+           cot:cot_tmp, $
+           cwp:cwp_tmp, $
            cfc_bin:cfc_tmp_bin, $
            cph_bin:cph_tmp_bin, $
            lwp_bin:lwp_tmp_bin, $
