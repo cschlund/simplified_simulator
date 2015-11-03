@@ -79,10 +79,10 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
     cph_tmp = FLTARR(grd.xdim,grd.ydim) & cph_tmp[*,*] = fillvalue
     lwp_tmp = FLTARR(grd.xdim,grd.ydim) & lwp_tmp[*,*] = fillvalue
     iwp_tmp = FLTARR(grd.xdim,grd.ydim) & iwp_tmp[*,*] = fillvalue
-    cfc_tmp = FLTARR(grd.xdim,grd.ydim) & cfc_tmp[*,*] = fillvalue
+    cfc_tmp = FLTARR(grd.xdim,grd.ydim) & cfc_tmp[*,*] = 0.
 
     ; binary based cfc and cph
-    cfc_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cfc_tmp_bin[*,*] = fillvalue
+    cfc_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cfc_tmp_bin[*,*] = 0.
     cph_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cph_tmp_bin[*,*] = fillvalue
 
     ; lwp and iwp based on binary decision of cph
@@ -215,11 +215,11 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
         cph_tmp[f] = fillvalue
         lwp_tmp[f] = fillvalue
         iwp_tmp[f] = fillvalue
-        cfc_tmp[f] = fillvalue
-        ; initialized here but used in sumup_vars.pro
+        ;cfc_tmp[f] = fillvalue
+        ;initialized here but used in sumup_vars.pro
         ;cot_tmp[f] = fillvalue
         ;cwp_tmp[f] = fillvalue
-        cfc_tmp_bin[f] = fillvalue
+        ;cfc_tmp_bin[f] = fillvalue
         cph_tmp_bin[f] = fillvalue
         lwp_tmp_bin[f] = fillvalue
         iwp_tmp_bin[f] = fillvalue
