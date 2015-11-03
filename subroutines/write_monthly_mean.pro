@@ -216,19 +216,19 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'ctp', ave_sat.ctp
     NCDF_VARPUT, id, 'cth', ave_sat.cth
     NCDF_VARPUT, id, 'ctt', ave_sat.ctt
-    NCDF_VARPUT, id, 'cph', ave_sat.cph_bin
-    NCDF_VARPUT, id, 'cc_total', ave_sat.cfc_bin
+    NCDF_VARPUT, id, 'cph', ave_sat.cph
+    NCDF_VARPUT, id, 'cc_total', ave_sat.cfc
     ; lwp_inc_bin + iwp_inc_bin
     NCDF_VARPUT, id, 'cwp', ave_sat.cwp
     ; cot_liq_bin + cot_ice_bin
     NCDF_VARPUT, id, 'cot', ave_sat.cot
-    NCDF_VARPUT, id, 'cot_liq', ave_sat.cot_liq_bin
-    NCDF_VARPUT, id, 'cot_ice', ave_sat.cot_ice_bin
-    NCDF_VARPUT, id, 'lwp', ave_sat.lwp_inc_bin
-    NCDF_VARPUT, id, 'iwp', ave_sat.iwp_inc_bin
+    NCDF_VARPUT, id, 'cot_liq', ave_sat.cot_liq
+    NCDF_VARPUT, id, 'cot_ice', ave_sat.cot_ice
+    NCDF_VARPUT, id, 'lwp', ave_sat.lwp
+    NCDF_VARPUT, id, 'iwp', ave_sat.iwp
     NCDF_VARPUT, id, 'nobs', cnt_sat.ctp
-    NCDF_VARPUT, id, 'nobs_lwp', cnt_sat.lwp_inc_bin
-    NCDF_VARPUT, id, 'nobs_iwp', cnt_sat.iwp_inc_bin
+    NCDF_VARPUT, id, 'nobs_lwp', cnt_sat.lwp
+    NCDF_VARPUT, id, 'nobs_iwp', cnt_sat.iwp
 
     NCDF_CLOSE, id ;Close netCDF output file
 

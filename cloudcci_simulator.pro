@@ -22,16 +22,17 @@
 ; MODIFICATION HISTORY:
 ;   Written by Dr. Martin Stengel, 2014; 
 ;     grid_mean arrays as output; for comparison with model results
-;   C. Schlundt, July 2015: program modifications - subroutines added
-;   C. Schlundt, July 2015: incloud_mean arrays added
-;                           (LWP and IWP weighted with CFC)
-;   C. Schlundt, September 2015: binary CFC, CPH added and applied to LWP/IWP
-;   C. Schlundt, October 2015: implementation of structures
-;   C. Schlundt, October 2015: implementation of CWP
-;   C. Schlundt, October 2015: implementation of COT
-;   C. Schlundt, October 2015: implementation of SZA2d
-;   C. Schlundt, October 2015: implementation of COT/CWP dayside only
-;   C. Schlundt, October 2015: implementation of 1D Histograms
+;   C. Schlundt, Jul 2015: program modifications - subroutines added
+;   C. Schlundt, Jul 2015: incloud_mean arrays added
+;                          (LWP and IWP weighted with CFC)
+;   C. Schlundt, Sep 2015: binary CFC, CPH added and applied to LWP/IWP
+;   C. Schlundt, Oct 2015: implementation of structures
+;   C. Schlundt, Oct 2015: implementation of CWP
+;   C. Schlundt, Oct 2015: implementation of COT
+;   C. Schlundt, Oct 2015: implementation of SZA2d
+;   C. Schlundt, Oct 2015: implementation of COT/CWP dayside only
+;   C. Schlundt, Oct 2015: implementation of 1D Histograms
+;   C. Schlundt, Nov 2015: implementation of 2D Histogram COT-CTP
 ;
 ; ToDo:
 ;       (1) cloud overlap
@@ -129,9 +130,9 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
                         ; -- get cloud parameters using incloud COT threshold
                         SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
-                                      thv.era, tmp_era
+                                      'ori', thv.era, tmp_era
                         SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
-                                      thv.sat, tmp_sat
+                                      'sat', thv.sat, tmp_sat
 
                         ; -- scale COT and thus CWP like in CC4CL for tmp_sat only
                         SCALE_COT_CWP, tmp_sat, grid

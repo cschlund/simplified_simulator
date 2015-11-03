@@ -2,7 +2,8 @@
 ;-- write netcdf monthly histogram output
 ;-------------------------------------------------------------------
 ;
-; ** Structure FINAL_OUTPUT, 25 tags, length=142436160, data length=142436160:
+; ** Structure FINAL_OUTPUT, 16 tags, length=537514560, data length=537514560:
+;    HIST2D_COT_CTP  LONG      Array[720, 361, 13, 15, 2]
 ;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
 ;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
 ;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
@@ -94,6 +95,22 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
     NCDF_ATTPUT, id, 'hist_phase', 'long_name', 'phase histogram bins'
     NCDF_ATTPUT, id, 'hist_phase', 'units', ' '
 
+    vid  = NCDF_VARDEF(id, 'hist_cot', [dim_cot1d], /DOUBLE)
+    NCDF_ATTPUT, id, 'hist_cot', 'long_name', 'cot histogram border values'
+    NCDF_ATTPUT, id, 'hist_cot', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'hist_cot_bin', [dim_cot_bin1d], /DOUBLE)
+    NCDF_ATTPUT, id, 'hist_cot_bin', 'long_name', 'cot histogram bins'
+    NCDF_ATTPUT, id, 'hist_cot_bin', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'hist_ctp', [dim_ctp1d], /DOUBLE)
+    NCDF_ATTPUT, id, 'hist_ctp', 'long_name', 'ctp histogram border values'
+    NCDF_ATTPUT, id, 'hist_ctp', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'hist_ctp_bin', [dim_ctp_bin1d], /DOUBLE)
+    NCDF_ATTPUT, id, 'hist_ctp_bin', 'long_name', 'ctp histogram bins'
+    NCDF_ATTPUT, id, 'hist_ctp_bin', 'units', ' '
+
 
     ; -- cloud top pressure 1d histogram --------------------------------------
     vid  = NCDF_VARDEF(id, 'hist_ctp1d_axis', [dim_ctp1d], /FLOAT)
@@ -182,12 +199,37 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
     NCDF_ATTPUT, id, 'hist1d_cot', 'units', 'counts'
     NCDF_ATTPUT, id, 'hist1d_cot', '_FillValue', -999l, /LONG
     
+
+    ; hist2d_cot_ctp
+
+    vid  = NCDF_VARDEF(id, 'hist2d_cot_ctp_ori', $
+        [dim_x_id, dim_y_id, dim_cot_bin1d, dim_ctp_bin1d, dim_phase, time_id], /LONG)
+    NCDF_ATTPUT, id, 'hist2d_cot_ctp_ori', 'long_name', 'hist2d_cot_ctp (era)'
+    NCDF_ATTPUT, id, 'hist2d_cot_ctp_ori', 'units', 'counts'
+    NCDF_ATTPUT, id, 'hist2d_cot_ctp_ori', '_FillValue', -999l, /LONG
+
+    vid  = NCDF_VARDEF(id, 'hist2d_cot_ctp', $
+        [dim_x_id, dim_y_id, dim_cot_bin1d, dim_ctp_bin1d, dim_phase, time_id], /LONG)
+    NCDF_ATTPUT, id, 'hist2d_cot_ctp', 'long_name', 'hist2d_cot_ctp'
+    NCDF_ATTPUT, id, 'hist2d_cot_ctp', 'units', 'counts'
+    NCDF_ATTPUT, id, 'hist2d_cot_ctp', '_FillValue', -999l, /LONG
+
+
+
     NCDF_CONTROL, id, /ENDEF
 
     NCDF_VARPUT, id, 'time',itime
     NCDF_VARPUT, id, 'lon',lon
     NCDF_VARPUT, id, 'lat',lat
+
     NCDF_VARPUT, id, 'hist_phase',hist.phase
+    NCDF_VARPUT, id, 'hist_cot',hist.cot1d
+    NCDF_VARPUT, id, 'hist_cot_bin',hist.cot_bin1d
+    NCDF_VARPUT, id, 'hist_ctp',hist.ctp1d
+    NCDF_VARPUT, id, 'hist_ctp_bin',hist.ctp_bin1d
+
+    NCDF_VARPUT, id, 'hist2d_cot_ctp_ori',ave_era.hist2d_cot_ctp
+    NCDF_VARPUT, id, 'hist2d_cot_ctp',ave_sat.hist2d_cot_ctp
 
     NCDF_VARPUT, id, 'hist_ctp1d_axis', hist.ctp1d
     NCDF_VARPUT, id, 'hist_ctp_bin1d_axis', hist.ctp_bin1d

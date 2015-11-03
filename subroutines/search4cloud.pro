@@ -71,14 +71,14 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
     fillvalue = -999.
 
     ; -- initialize arrays
-    cot_tmp = FLTARR(grd.xdim,grd.ydim) & cot_tmp[*,*] = fillvalue
-    cwp_tmp = FLTARR(grd.xdim,grd.ydim) & cwp_tmp[*,*] = fillvalue
+    cot_tmp = FLTARR(grd.xdim,grd.ydim) & cot_tmp[*,*] = 0.
+    cwp_tmp = FLTARR(grd.xdim,grd.ydim) & cwp_tmp[*,*] = 0.
     ctp_tmp = FLTARR(grd.xdim,grd.ydim) & ctp_tmp[*,*] = fillvalue
     cth_tmp = FLTARR(grd.xdim,grd.ydim) & cth_tmp[*,*] = fillvalue
     ctt_tmp = FLTARR(grd.xdim,grd.ydim) & ctt_tmp[*,*] = fillvalue
     cph_tmp = FLTARR(grd.xdim,grd.ydim) & cph_tmp[*,*] = fillvalue
-    lwp_tmp = FLTARR(grd.xdim,grd.ydim) & lwp_tmp[*,*] = fillvalue
-    iwp_tmp = FLTARR(grd.xdim,grd.ydim) & iwp_tmp[*,*] = fillvalue
+    lwp_tmp = FLTARR(grd.xdim,grd.ydim) & lwp_tmp[*,*] = 0.
+    iwp_tmp = FLTARR(grd.xdim,grd.ydim) & iwp_tmp[*,*] = 0.
     cfc_tmp = FLTARR(grd.xdim,grd.ydim) & cfc_tmp[*,*] = 0.
 
     ; binary based cfc and cph
@@ -86,21 +86,21 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
     cph_tmp_bin = FLTARR(grd.xdim,grd.ydim) & cph_tmp_bin[*,*] = fillvalue
 
     ; lwp and iwp based on binary decision of cph
-    lwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_bin[*,*] = fillvalue
-    iwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_bin[*,*] = fillvalue
+    lwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_bin[*,*] = 0.
+    iwp_tmp_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_bin[*,*] = 0.
 
     ; liquid and ice COT for ori. model output
-    lcot_tmp = FLTARR(grd.xdim,grd.ydim) & lcot_tmp[*,*] = fillvalue
-    icot_tmp = FLTARR(grd.xdim,grd.ydim) & icot_tmp[*,*] = fillvalue
+    lcot_tmp = FLTARR(grd.xdim,grd.ydim) & lcot_tmp[*,*] = 0.
+    icot_tmp = FLTARR(grd.xdim,grd.ydim) & icot_tmp[*,*] = 0.
 
     ; liquid and ice COT for pseudo-satellite output, based on cph_tmp_bin
-    lcot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lcot_tmp_bin[*,*] = fillvalue
-    icot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & icot_tmp_bin[*,*] = fillvalue
+    lcot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & lcot_tmp_bin[*,*] = 0.
+    icot_tmp_bin = FLTARR(grd.xdim,grd.ydim) & icot_tmp_bin[*,*] = 0.
 
     ; incloud lwp and iwp based on binary decision of cph
     ; required in sumup_vars.pro
-    lwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_inc_bin[*,*] = fillvalue
-    iwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_inc_bin[*,*] = fillvalue
+    lwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & lwp_tmp_inc_bin[*,*] = 0.
+    iwp_tmp_inc_bin = FLTARR(grd.xdim,grd.ydim) & iwp_tmp_inc_bin[*,*] = 0.
 
 
     FOR z=grd.zdim-2,1,-1 DO BEGIN
