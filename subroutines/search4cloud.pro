@@ -176,32 +176,59 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
 
     ENDFOR
 
-    ; ---
-    ; LWP and IWP calculation based on cph_tmp_bin & lwp_tmp & iwp_tmp
-    ; cloud top: 0=ice, 1=liquid
-    ; ---
 
-    wo_liq = WHERE(cph_tmp_bin EQ 1., nliq)
-    wo_ice = WHERE(cph_tmp_bin EQ 0., nice)
+    IF (flg EQ 'sat') THEN BEGIN
 
-    ; TOP = liquid
-    IF (nliq GT 0) THEN BEGIN
-        lwp_tmp_bin[wo_liq]  = lwp_tmp[wo_liq] + iwp_tmp[wo_liq]
-        iwp_tmp_bin[wo_liq]  = 0.
-        lcot_tmp_bin[wo_liq] = lcot_tmp[wo_liq] + icot_tmp[wo_liq] 
-        icot_tmp_bin[wo_liq] = 0.
+        ; -- cloud top based on binary phase
+        wo_liq = WHERE(cph_tmp_bin EQ 1., nliq)
+        wo_ice = WHERE(cph_tmp_bin EQ 0., nice)
+
+        ; -- TOP = liquid
+        IF (nliq GT 0) THEN BEGIN
+            lwp_tmp_bin[wo_liq]  = lwp_tmp[wo_liq] + iwp_tmp[wo_liq]
+            iwp_tmp_bin[wo_liq]  = 0.
+            lcot_tmp_bin[wo_liq] = lcot_tmp[wo_liq] + icot_tmp[wo_liq] 
+            icot_tmp_bin[wo_liq] = 0.
+        ENDIF
+
+        ; -- TOP = ice
+        IF (nice GT 0) THEN BEGIN
+            lwp_tmp_bin[wo_ice]  = 0.
+            iwp_tmp_bin[wo_ice]  = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
+            lcot_tmp_bin[wo_ice] = 0.
+            icot_tmp_bin[wo_ice] = lcot_tmp[wo_ice] + icot_tmp[wo_ice]
+        ENDIF
+
+
+        ; -- temperature - phase consistency check
+        tc = 273.15 - 40.
+        tw = 273.15
+        cold = WHERE(ctt_tmp LT tc AND cph_tmp_bin EQ 1., ncold) ;liq
+        warm = WHERE(ctt_tmp GT tw AND cph_tmp_bin EQ 0., nwarm) ;ice
+
+        ; -- cloud is too cold to be liquid => reassign to ice phase
+        IF (ncold GT 0) THEN BEGIN
+            cph_tmp_bin[cold] = 0. ; = ice
+            iwp_tmp_bin[cold] = lwp_tmp_bin[cold]
+            lwp_tmp_bin[cold] = 0.
+            icot_tmp_bin[cold] = lcot_tmp_bin[cold]
+            lcot_tmp_bin[cold] = 0.
+        ENDIF
+
+        ; -- cloud is too warm to be ice => reassign to liquid phase
+        IF (nwarm GT 0) THEN BEGIN
+            cph_tmp_bin[warm] = 1. ; = water
+            lwp_tmp_bin[warm] = iwp_tmp_bin[warm]
+            iwp_tmp_bin[warm] = 0.
+            lcot_tmp_bin[warm] = icot_tmp_bin[warm]
+            icot_tmp_bin[warm] = 0.
+        ENDIF
+
     ENDIF
 
-    ; TOP = ice
-    IF (nice GT 0) THEN BEGIN
-        lwp_tmp_bin[wo_ice]  = 0.
-        iwp_tmp_bin[wo_ice]  = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
-        lcot_tmp_bin[wo_ice] = 0.
-        icot_tmp_bin[wo_ice] = lcot_tmp[wo_ice] + icot_tmp[wo_ice]
-    ENDIF
+    
 
-
-    ; conistent output w.r.t. cloud fraction
+    ; -- conistent output w.r.t. cloud fraction
     IF (flg EQ 'ori') THEN BEGIN
         f = WHERE(cfc_tmp EQ 0., fcnt)
     ENDIF ELSE BEGIN
@@ -213,25 +240,27 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
         cth_tmp[f] = fillvalue
         ctt_tmp[f] = fillvalue
         cph_tmp[f] = fillvalue
-        lwp_tmp[f] = fillvalue
-        iwp_tmp[f] = fillvalue
-        ;cfc_tmp[f] = fillvalue
+        lwp_tmp[f] = 0.
+        iwp_tmp[f] = 0.
+        ;cfc_tmp[f] = 0.
         ;initialized here but used in sumup_vars.pro
-        ;cot_tmp[f] = fillvalue
-        ;cwp_tmp[f] = fillvalue
-        ;cfc_tmp_bin[f] = fillvalue
+        ;cot_tmp[f] = 0.
+        ;cwp_tmp[f] = 0.
+        ;cfc_tmp_bin[f] = 0.
         cph_tmp_bin[f] = fillvalue
-        lwp_tmp_bin[f] = fillvalue
-        iwp_tmp_bin[f] = fillvalue
-        lwp_tmp_inc_bin[f] = fillvalue
-        iwp_tmp_inc_bin[f] = fillvalue
-        lcot_tmp[f] = fillvalue
-        icot_tmp[f] = fillvalue
-        lcot_tmp_bin[f] = fillvalue
-        icot_tmp_bin[f] = fillvalue
+        lwp_tmp_bin[f] = 0.
+        iwp_tmp_bin[f] = 0.
+        lwp_tmp_inc_bin[f] = 0.
+        iwp_tmp_inc_bin[f] = 0.
+        lcot_tmp[f] = 0.
+        icot_tmp[f] = 0.
+        lcot_tmp_bin[f] = 0.
+        icot_tmp_bin[f] = 0.
     ENDIF
 
-    ; output structure
+
+
+    ; -- output structure
     tmp = {temp_arrays, $
            ctp:ctp_tmp, $
            cth:cth_tmp, $
