@@ -146,6 +146,28 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         counts.cwp[wo_cwp] = counts.cwp[wo_cwp] + 1l
 
 
+        ; -- hist1d_cot
+        res = SUMUP_HIST1D( bin_dim=histo.cot_bin1d_dim, $
+                            cph_dim=histo.phase_dim, $
+                            lim_bin=histo.cot2d, $
+                            liq_tmp=temps.cot_liq, $
+                            ice_tmp=temps.cot_ice, $
+                            cfc_tmp=temps.cfc )
+        means.hist1d_cot = means.hist1d_cot + res
+        UNDEFINE, res 
+
+        ; -- hist1d_cwp: bins [g/m2], temps [kg/m2]
+        res = SUMUP_HIST1D( bin_dim=histo.cwp_bin1d_dim, $
+                            cph_dim=histo.phase_dim, $
+                            lim_bin=histo.cwp2d, $
+                            liq_tmp=temps.lwp*1000., $
+                            ice_tmp=temps.iwp*1000., $
+                            cfc_tmp=temps.cfc )
+        means.hist1d_cwp = means.hist1d_cwp + res
+        UNDEFINE, res
+
+
+        ;;;;;;;;;;;;;;;;;; DISABLED! ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         ;; -- hist1d_ctp
         ;res = SUMUP_HIST1D( bin_dim=histo.ctp_bin1d_dim, $
         ;                    cph_dim=histo.phase_dim, $
@@ -155,7 +177,7 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         ;                    cph_tmp=temps.cph )
         ;means.hist1d_ctp = means.hist1d_ctp + res
         ;UNDEFINE, res
-
+        ;
         ;; -- hist1d_ctt
         ;res = SUMUP_HIST1D( bin_dim=histo.ctt_bin1d_dim, $
         ;                    cph_dim=histo.phase_dim, $
@@ -165,50 +187,13 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         ;                    cph_tmp=temps.cph )
         ;means.hist1d_ctt = means.hist1d_ctt + res
         ;UNDEFINE, res
-
-        ;; -- hist1d_cot
-        ;; liquid = 0.
-        ;res = SUMUP_HIST1D( bin_dim=histo.cot_bin1d_dim, $
-        ;                    cph_dim=histo.phase_dim, $
-        ;                    lim_bin=histo.cot2d, $
-        ;                    var_tmp=temps.cot_liq, $
-        ;                    cfc_tmp=temps.cfc, $
-        ;                    cph_tmp=temps.cph)
-        ;means.hist1d_cot = means.hist1d_cot + res
-        ;print, minmax(means.hist1d_cot[*,*,*,0])
-        ;print, minmax(means.hist1d_cot[*,*,*,1])
-        ;UNDEFINE, res 
-        ;stop
-
-        ;; ice
-        ;res = SUMUP_HIST1D( bin_dim=histo.cot_bin1d_dim, $
-        ;                    cph_dim=histo.phase_dim, $
-        ;                    lim_bin=histo.cot2d, $
-        ;                    var_tmp=temps.cot_ice, $
-        ;                    cfc_tmp=temps.cfc, $
-        ;                    cph_tmp=temps.cph )
-        ;means.hist1d_cot = means.hist1d_cot + res
-        ;print, minmax(means.hist1d_cot[*,*,*,0])
-        ;print, minmax(means.hist1d_cot[*,*,*,1])
-        ;UNDEFINE, res 
-        ;stop
-
-        ;; -- hist1d_cwp: bins [g/m2], temps [kg/m2]
-        ;res = SUMUP_HIST1D( bin_dim=histo.cwp_bin1d_dim, $
-        ;                    cph_dim=histo.phase_dim, $
-        ;                    lim_bin=histo.cwp2d, $
-        ;                    var_tmp=temps.cwp*1000., $
-        ;                    cfc_tmp=temps.cfc, $
-        ;                    cph_tmp=temps.cph )
-        ;means.hist1d_cwp = means.hist1d_cwp + res
-        ;UNDEFINE, res
-
-
+        ;
         ;; -- hist2d_cot_ctp
         ;res = SUMUP_HIST2D( histo, temps.cot, temps.ctp, $
         ;                    temps.cfc, temps.cph)
         ;means.hist2d_cot_ctp = means.hist2d_cot_ctp + res
         ;UNDEFINE, res
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -326,18 +311,6 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
 
 
     ENDELSE
-
-    ;print, minmax(means.ctp)
-    ;print, minmax(means.ctt)
-    ;print, minmax(means.cth)
-    ;print, minmax(means.cph)
-    ;print, minmax(means.cfc)
-    ;print, minmax(means.cwp)
-    ;print, minmax(means.lwp)
-    ;print, minmax(means.iwp)
-    ;print, minmax(means.cot)
-    ;print, minmax(means.cot_liq)
-    ;print, minmax(means.cot_ice)
 
 
 END
