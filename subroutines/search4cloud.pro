@@ -200,29 +200,29 @@ PRO SEARCH4CLOUD, inp, grd, cwp, cot, flg, thv, tmp
         ENDIF
 
 
-        ; -- temperature - phase consistency check
-        tc = 273.15 - 40.
-        tw = 273.15
-        cold = WHERE(ctt_tmp LT tc AND cph_tmp_bin EQ 1., ncold) ;liq
-        warm = WHERE(ctt_tmp GT tw AND cph_tmp_bin EQ 0., nwarm) ;ice
+        ;; -- temperature - phase consistency check
+        ;tc = 273.15 - 40.
+        ;tw = 273.15
+        ;cold = WHERE(ctt_tmp LT tc AND cph_tmp_bin EQ 1., ncold) ;liq
+        ;warm = WHERE(ctt_tmp GT tw AND cph_tmp_bin EQ 0., nwarm) ;ice
 
-        ; -- cloud is too cold to be liquid => reassign to ice phase
-        IF (ncold GT 0) THEN BEGIN
-            cph_tmp_bin[cold] = 0. ; = ice
-            iwp_tmp_bin[cold] = lwp_tmp_bin[cold]
-            lwp_tmp_bin[cold] = 0.
-            icot_tmp_bin[cold] = lcot_tmp_bin[cold]
-            lcot_tmp_bin[cold] = 0.
-        ENDIF
+        ;; -- cloud is too cold to be liquid => reassign to ice phase
+        ;IF (ncold GT 0) THEN BEGIN
+        ;    cph_tmp_bin[cold] = 0. ; = ice
+        ;    iwp_tmp_bin[cold] = lwp_tmp_bin[cold]
+        ;    lwp_tmp_bin[cold] = 0.
+        ;    icot_tmp_bin[cold] = lcot_tmp_bin[cold]
+        ;    lcot_tmp_bin[cold] = 0.
+        ;ENDIF
 
-        ; -- cloud is too warm to be ice => reassign to liquid phase
-        IF (nwarm GT 0) THEN BEGIN
-            cph_tmp_bin[warm] = 1. ; = water
-            lwp_tmp_bin[warm] = iwp_tmp_bin[warm]
-            iwp_tmp_bin[warm] = 0.
-            lcot_tmp_bin[warm] = icot_tmp_bin[warm]
-            icot_tmp_bin[warm] = 0.
-        ENDIF
+        ;; -- cloud is too warm to be ice => reassign to liquid phase
+        ;IF (nwarm GT 0) THEN BEGIN
+        ;    cph_tmp_bin[warm] = 1. ; = water
+        ;    lwp_tmp_bin[warm] = iwp_tmp_bin[warm]
+        ;    iwp_tmp_bin[warm] = 0.
+        ;    lcot_tmp_bin[warm] = icot_tmp_bin[warm]
+        ;    icot_tmp_bin[warm] = 0.
+        ;ENDIF
 
     ENDIF
 
