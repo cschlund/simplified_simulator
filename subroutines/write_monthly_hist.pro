@@ -56,7 +56,7 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
     lon = inp.lon - 180.    ;degrees_east
     lat = inp.lat           ;degrees_north
 
-    file_out='SimpSimu_MH'+year+month+'_'+thvs.str+'_CTP.nc'
+    file_out='SimpSimu_MH'+year+month+'_'+thvs.str+'.nc'
     clobber=1
 
     id = NCDF_CREATE(path_out+file_out, CLOBBER = clobber)

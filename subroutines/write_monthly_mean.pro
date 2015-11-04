@@ -18,7 +18,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     tbo[1,0]   = tttt2-tref
     itime      = tttt-tref
 
-    file_out = 'SimpSimu_MM'+year+month+'_'+thv.str+'_CTP.nc'
+    file_out = 'SimpSimu_MM'+year+month+'_'+thv.str+'.nc'
     clobber  = 1
 
     ; inp.lon [0;359.5]
