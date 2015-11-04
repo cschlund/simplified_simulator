@@ -59,8 +59,14 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
     ENDIF
 
 
-    IF KEYWORD_SET(verbose) THEN HELP, pwd, /structure
-    IF KEYWORD_SET(verbose) THEN HELP, thv, /structure
+    IF KEYWORD_SET(verbose) THEN BEGIN
+        PRINT, '** INP:     ', pwd.INP
+        PRINT, '** OUT:     ', pwd.OUT
+        PRINT, '** FIG:     ', pwd.FIG
+        PRINT, '** ERA-thv: ', thv.ERA
+        PRINT, '** SAT-thv: ', thv.SAT
+        PRINT, '** STR-thv: ', thv.STR
+    ENDIF
 
 
     ; -- loop over years and months
