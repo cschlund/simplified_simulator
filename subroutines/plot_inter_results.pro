@@ -143,7 +143,10 @@ END
 
 PRO PLOT_SOLAR_COT_CWP, tmp, grd, pwd, fil, void
 
+    !P.MULTI = [0,2,2]
+
     base = FSC_Base_Filename(fil)
+    ofil = pwd + base + '_solar_cot_cwp.png'
 
     theSize = Get_Screen_Size()
     WINDOW, 4, XSIZE=theSize[0], YSIZE=theSize[1]
@@ -152,32 +155,25 @@ PRO PLOT_SOLAR_COT_CWP, tmp, grd, pwd, fil, void
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
         TITLE='lwp_bin [kg/m^2]'
-    filename = pwd+base+'_solar_tmp_lwp_bin.png'
-    WRITE_PNG, filename, TVRD(/TRUE)
-    PRINT, 'File written to ', filename
 
     MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
         TITLE='iwp_bin [kg/m^2]'
-    filename = pwd+base+'_solar_tmp_iwp_bin.png'
-    WRITE_PNG, filename, TVRD(/TRUE)
-    PRINT, 'File written to ', filename
 
     MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
         TITLE='cot_liq_bin '
-    filename = pwd+base+'_solar_tmp_cot_liq_bin.png'
-    WRITE_PNG, filename, TVRD(/TRUE)
-    PRINT, 'File written to ', filename
 
     MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
         TITLE='cot_ice_bin'
-    filename = pwd+base+'_solar_tmp_cot_ice_bin.png'
-    WRITE_PNG, filename, TVRD(/TRUE)
-    PRINT, 'File written to ', filename
+
+    WRITE_PNG, ofil, TVRD(/TRUE)
+    PRINT, 'File written to ', ofil
+
+    !P.MULTI = 0
 
 END
