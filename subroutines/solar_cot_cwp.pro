@@ -66,50 +66,7 @@ PRO SOLAR_COT_CWP, tmp, sza, grd, pwd, fil
     ENDIF
 
     IF KEYWORD_SET(grd) AND KEYWORD_SET(fil) $
-        AND KEYWORD_SET(pwd) THEN BEGIN
-
-        base = FSC_Base_Filename(fil)
-
-        cgLoadCT, 33
-        DEVICE, GET_DECOMPOSED=old_decomposed
-        DEVICE, DECOMPOSED=0
-
-        theSize = Get_Screen_Size()
-        WINDOW, /FREE, XSIZE=theSize[0], YSIZE=theSize[1]
-        
-        MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, $
-            /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
-            MINI=0., MAXI=1., VOID_INDEX=noday, $
-            TITLE='lwp_bin [kg/m^2]'
-        filename = pwd+base+'_solar_tmp_lwp_bin.png'
-        WRITE_PNG, filename, TVRD(/TRUE)
-        PRINT, 'File written to ', filename
-
-        MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, $
-            /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
-            MINI=0., MAXI=1., VOID_INDEX=noday, $
-            TITLE='iwp_bin [kg/m^2]'
-        filename = pwd+base+'_solar_tmp_iwp_bin.png'
-        WRITE_PNG, filename, TVRD(/TRUE)
-        PRINT, 'File written to ', filename
-
-        MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, $
-            /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
-            MINI=0., MAXI=100., VOID_INDEX=noday, $
-            TITLE='cot_liq_bin '
-        filename = pwd+base+'_solar_tmp_cot_liq_bin.png'
-        WRITE_PNG, filename, TVRD(/TRUE)
-        PRINT, 'File written to ', filename
-
-        MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, $
-            /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
-            MINI=0., MAXI=100., VOID_INDEX=noday, $
-            TITLE='cot_ice_bin'
-        filename = pwd+base+'_solar_tmp_cot_ice_bin.png'
-        WRITE_PNG, filename, TVRD(/TRUE)
-        PRINT, 'File written to ', filename
-
-        DEVICE, DECOMPOSED=old_decomposed
-    ENDIF
+        AND KEYWORD_SET(pwd) THEN $ 
+            PLOT_SOLAR_COT_CWP, tmp, grd, pwd, fil, noday
 
 END
