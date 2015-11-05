@@ -73,7 +73,9 @@ PRO SOLAR_COT_CWP, tmp, sza, grd, pwd, fil
         cgLoadCT, 33
         DEVICE, GET_DECOMPOSED=old_decomposed
         DEVICE, DECOMPOSED=0
-        WINDOW, 0, XSIZE=1200, YSIZE=800, TITLE='DAYSIDE ONLY'
+
+        theSize = Get_Screen_Size()
+        WINDOW, /FREE, XSIZE=theSize[0], YSIZE=theSize[1]
         
         MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, $
             /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $

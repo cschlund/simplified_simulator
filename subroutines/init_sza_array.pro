@@ -28,7 +28,9 @@ FUNCTION INIT_SZA_ARRAY, fil, grd, map=map, pwd=pwd
         DEVICE, DECOMPOSED=0
         cgLoadCT, 33, /REVERSE
 
-        WINDOW, 0, XSIZE=1200, YSIZE=800, TITLE='SZA2d'
+        theSize = Get_Screen_Size()
+        WINDOW, /FREE, XSIZE=theSize[0], YSIZE=theSize[1]
+
         MAP_IMAGE, sza2d, grd.lat2d, grd.lon2d, $
             /BOX_AXES, /MAGNIFY, /GRID, $
             MINI=0., MAXI=180., CHARSIZE=3., $
