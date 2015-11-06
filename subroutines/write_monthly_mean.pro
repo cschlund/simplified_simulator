@@ -21,9 +21,8 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     file_out = 'SimpSimu_MM'+year+month+'_'+thv.str+'.nc'
     clobber  = 1
 
-    ; inp.lon [0;359.5]
-    lon = inp.lon - 180.    ;degrees_east
-    lat = inp.lat           ;degrees_north
+    lon = inp.lon ;degrees_east
+    lat = inp.lat ;degrees_north
 
     ; -- Create netCDF output file
     id = NCDF_CREATE(path_out + file_out, CLOBBER = clobber)

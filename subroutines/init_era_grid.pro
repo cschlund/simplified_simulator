@@ -37,7 +37,7 @@ PRO INIT_ERA_GRID, input, output
     latgrd=FLTARR(xdim,ydim)
     
     ; create lat/lon grid arrays using lon & lat from ncfile
-    FOR loi=0,xdim-1 DO longrd[loi,*]=input.lon[loi]-180.
+    FOR loi=0,xdim-1 DO longrd[loi,*]=input.lon[loi]
     FOR lai=0,ydim-1 DO latgrd[*,lai]=input.lat[lai]
 
     output = {era_grid, lon2d:longrd, lat2d:latgrd, $

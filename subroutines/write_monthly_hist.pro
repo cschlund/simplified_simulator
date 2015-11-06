@@ -52,9 +52,8 @@ PRO WRITE_MONTHLY_HIST, path_out, year, month, grd, inp, $
     tbo[1,0]   = tttt2-tref
     itime      = tttt-tref
 
-    ; inp.lon [0;359.5]
-    lon = inp.lon - 180.    ;degrees_east
-    lat = inp.lat           ;degrees_north
+    lon = inp.lon    ;degrees_east
+    lat = inp.lat    ;degrees_north
 
     file_out='SimpSimu_MH'+year+month+'_'+thvs.str+'.nc'
     clobber=1
