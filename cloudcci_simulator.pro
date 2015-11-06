@@ -135,11 +135,6 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                         CWP_COT_LAYERS, cwc_inc.lwc, cwc_inc.iwc, input.dpres, $ 
                                         grid, cwp_lay_inc, cot_lay_inc 
 
-                        ; -- check intermediate results
-                        IF KEYWORD_SET(map) THEN $ 
-                            PLOT_COT_HISTOS, cot_lay_inc.liq, cot_lay_inc.ice, $ 
-                                             his, pwd.fig, grid
-
                         ; -- get cloud parameters using incloud COT threshold
                         SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
                                       'ori', thv.era, tmp_era
@@ -159,6 +154,11 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                         ; -- sum up cloud parameters
                         SUMUP_VARS, 'ori', mean_era, cnts_era, tmp_era, his
                         SUMUP_VARS, 'sat', mean_sat, cnts_sat, tmp_sat, his
+
+                        ; -- check intermediate results
+                        IF KEYWORD_SET(map) THEN $ 
+                            PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
+                                             pwd, file1, grid
 
                         ; -- count number of files
                         cnts_era.raw++
