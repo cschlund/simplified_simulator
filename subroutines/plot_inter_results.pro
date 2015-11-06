@@ -1,6 +1,7 @@
 
 PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
 
+    fil = filename
     theSize = Get_Screen_Size()
     WINDOW, 0, XSIZE=theSize[0], YSIZE=theSize[1]
 
@@ -14,8 +15,8 @@ PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
         COLOR=cgcolor('Black'), GLINETHICK=2.2
     MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2
 
-    WRITE_PNG, filename, TVRD(/TRUE)
-    PRINT, 'File written to ', filename
+    WRITE_PNG, fil, TVRD(/TRUE)
+    PRINT, 'File written to ', fil
 
 END
 
