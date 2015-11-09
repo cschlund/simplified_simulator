@@ -181,12 +181,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
                 ; -- write output files
                 WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $
-                                    mean_era, cnts_era, mean_sat, cnts_sat
-
-                WRITE_MONTHLY_HIST, pwd.out, year, month, grid, input, $
-                                    thv, his, mean_era, mean_sat, $
-                                    cnts_era, cnts_sat
-
+                                    his, mean_era, cnts_era, mean_sat, cnts_sat
 
                 ; delete final arrays before next cycle starts
                 UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat
