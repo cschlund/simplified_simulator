@@ -4,9 +4,10 @@ PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
     fil = filename
     theSize = Get_Screen_Size()
     WINDOW, 0, XSIZE=theSize[0], YSIZE=theSize[1]
+    limit = [-90., -180., 90., 180.]
 
-    MAP_IMAGE, sza2d, lat, lon, p0lon=180, $
-               CTABLE=33, /FLIP_COLOR, $
+    MAP_IMAGE, sza2d, lat, lon, LIMIT=limit, $
+               CTABLE=33, /FLIP_COLOURS, $
                /BOX_AXES, /MAGNIFY, /GRID, $
                MINI=0., MAXI=180., CHARSIZE=3., $
                TITLE=title
@@ -61,13 +62,14 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
     theSize = Get_Screen_Size()
     WINDOW, 1, XSIZE=theSize[0], YSIZE=theSize[1]
     cs = 2.5
+    limit = [-90., -180., 90., 180.]
 
-    ;MAP_IMAGE, aliq, grd.lat2d, grd.lon2d, p0lon=180, $
+    ;MAP_IMAGE, aliq, grd.lat2d, grd.lon2d, LIMIT=limit, $
     ;    /RAINBOW, /BOX_AXES, /MAGNIFY, /GRID, $
     ;    MINI=0., MAXI=100., CHARSIZE=cs, $
     ;    TITLE='cot_lay_inc.LIQ', n_lev=5
 
-    ;MAP_IMAGE, aice, grd.lat2d, grd.lon2d, p0lon=180, $
+    ;MAP_IMAGE, aice, grd.lat2d, grd.lon2d, LIMIT=limit, $
     ;    /RAINBOW, /BOX_AXES, /MAGNIFY, /GRID, $
     ;    MINI=0., MAXI=100., CHARSIZE=cs, $
     ;    TITLE='cot_lay_inc.ICE', n_lev=5
@@ -112,17 +114,17 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
     bild_ice = reform(res[*,*,*,1])
 
     bild = get_1d_rel_hist_from_1d_hist( bild_all, $
-        'hist1d_cot', algo='era-i', limit=limit, $
+        'hist1d_cot', algo='era-i', $;limit=limit, $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
     bild1 = get_1d_rel_hist_from_1d_hist( bild_liq, $
-        'hist1d_cot_liq', algo='era-i', limit=limit, $
+        'hist1d_cot_liq', algo='era-i', $;limit=limit, $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
     bild2 = get_1d_rel_hist_from_1d_hist( bild_ice, $
-        'hist1d_cot_ice', algo='era-i', limit=limit, $
+        'hist1d_cot_ice', algo='era-i', $;limit=limit, $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
@@ -149,17 +151,17 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
     bild_ice = REFORM(means.HIST1D_COT[*,*,*,1])
 
     bild = get_1d_rel_hist_from_1d_hist( bild_all, $
-        'hist1d_cot', algo='era-i', limit=limit, $
+        'hist1d_cot', algo='era-i', $;limit=limit, $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
     bild1 = get_1d_rel_hist_from_1d_hist( bild_liq, $
-        'hist1d_cot_liq', algo='era-i', limit=limit, $
+        'hist1d_cot_liq', algo='era-i', $;limit=limit, $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
     bild2 = get_1d_rel_hist_from_1d_hist( bild_ice, $
-        'hist1d_cot_ice', algo='era-i', limit=limit, $
+        'hist1d_cot_ice', algo='era-i', $;limit=limit, $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
@@ -223,26 +225,27 @@ PRO PLOT_SOLAR_COT_CWP, tmp, grd, pwd, fil, void
 
     theSize = Get_Screen_Size()
     WINDOW, 4, XSIZE=theSize[0], YSIZE=theSize[1]
+    limit = [-90., -180., 90., 180.]
     
-    MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, p0lon=180, $
+    MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
-        TITLE='lwp_bin [kg/m^2]'
+        LIMIT=limit, TITLE='lwp_bin [kg/m^2]'
 
-    MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, p0lon=180, $
+    MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
-        TITLE='iwp_bin [kg/m^2]'
+        LIMIT=limit, TITLE='iwp_bin [kg/m^2]'
 
-    MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, p0lon=180, $
+    MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
-        TITLE='cot_liq_bin '
+        LIMIT=limit, TITLE='cot_liq_bin '
 
-    MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, p0lon=180, $
+    MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
-        TITLE='cot_ice_bin'
+        LIMIT=limit, TITLE='cot_ice_bin'
 
     WRITE_PNG, ofil, TVRD(/TRUE)
     PRINT, 'File written to ', ofil
