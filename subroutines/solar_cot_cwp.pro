@@ -52,7 +52,6 @@
 
 PRO SOLAR_COT_CWP, tmp, sza, grd, pwd, fil
 
-
     isday = WHERE( sza LT 80., nisday )
     noday = WHERE( sza GE 80., nnoday )
 

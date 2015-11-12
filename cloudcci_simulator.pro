@@ -121,9 +121,10 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
                         ; -- initialize solar zenith angle 2D array
                         IF KEYWORD_SET(map) THEN BEGIN
-                            sza2d = INIT_SZA_ARRAY(file1,grid,/map,pwd=pwd.fig)
+                            pfil = file1
+                            sza2d = INIT_SZA_ARRAY(pfil,grid,/map,pwd=pwd.fig)
                         ENDIF ELSE BEGIN
-                            sza2d = INIT_SZA_ARRAY(file1,grid)
+                            sza2d = INIT_SZA_ARRAY(pfil,grid)
                         ENDELSE
 
                         ; -- lwc and iwc weighted by cc
@@ -131,9 +132,9 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
                         ; -- get LWP/IWP/LCOT/ICOT per layer
                         CWP_COT_LAYERS, input.lwc, input.iwc, input.dpres, $
-                                        grid, cwp_lay, cot_lay
+                                        input.temp, grid, cwp_lay, cot_lay
                         CWP_COT_LAYERS, cwc_inc.lwc, cwc_inc.iwc, input.dpres, $ 
-                                        grid, cwp_lay_inc, cot_lay_inc 
+                                        input.temp, grid, cwp_lay_inc, cot_lay_inc 
 
                         ; -- get cloud parameters using incloud COT threshold
                         SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
@@ -146,7 +147,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
                         ; -- sunlit region only for COT and CWP
                         IF KEYWORD_SET(map) THEN BEGIN
-                            SOLAR_COT_CWP, tmp_sat, sza2d, grid, pwd.fig, file1
+                            pf = file1
+                            SOLAR_COT_CWP, tmp_sat, sza2d, grid, pwd.fig, pf
                         ENDIF ELSE BEGIN
                             SOLAR_COT_CWP, tmp_sat, sza2d
                         ENDELSE
@@ -156,9 +158,11 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                         SUMUP_VARS, 'sat', mean_sat, cnts_sat, tmp_sat, his
 
                         ; -- check intermediate results
-                        IF KEYWORD_SET(map) THEN $ 
+                        IF KEYWORD_SET(map) THEN BEGIN
+                            pf = file1
                             PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
-                                             pwd, file1, grid
+                                             pwd, pf, grid
+                        ENDIF
 
                         ; -- count number of files
                         cnts_era.raw++

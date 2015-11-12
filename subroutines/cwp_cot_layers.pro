@@ -2,7 +2,7 @@
 ;-- from bottom-up find liquid and ice COT from lwc & iwc
 ;-------------------------------------------------------------------
 ;
-; in : lwc, iwc, pres_diff, grd(structure)
+; in : lwc, iwc, pres_diff, temp, grd(structure)
 ; out: cwp_lay, cot_lay
 ;
 ; IDL> help, lwc ... liquid water content at each pressure level (grd.zdim)
@@ -13,6 +13,9 @@
 ;
 ; IDL> help, pres_diff ... pressure increment between 2 layers in the atmosphere
 ; PRES_DIFF       DOUBLE    = Array[26]
+;
+; IDL> help, temp ... temperature per pressure level [K]
+; TEMP            FLOAT     = Array[720, 361, 27]
 ;
 ; IDL> help, grd
 ; ** Structure <752c68>, 5 tags, length=2079368, data length=2079366, refs=1:
@@ -34,12 +37,41 @@
 ;
 ;-------------------------------------------------------------------
 
-PRO CWP_COT_LAYERS, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
+FUNCTION GET_IREFF, temperature
 
-    lwp_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
-    iwp_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
-    lcot_lay = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
-    icot_lay = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    ZT = temperature
+    replicate_inplace, ZT, 0.
+    RTICE = 250.
+    RTT = 273.15
+    ZRefDe = 0.64952
+
+    yep = WHERE(temperature LT RTICE, nyep)
+    nop = WHERE(temperature GE RTICE, nnop)
+
+    IF (nyep GT 0) THEN ZT[yep] = temperature[yep] - RTT
+    IF (nnop GT 0) THEN ZT[nop] = RTICE - RTT
+
+    ireff = 326.3 + ZT*( 12.42 + ZT*(0.197 + ZT*0.0012) )
+    ; unlimited
+    ;ireff = ireff * ZRefDe
+    ; limited
+    ireff = (30. > (ireff * ZRefDe) < 60.)
+
+    RETURN, ireff*1.0E-6
+
+END
+
+
+PRO CWP_COT_LAYERS, lwc, iwc, pres_diff, temp, grd, cwp_lay, cot_lay
+
+    lwp_lay   = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    iwp_lay   = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    ; using constant reff
+    lcot_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    icot_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    ; using reff(Temperature)
+    lcot_lay2 = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
+    icot_lay2 = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
 
     FOR z=grd.zdim-2,0,-1 DO BEGIN
 
@@ -47,6 +79,11 @@ PRO CWP_COT_LAYERS, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
       ;    i.e., LWC of the layer between the levels (middle)
       lwc_lay=lwc[*,*,z]*0.5 + lwc[*,*,z+1]*0.5
       iwc_lay=iwc[*,*,z]*0.5 + iwc[*,*,z+1]*0.5
+
+
+      ; -- temperature per layer
+      temp_lay  = temp[*,*,z]*0.5 + temp[*,*,z+1]*0.5
+      ireff_lay = GET_IREFF(temp_lay)
 
 
       ; -- http://en.wikipedia.org/wiki/Liquid_water_path#cite_note-2
@@ -67,15 +104,29 @@ PRO CWP_COT_LAYERS, lwc, iwc, pres_diff, grd, cwp_lay, cot_lay
       qext_ice   = 2.1              ;extinction coefficient for ice
 
       ; -- LWP
-      lcot_lay[*,*,z] = (3. * lwp_lay[*,*,z] * qext_water) / (4. * reff_water * rho_water)
-
+      lcot_lay[*,*,z] = (3. * lwp_lay[*,*,z] * qext_water) / $
+                        (4. * reff_water * rho_water)
       ; -- IWP
-      icot_lay[*,*,z] = (3. * iwp_lay[*,*,z] * qext_ice) / (4. * reff_ice * rho_ice)
+      icot_lay[*,*,z] = (3. * iwp_lay[*,*,z] * qext_ice) / $
+                        (4. * reff_ice * rho_ice)
+      icot_lay2[*,*,z] = (3. * iwp_lay[*,*,z] * qext_ice) / $
+                         (4. * ireff_lay[*,*] * rho_ice)
+
+      ;print, '** MINMAX of z:',strtrim(string(z),2)
+      ;print, '   temp      :', minmax(temp[*,*,z])
+      ;print, '   temp_lay  :', minmax(temp_lay)
+      ;print, '   ireff_lay :', minmax(ireff_lay)/1E-6
+      ;print, '   lwp_lay   :', minmax(lwp_lay[*,*,z])
+      ;print, '   iwp_lay   :', minmax(iwp_lay[*,*,z])
+      ;print, '   lcot_lay  :', minmax(lcot_lay[*,*,z])
+      ;print, '   icot_lay  :', minmax(icot_lay[*,*,z])
+      ;print, '   icot_lay2 :', minmax(icot_lay2[*,*,z])
 
     ENDFOR
 
     ; -- output structures
     cwp_lay = {cloud_water_path, lwp:lwp_lay, iwp:iwp_lay}
-    cot_lay = {cloud_optical_depth, liq:lcot_lay, ice:icot_lay}
+    ;cot_lay = {cloud_optical_depth, liq:lcot_lay, ice:icot_lay}
+    cot_lay = {cloud_optical_depth, liq:lcot_lay, ice:icot_lay2}
 
 END
