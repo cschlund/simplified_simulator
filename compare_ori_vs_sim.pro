@@ -86,7 +86,7 @@ PRO COMPARE_ORI_VS_SIM, verbose=verbose, dir=dir, LIMIT=limit, PORTRAIT=portrait
     chars = 2.4
 
     ; -- eps plots here
-    IF ~KEYWORD_SET(outdir) THEN outdir = '/data/cschlund/figs/cloudcci_simulator/'
+    IF ~KEYWORD_SET(outdir) THEN outdir = '/data/cschlund/figs/'
 
     ; -- if no limit keyword is set
     IF ~KEYWORD_SET(limit) THEN limit=[-90.,-180.,90.,180.]
@@ -288,9 +288,9 @@ PRO COMPARE_ORI_VS_SIM, verbose=verbose, dir=dir, LIMIT=limit, PORTRAIT=portrait
                 COLOR=col, /norm, CHARSIZE=2., CHARTHICK=chars
         ENDIF
 
-        XYOUTS, 0.1, 0.185, 'Min.='+STRTRIM(STRING(minmax_range[0]),2),$
+        XYOUTS, 0.1, 0.185, 'Min. = '+STRTRIM(STRING(minmax_range[0]),2),$
             COLOR=col, /norm, CHARSIZE=2., CHARTHICK=2.
-        XYOUTS, 0.1, 0.155, 'Max.='+STRTRIM(STRING(minmax_range[1]),2), $
+        XYOUTS, 0.1, 0.155, 'Max. = '+STRTRIM(STRING(minmax_range[1]),2), $
             COLOR=col, /norm, CHARSIZE=2., CHARTHICK=2.
 
         IF KEYWORD_SET(png) THEN BEGIN
