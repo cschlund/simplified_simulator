@@ -162,6 +162,9 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                             pf = file1
                             PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
                                              pwd, pf, grid
+                            pf = file1
+                            PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
+                                             pwd, pf, grid, temps=tmp_sat
                         ENDIF
 
                         ; -- count number of files

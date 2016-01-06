@@ -22,10 +22,15 @@ PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
 END
 
 
-PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
+PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd,$
+                     temps=temps
 
     base = FSC_Base_Filename(fil)
-    ofil = pwd.FIG + base + '_cot_lay_inc.png'
+    IF KEYWORD_SET(temps) THEN BEGIN 
+        ofil = pwd.FIG + base + '_cot_lay_inc_2.png'
+    ENDIF ELSE BEGIN
+        ofil = pwd.FIG + base + '_cot_lay_inc.png'
+    ENDELSE
     splt = STRSPLIT(base, /EXTRACT, '_')
     time = STRSPLIT(splt[4],/EXTRACT,'+')
     hour = FIX(time[0])
@@ -56,6 +61,33 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
     IF (ni3 GT 0) THEN all[i3] = -999.
 
 
+    ;  COT_LIQ   FLOAT   Array[720, 361]
+    ;  COT_ICE   FLOAT   Array[720, 361]
+    IF KEYWORD_SET(temps) THEN BEGIN 
+        aliq2 = temps.COT_LIQ
+        aice2 = temps.COT_ICE
+        all2  = aliq2 + aice2
+        dims2 = SIZE(aliq2, /DIM)
+        acfc2 = FLTARR(dims2[0],dims2[1])
+        acfc2[*,*] = 1.
+
+        i1=WHERE( aliq2 GT 100.,ni1)
+        IF (ni1 GT 0) THEN aliq2[i1] = 100.
+        i2=WHERE( aice2 GT 100.,ni2)
+        IF (ni2 GT 0) THEN aice2[i2] = 100.
+        i3=WHERE( all2 GT 100.,ni3)
+        IF (ni3 GT 0) THEN all2[i3] = 100.
+
+        i1=WHERE( aliq2 EQ 0.,ni1)
+        IF (ni1 GT 0) THEN aliq2[i1] = -999.
+        i2=WHERE( aice2 EQ 0.,ni2)
+        IF (ni2 GT 0) THEN aice2[i2] = -999.
+        i3=WHERE( all2 EQ 0.,ni3)
+        IF (ni3 GT 0) THEN all2[i3] = -999.
+    ENDIF
+
+
+
     !P.Background = cgColor('white')
     !P.Color = cgColor('black')
     !P.MULTI = [0,2,2]
@@ -81,33 +113,24 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
         mininput=0, maxinput=100., charsize=cs, $
         xtitle='cot_lay_inc.ICE'+datutc, histdata=cghist_ice
     
-    ;hist_all = HISTOGRAM(all, binsize=1, min=0., max=100.)
-    ;bins_all = FINDGEN(N_ELEMENTS(hist_all))+MIN(all[WHERE(all NE -999.)])
-    ;hist_liq = HISTOGRAM(aliq, binsize=1, min=0., max=100.)
-    ;bins_liq = FINDGEN(N_ELEMENTS(hist_liq))+MIN(aliq[WHERE(aliq NE -999.)])
-    ;hist_ice = HISTOGRAM(aice, binsize=1, min=0., max=100.)
-    ;bins_ice = FINDGEN(N_ELEMENTS(hist_ice))+MIN(aice[WHERE(aice NE -999.)])
-    ;
-    ;cgPlot, bins_all, hist_all, psym=4, color=cgcolor('Black'), $
-    ;    charsize=cs, ytickformat = '(I)', yrange=[0, 30000], $
-    ;    xtitle='Bin Number', ytitle='Density per Bin'
-    ;cgPlot, bins_ice, hist_ice, psym=2, color=cgcolor('royal blue'), $
-    ;    charsize=cs, /overplot
-    ;cgPlot, bins_liq, hist_liq, psym=1, color=cgcolor('Red'), $
-    ;    charsize=cs, /overplot
-    ;xyouts, 60, 26000, 'BINSIZE=1', color=cgcolor('Black'), chars=cs
-    ;xyouts, 6, 26000, 'cot_lay_liq', color=cgcolor('Red'), chars=cs
-    ;xyouts, 6, 23000, 'cot_lay_ice', color=cgcolor('royal blue'), chars=cs
-    ;xyouts, 6, 20000, 'cot_lay_all', color=cgcolor('Black'), chars=cs
     
-    
+    ; -- hist1d_cot for temps.COT_LIQ + temps.COT_ICE
+    IF KEYWORD_SET(temps) THEN BEGIN 
+        res = SUMUP_HIST1D( bin_dim=histo.cot_bin1d_dim, $
+                            cph_dim=histo.phase_dim, $
+                            lim_bin=histo.cot2d, $
+                            liq_tmp=aliq2, $
+                            ice_tmp=aice2, $
+                            cfc_tmp=acfc2 )
     ; -- hist1d_cot for cot_lay_inc.LIQ + .ICE
-    res = SUMUP_HIST1D( bin_dim=histo.cot_bin1d_dim, $
-                        cph_dim=histo.phase_dim, $
-                        lim_bin=histo.cot2d, $
-                        liq_tmp=aliq, $
-                        ice_tmp=aice, $
-                        cfc_tmp=acfc )
+    ENDIF ELSE BEGIN
+        res = SUMUP_HIST1D( bin_dim=histo.cot_bin1d_dim, $
+                            cph_dim=histo.phase_dim, $
+                            lim_bin=histo.cot2d, $
+                            liq_tmp=aliq, $
+                            ice_tmp=aice, $
+                            cfc_tmp=acfc )
+    ENDELSE
 
     bild_all = TOTAL(res, 4)
     bild_liq = reform(res[*,*,*,0])
@@ -137,15 +160,26 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
     oplot,bild, psym=-1, col=cgcolor('Black')
     oplot,bild1,psym=-2, col=cgcolor('Red')
     oplot,bild2,psym=-4, col=cgcolor('royal blue')
-    xyouts, .3, 25, 'cot_lay_inc.ALL', color=cgcolor('Black'), chars=cs
-    xyouts, .3, 35, 'cot_lay_inc.LIQ', color=cgcolor('Red'), chars=cs
-    xyouts, .3, 30, 'cot_lay_inc.ICE', color=cgcolor('royal blue'), chars=cs
 
-    PRINT, '** MINMAX: cot_lay_inc(all,liq,ice)'
+    IF KEYWORD_SET(temps) THEN BEGIN 
+        allstr  = 'temps.COT_ALL'
+        aliqstr = 'temps.COT_LIQ'
+        aicestr = 'temps.COT_ICE'
+    ENDIF ELSE BEGIN
+        allstr  = 'cot_lay_inc.ALL'
+        aliqstr = 'cot_lay_inc.LIQ'
+        aicestr = 'cot_lay_inc.ICE'
+    ENDELSE
+
+    xyouts, .3, 25, allstr,  color=cgcolor('Black'), chars=cs
+    xyouts, .3, 35, aliqstr, color=cgcolor('Red'), chars=cs
+    xyouts, .3, 30, aicestr, color=cgcolor('royal blue'), chars=cs
+
+    PRINT, '** MINMAX(bild): ', allstr+'/'+aliqstr+'/'+aicestr
     PRINT, MINMAX(bild), MINMAX(bild1), MINMAX(bild2)
 
 
-    ; means.HIST1D_COT
+    ; -- means.HIST1D_COT
     bild_all = TOTAL(means.HIST1D_COT, 4)
     bild_liq = REFORM(means.HIST1D_COT[*,*,*,0])
     bild_ice = REFORM(means.HIST1D_COT[*,*,*,1])
@@ -177,7 +211,7 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd
     xyouts, .3, 35, 'hist1d_cot: liq', color=cgcolor('Red'), chars=cs
     xyouts, .3, 30, 'hist1d_cot: ice', color=cgcolor('royal blue'), chars=cs
 
-    PRINT, '** MINMAX: hist1d_cot(all,liq,ice)'
+    PRINT, '** MINMAX(bild): hist1d_cot(all,liq,ice)'
     PRINT, MINMAX(bild), MINMAX(bild1), MINMAX(bild2)
 
     WRITE_PNG, ofil, TVRD(/TRUE)
