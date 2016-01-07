@@ -4,7 +4,7 @@
 ;   based on year, month, day, time (UTC), lat, lon
 ;---------------------------------------------------------------
 
-FUNCTION INIT_SZA_ARRAY, fil, grd, map=map, pwd=pwd
+FUNCTION INIT_SZA_ARRAY, fil, grd, map=map 
 
     base = FSC_Base_Filename(fil,Directory=dir,Extension=ext)
 
@@ -22,13 +22,10 @@ FUNCTION INIT_SZA_ARRAY, fil, grd, map=map, pwd=pwd
 
     ZENSUN, day2d, utc2d, grd.lat2d, grd.lon2d, sza2d
 
-    IF KEYWORD_SET(map) AND KEYWORD_SET(pwd) THEN BEGIN
-
+    IF KEYWORD_SET(map)  THEN BEGIN
         tit ='SZA for '+splt[3]+' UTC '+splt[4]
-        fil = pwd+base+'_sza.png'
-
+        fil = base+'_sza'
         PLOT_SZA2D, sza2d, grd.lat2d, grd.lon2d, tit, fil
-
     ENDIF
 
     RETURN, sza2d

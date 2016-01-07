@@ -1,9 +1,9 @@
 
 PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
 
-    fil = filename
-    theSize = Get_Screen_Size()
-    WINDOW, 0, XSIZE=theSize[0], YSIZE=theSize[1]
+    filepwd = !SAVE_DIR + filename
+    save_as = filepwd + '.eps'
+    start_save, save_as, size='A4', /LANDSCAPE
     limit = [-90., -180., 90., 180.]
 
     MAP_IMAGE, sza2d, lat, lon, LIMIT=limit, $
@@ -11,26 +11,35 @@ PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
                /BOX_AXES, /MAGNIFY, /GRID, $
                MINI=0., MAXI=180., CHARSIZE=3., $
                TITLE=title
-    
     MAP_CONTINENTS, /CONTINENTS, /HIRES, $
         COLOR=cgcolor('Black'), GLINETHICK=2.2
     MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2
 
-    WRITE_PNG, fil, TVRD(/TRUE)
-    PRINT, 'File written to ', fil
+    end_save, save_as
+    cs_eps2png, save_as
 
 END
 
 
-PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd,$
-                     temps=temps
+PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, fil, grd,$
+                     temps=temps, fixed_reffs=creff
+
+    !P.MULTI = [0,2,2]
+
+    IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' $
+        ELSE addstr = ''
 
     base = FSC_Base_Filename(fil)
+
     IF KEYWORD_SET(temps) THEN BEGIN 
-        ofil = pwd.FIG + base + '_cot_lay_inc_2.png'
+        ofil = !SAVE_DIR + base + '_cot_lay_inc_2'+addstr
     ENDIF ELSE BEGIN
-        ofil = pwd.FIG + base + '_cot_lay_inc.png'
+        ofil = !SAVE_DIR + base + '_cot_lay_inc'+addstr
     ENDELSE
+
+    save_as = ofil + '.eps'
+    start_save, save_as, size=[45,30]
+
     splt = STRSPLIT(base, /EXTRACT, '_')
     time = STRSPLIT(splt[4],/EXTRACT,'+')
     hour = FIX(time[0])
@@ -87,24 +96,8 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd,$
     ENDIF
 
 
-
-    !P.Background = cgColor('white')
-    !P.Color = cgColor('black')
-    !P.MULTI = [0,2,2]
-    theSize = Get_Screen_Size()
-    WINDOW, 1, XSIZE=theSize[0], YSIZE=theSize[1]
-    cs = 2.5
+    cs = 2.1
     limit = [-90., -180., 90., 180.]
-
-    ;MAP_IMAGE, aliq, grd.lat2d, grd.lon2d, LIMIT=limit, $
-    ;    /RAINBOW, /BOX_AXES, /MAGNIFY, /GRID, $
-    ;    MINI=0., MAXI=100., CHARSIZE=cs, $
-    ;    TITLE='cot_lay_inc.LIQ', n_lev=5
-
-    ;MAP_IMAGE, aice, grd.lat2d, grd.lon2d, LIMIT=limit, $
-    ;    /RAINBOW, /BOX_AXES, /MAGNIFY, /GRID, $
-    ;    MINI=0., MAXI=100., CHARSIZE=cs, $
-    ;    TITLE='cot_lay_inc.ICE', n_lev=5
 
     cgHistoplot, aliq, binsize=1, /FILL, POLYCOLOR='red', $
         mininput=0, maxinput=100., charsize=cs, $
@@ -157,9 +150,9 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd,$
         col=cgcolor('black')
 
     lsty = 0
-    oplot,bild, psym=-1, col=cgcolor('Black')
-    oplot,bild1,psym=-2, col=cgcolor('Red')
-    oplot,bild2,psym=-4, col=cgcolor('royal blue')
+    oplot,bild, psym=-1, col=cgcolor('Black'), THICK=3
+    oplot,bild1,psym=-2, col=cgcolor('Red'), THICK=3
+    oplot,bild2,psym=-4, col=cgcolor('royal blue'), THICK=3
 
     IF KEYWORD_SET(temps) THEN BEGIN 
         allstr  = 'temps.COT_ALL'
@@ -204,9 +197,9 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd,$
         xtitle=data_name,ytitle=ytitle,xminor=2, charsize=cs, $
         col=cgcolor('black')
 
-    oplot,bild, psym=-1,col=cgcolor('Black')
-    oplot,bild1,psym=-2,col=cgcolor('Red')
-    oplot,bild2,psym=-4,col=cgcolor('royal blue')
+    oplot,bild, psym=-1,col=cgcolor('Black'), THICK=3
+    oplot,bild1,psym=-2,col=cgcolor('Red'), THICK=3
+    oplot,bild2,psym=-4,col=cgcolor('royal blue'), THICK=3
     xyouts, .3, 25, 'hist1d_cot: liq + ice', color=cgcolor('Black'), chars=cs
     xyouts, .3, 35, 'hist1d_cot: liq', color=cgcolor('Red'), chars=cs
     xyouts, .3, 30, 'hist1d_cot: ice', color=cgcolor('royal blue'), chars=cs
@@ -214,21 +207,19 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, pwd, fil, grd,$
     PRINT, '** MINMAX(bild): hist1d_cot(all,liq,ice)'
     PRINT, MINMAX(bild), MINMAX(bild1), MINMAX(bild2)
 
-    WRITE_PNG, ofil, TVRD(/TRUE)
-    PRINT, 'File written to ', ofil
-    !P.MULTI = 0
+    end_save, save_as
+    cs_eps2png, save_as
 
+    !P.MULTI = 0
 END
 
 
 
-PRO PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2, path
+PRO PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2
 
-    !P.Background = cgColor('white')
-    !P.Color = cgColor('black')
-    !P.MULTI = [0,1,2]
-    theSize = Get_Screen_Size()
-    WINDOW, 3, XSIZE=theSize[0], YSIZE=theSize[1]
+    filepwd = !SAVE_DIR + 'Reff_ec-earth_ver2.png'
+    save_as = filepwd + '.eps'
+    start_save, save_as, size='A4', /LANDSCAPE
 
     PLOT, (T-RTT), ZRAD, COLOR=0, $
         XRANGE=[-80,40], YRANGE=[0,100], $
@@ -242,48 +233,48 @@ PRO PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2, path
         TITLE='Reff ver 2', $
         XTITLE='T(degC)', YTITLE='Reff(microns)'
 
-    ofil = path + 'Reff_ec-earth_ver2.png'
-    WRITE_PNG, ofil, TVRD(/TRUE)
-    PRINT, 'File written to ', ofil
-    !P.MULTI = 0
+    end_save, save_as
+    cs_eps2png, save_as
 
 END
 
 
-PRO PLOT_SOLAR_COT_CWP, tmp, grd, pwd, fil, void
+PRO PLOT_SOLAR_COT_CWP, tmp, grd, fil, void
 
     !P.MULTI = [0,2,2]
 
     base = FSC_Base_Filename(fil)
-    ofil = pwd + base + '_solar_cot_cwp.png'
+    filepwd = !SAVE_DIR + base + '_solar_cot_cwp'
+    save_as = filepwd + '.eps'
+    start_save, save_as, size='A3', /LANDSCAPE
 
-    theSize = Get_Screen_Size()
-    WINDOW, 4, XSIZE=theSize[0], YSIZE=theSize[1]
+    cs = 2.3
     limit = [-90., -180., 90., 180.]
     
     MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
+        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
+        FORMAT=('(f3.1)'), $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
         LIMIT=limit, TITLE='lwp_bin [kg/m^2]'
 
     MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
+        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
+        FORMAT=('(f3.1)'), $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
         LIMIT=limit, TITLE='iwp_bin [kg/m^2]'
 
     MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
+        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
         LIMIT=limit, TITLE='cot_liq_bin '
 
     MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=3., $
+        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
         LIMIT=limit, TITLE='cot_ice_bin'
 
-    WRITE_PNG, ofil, TVRD(/TRUE)
-    PRINT, 'File written to ', ofil
+    end_save, save_as
+    cs_eps2png, save_as
 
     !P.MULTI = 0
-
 END

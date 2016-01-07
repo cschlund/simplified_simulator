@@ -1,5 +1,5 @@
 
-PRO ICE_REFF_T, T, ZRAD, ZRAD2, path=path
+PRO ICE_REFF_T, T, ZRAD, ZRAD2
 
     T = FINDGEN(350-200+1)+200.
     ZT = FLTARR(SIZE(T, /DIM))
@@ -23,7 +23,6 @@ PRO ICE_REFF_T, T, ZRAD, ZRAD2, path=path
     ZRAD2[wo1] = 60.
     ZRAD2[wo2] = 30.
 
-    IF KEYWORD_SET(path) THEN $
-        PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2, path
+    PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2
 
 END

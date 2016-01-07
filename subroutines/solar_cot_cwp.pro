@@ -50,7 +50,7 @@
 ;
 ;---------------------------------------------------------------
 
-PRO SOLAR_COT_CWP, tmp, sza, grd, pwd, fil
+PRO SOLAR_COT_CWP, tmp, sza, grd, fil, map=map
 
     isday = WHERE( sza LT 80., nisday )
     noday = WHERE( sza GE 80., nnoday )
@@ -64,8 +64,7 @@ PRO SOLAR_COT_CWP, tmp, sza, grd, pwd, fil
 
     ENDIF
 
-    IF KEYWORD_SET(grd) AND KEYWORD_SET(fil) $
-        AND KEYWORD_SET(pwd) THEN $ 
-            PLOT_SOLAR_COT_CWP, tmp, grd, pwd, fil, noday
+    IF KEYWORD_SET(map) THEN $ 
+        PLOT_SOLAR_COT_CWP, tmp, grd, fil, noday
 
 END
