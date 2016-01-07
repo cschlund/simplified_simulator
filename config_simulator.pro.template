@@ -4,17 +4,19 @@
 ; ** OUT:io_paths, time_frame, cot_thresholds, histinfo
 ;-------------------------------------------------------------------
 
-PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
+PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
+                        histinfo, const_reffs
 
     ;-- model = 0.01, e.g. ERA = original input data
     cot_thv_era = 0.01 
     ;-- satellite sensitivity threshold
-    cot_thv_sat = 5.0
+    cot_thv_sat = 0.3
+    ;cot_thv_sat = 5.0
     ;-- crit_str
     crit_str = 'cot_thv_'+STRTRIM(STRING(cot_thv_sat, FORMAT='(F4.2)'),2)
 
     ;-- era simulator output directory
-    out_base = 'v3_further_devs/v3.8_add_2dhistogram/'
+    out_base = 'v3_further_devs/v3.10_cot_improvement/'
     pwd_base = '/data/cschlund/output/simplified_simulator/'
     out_path = pwd_base + out_base
     validres = VALID_DIR( out_path )
@@ -26,7 +28,7 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
     era_path = era_base  + 'MARS_data/ERA_simulator/'
 
     ;-- path for figs
-    fig_path = '/data/cschlund/figs/'
+    fig_path = '/data/cschlund/figs/simulator/'
 
     ;-- Set list of years to be processed
     ;years_list = ['1979','1980',$
@@ -42,6 +44,9 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
     months_list = ['07']
     nmonths = N_ELEMENTS(months_list)
 
+    ; -- constant water droplet and ice crystal effective radius
+    reff_water = 12. ;12 microns a priori in CC4CL
+    reff_ice   = 30. ;30 microns a priori in CC4CL
 
     ;-- Set cloud top pressure limits for 1D and 2D output, same as in Cloud_cci
     phase = [0, 1] ; liquid, ice
@@ -116,7 +121,7 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
     io_paths = {io_paths, $
                 inp:era_path, $
                 out:out_path, $
-                fig:fig_path}
+                fig:fig_path }
 
     time_frame = {time_frame, $
                   yyyy:years_list, $
@@ -128,6 +133,10 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, histinfo
                       era:cot_thv_era, $
                       sat:cot_thv_sat, $
                       str:crit_str}
+
+    const_reffs = {effective_radii_microns, $
+                   water:reff_water, $
+                   ice:reff_ice}
 
     histinfo = { histograms, $ 
                  phase:phase, $
