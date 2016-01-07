@@ -1,5 +1,4 @@
 @/home/cschlund/Programme/idl/vali_gui_rv/vali_pre_compile.pro
-@/home/cschlund/Programme/idl/simplified_simulator/subroutines/plot_inter_results.pro
 ;+
 ; NAME:
 ;   CLOUDCCI_SIMULATOR
@@ -34,18 +33,45 @@
 ;   C. Schlundt, Oct 2015: implementation of COT/CWP dayside only
 ;   C. Schlundt, Oct 2015: implementation of 1D Histograms
 ;   C. Schlundt, Nov 2015: implementation of 2D Histogram COT-CTP
+;   C. Schlundt, Jan 2016: implementation of ireff, lreff as func(T,IWC/LWC)
+;   C. Schlundt, Jan 2016: quite a bunch of code improvements
 ;
 ; ToDo:
 ;       (1) cloud overlap
 ;
 ;*******************************************************************************
-PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
+PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
+                        fixed_reffs=fixed_reffs, help=help
 ;*******************************************************************************
     clock = TIC('TOTAL')
 
-    ; -- import settings
+    IF KEYWORD_SET(help) THEN BEGIN
+        PRINT, ""
+        PRINT, " *** THIS PROGRAM READS ERA-INTERIM REANALYSIS FILES AND",$
+               " SIMULATES CLOUD_CCI CLOUD PARAMETERS ***"
+        PRINT, ""
+        PRINT, " Please, first copy the cfg template to config_simulator.pro",$
+               " and modify the settings for your needs."
+        PRINT, ""
+        PRINT, " USAGE: CLOUDCCI_SIMULATOR"
+        PRINT, ""
+        PRINT, " Optional Keywords:"
+        PRINT, " fixed_reffs    using constant eff. radii for COT calculation."
+        PRINT, " verbose        increase output verbosity."
+        PRINT, " logfile        creates journal logfile."
+        PRINT, " test           output based on the first day only."
+        PRINT, " map            creates some intermediate results."
+        PRINT, " help           prints this message."
+        PRINT, ""
+        RETURN
+    ENDIF
+
+
     IF KEYWORD_SET(verbose) THEN PRINT, '** Import user setttings'
-    CONFIG_SIMULATOR, pwd, tim, thv, his
+    CONFIG_SIMULATOR, pwd, tim, thv, his, reff
+
+
+    DEFSYSV, '!SAVE_DIR', pwd.FIG
 
 
     IF KEYWORD_SET(logfile) THEN $
@@ -61,13 +87,22 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
 
 
     IF KEYWORD_SET(verbose) THEN BEGIN
-        PRINT, '** INP:     ', pwd.INP
-        PRINT, '** OUT:     ', pwd.OUT
-        PRINT, '** FIG:     ', pwd.FIG
-        PRINT, '** ERA-thv: ', thv.ERA
-        PRINT, '** SAT-thv: ', thv.SAT
-        PRINT, '** STR-thv: ', thv.STR
+        PRINT, FORMAT='(A, A-100)', '** INP:     ', pwd.INP
+        PRINT, FORMAT='(A, A-100)', '** OUT:     ', pwd.OUT
+        PRINT, FORMAT='(A, A-100)', '** FIG:     ', pwd.FIG
+        PRINT, FORMAT='(A, F8.3)', '** ERA-thv: ', thv.ERA
+        PRINT, FORMAT='(A, F8.3)', '** SAT-thv: ', thv.SAT
+        PRINT, FORMAT='(A, A)', '** STR-thv: ', thv.STR
     ENDIF
+
+    IF KEYWORD_SET(fixed_reffs) THEN BEGIN 
+        mess = "** COT_lay using FIXED reffs [um]"
+        fmt = '(A, " ! ", "reff_water =", F5.1, "; reff_ice =", F5.1)'
+        PRINT, FORMAT=fmt, mess, [reff.water, reff.ice]
+    ENDIF ELSE BEGIN
+        mess = "** COT_lay using reffs(T,CWC) [um]"
+        PRINT, FORMAT='(A, " ! ")', mess
+    ENDELSE
 
 
     ; -- loop over years and months
@@ -86,6 +121,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
             strym = STRING(year) + '/' + STRING(month)
 
             PRINT, '** ', strff, ' ERA-Interim InputFiles for ', strym
+            PRINT, ''
 
             IF(N_ELEMENTS(ff) GT 1) THEN BEGIN
 
@@ -120,21 +156,19 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                         counti++
 
                         ; -- initialize solar zenith angle 2D array
-                        IF KEYWORD_SET(map) THEN BEGIN
-                            pfil = file1
-                            sza2d = INIT_SZA_ARRAY(pfil,grid,/map,pwd=pwd.fig)
-                        ENDIF ELSE BEGIN
-                            sza2d = INIT_SZA_ARRAY(pfil,grid)
-                        ENDELSE
+                        pfil = file1
+                        sza2d = INIT_SZA_ARRAY( pfil, grid, map=map )
 
                         ; -- lwc and iwc weighted by cc
                         CWC_INCLOUD, input, grid, cwc_inc
 
                         ; -- get LWP/IWP/LCOT/ICOT per layer
-                        CWP_COT_LAYERS, input.lwc, input.iwc, input.dpres, $
-                                        input.temp, grid, cwp_lay, cot_lay
-                        CWP_COT_LAYERS, cwc_inc.lwc, cwc_inc.iwc, input.dpres, $ 
-                                        input.temp, grid, cwp_lay_inc, cot_lay_inc 
+                        CWP_COT_LAYERS, input.lwc, input.iwc, input, $
+                                        grid, reff, cwp_lay, cot_lay, $
+                                        fixed_reffs=fixed_reffs, verbose=verbose
+                        CWP_COT_LAYERS, cwc_inc.lwc, cwc_inc.iwc, input, $ 
+                                        grid, reff, cwp_lay_inc, cot_lay_inc, $
+                                        fixed_reffs=fixed_reffs, verbose=verbose
 
                         ; -- get cloud parameters using incloud COT threshold
                         SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
@@ -146,12 +180,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                         SCALE_COT_CWP, tmp_sat, grid
 
                         ; -- sunlit region only for COT and CWP
-                        IF KEYWORD_SET(map) THEN BEGIN
-                            pf = file1
-                            SOLAR_COT_CWP, tmp_sat, sza2d, grid, pwd.fig, pf
-                        ENDIF ELSE BEGIN
-                            SOLAR_COT_CWP, tmp_sat, sza2d
-                        ENDELSE
+                        pf = file1
+                        SOLAR_COT_CWP, tmp_sat, sza2d, grid, pf, map=map
 
                         ; -- sum up cloud parameters
                         SUMUP_VARS, 'ori', mean_era, cnts_era, tmp_era, his
@@ -161,10 +191,11 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
                         IF KEYWORD_SET(map) THEN BEGIN
                             pf = file1
                             PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
-                                             pwd, pf, grid
+                                             pf, grid, fixed_reffs=fixed_reffs
                             pf = file1
                             PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
-                                             pwd, pf, grid, temps=tmp_sat
+                                             pf, grid, temps=tmp_sat, $
+                                             fixed_reffs=fixed_reffs
                         ENDIF
 
                         ; -- count number of files
@@ -201,7 +232,7 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map
     ENDFOR ;end of year loop
 
     ; End journaling:
-	IF KEYWORD_SET(logfile) THEN JOURNAL
+    IF KEYWORD_SET(logfile) THEN JOURNAL
 
     TOC, clock
 
