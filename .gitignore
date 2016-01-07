@@ -13,5 +13,6 @@ config_simulator.pro
 *JPG
 *nc
 *txt
+*swp
 .directory
 
