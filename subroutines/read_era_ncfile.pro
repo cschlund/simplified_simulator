@@ -27,7 +27,7 @@ PRO READ_ERA_NCFILE, ncfile, str
 
     fileID = NCDF_OPEN(ncfile)
 
-    ; -- pressure level [Pa]
+    ; -- pressure level [Pa]: 1 Pa = 1 kg m**-1 s**-2
     varID=NCDF_VARID(fileID,'lev')    & NCDF_VARGET,fileID,varID,plevel
 
     ; -- longitude
@@ -37,11 +37,11 @@ PRO READ_ERA_NCFILE, ncfile, str
     varID=NCDF_VARID(fileID,'lat')    & NCDF_VARGET,fileID,varID,lat
     
     ; -- liquid water content [kg kg**-1] 
-    ;    It is typically measured per volume of air (g/m3) or mass of air (g/kg)
+    ;    [mass of condensate / mass of moist air]
     varID=NCDF_VARID(fileID,'var246') & NCDF_VARGET,fileID,varID,lwc
     
     ; -- ice water content [kg kg**-1]
-    ;    It is typically measured per volume of air (g/m3) or mass of air (g/kg)
+    ;    [mass of condensate / mass of moist air]
     varID=NCDF_VARID(fileID,'var247') & NCDF_VARGET,fileID,varID,iwc
     
     ; -- cloud cover
@@ -58,7 +58,6 @@ PRO READ_ERA_NCFILE, ncfile, str
     ; -- pressure increment between 2 layer in the atmosphere
     diff_pressure = plevel[1:N_ELEMENTS(plevel)-1] - $
                     plevel[0:N_ELEMENTS(plevel)-2]
-
 
     ; -- check for negative values in: cc, lwc, iwc
     lwc_idx = WHERE(lwc LT 0., nlwc) 
