@@ -46,14 +46,6 @@ FUNCTION GET_NCDF_VARLIST, fil
 END
 
 @/home/cschlund/Programme/idl/vali_gui_rv/plot_l3.pro
-@/cmsaf/nfshome/sstapelb/idl/start_eps.pro
-@/cmsaf/nfshome/sstapelb/idl/startps.pro
-@/cmsaf/nfshome/sstapelb/idl/start_png.pro
-@/cmsaf/nfshome/sstapelb/idl/end_eps.pro
-@/cmsaf/nfshome/sstapelb/idl/end_png.pro
-@/cmsaf/nfshome/sstapelb/idl/endps.pro
-@/cmsaf/nfshome/sstapelb/idl/start_plot.pro
-@/cmsaf/nfshome/sstapelb/idl/end_plot.pro
 ; -- main program -------------------------------------------------------------------------------
 ; 
 ; Use ncdf_browser from Stefan for comparing with reference data and Cloud_cci results
