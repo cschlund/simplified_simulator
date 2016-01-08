@@ -14,5 +14,6 @@ config_simulator.pro
 *nc
 *txt
 *swp
+*error*
 .directory
 
