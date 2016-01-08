@@ -23,7 +23,7 @@ FUNCTION INIT_SZA_ARRAY, fil, grd, map=map
     ZENSUN, day2d, utc2d, grd.lat2d, grd.lon2d, sza2d
 
     IF KEYWORD_SET(map)  THEN BEGIN
-        tit ='SZA for '+splt[3]+' UTC '+splt[4]
+        tit ='Solar Zenith Angle for '+splt[3]+' UTC '+splt[4]
         fil = base+'_sza'
         PLOT_SZA2D, sza2d, grd.lat2d, grd.lon2d, tit, fil
     ENDIF

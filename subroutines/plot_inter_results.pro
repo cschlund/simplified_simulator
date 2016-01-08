@@ -1,16 +1,25 @@
 
-PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
+;--------------------------------------------------------------------
+PRO PLOT_LSM2D, lsm, lat, lon, title, filename
+;--------------------------------------------------------------------
 
     filepwd = !SAVE_DIR + filename
+    IF(is_file(filepwd+'.png')) THEN return
     save_as = filepwd + '.eps'
     start_save, save_as, size='A4', /LANDSCAPE
-    limit = [-90., -180., 90., 180.]
 
-    MAP_IMAGE, sza2d, lat, lon, LIMIT=limit, $
-               CTABLE=33, /FLIP_COLOURS, $
-               /BOX_AXES, /MAGNIFY, /GRID, $
-               MINI=0., MAXI=180., CHARSIZE=3., $
-               TITLE=title
+    limit = [-90., -180., 90., 180.]
+    bar_tickname = ['Water', 'Land']
+    nlev = N_ELEMENTS(bar_tickname)
+    discrete = FINDGEN(N_ELEMENTS(bar_tickname)+1)
+
+    MAP_IMAGE, lsm, lat, lon, LIMIT=limit, $
+               CTABLE=33, /BOX_AXES, /MAGNIFY, /GRID, $
+               DISCRETE=discrete, N_LEV=nlev, $
+               BAR_TICKNAME=bar_tickname, $
+               MINI=MIN(lsm), MAXI=MAX(lsm), $
+               CHARSIZE=2.2, VOID_INDEX=void_index, $
+               FIGURE_TITLE=title;+'!C'
     MAP_CONTINENTS, /CONTINENTS, /HIRES, $
         COLOR=cgcolor('Black'), GLINETHICK=2.2
     MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2
@@ -21,8 +30,64 @@ PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
 END
 
 
+;--------------------------------------------------------------------
+PRO PLOT_ERA_SST, filename, sst, lat, lon, void_index
+;--------------------------------------------------------------------
+
+    filepwd = !SAVE_DIR + filename
+    IF(is_file(filepwd+'.png')) THEN return
+    save_as = filepwd + '.eps'
+    start_save, save_as, size='A4', /LANDSCAPE
+
+    limit = [-90., -180., 90., 180.]
+
+    MAP_IMAGE, sst, lat, lon, LIMIT=limit, $
+               CTABLE=33, /BOX_AXES, /MAGNIFY, /GRID, $
+               FORMAT=('(f5.1)'), N_LEV=6, $
+               MINI=MIN(sst), MAXI=MAX(sst), $
+               CHARSIZE=2.2, VOID_INDEX=void_index, $
+               TITLE='SST [K]', $
+               FIGURE_TITLE="ERA-Interim Sea Surface Temperature"
+    MAP_CONTINENTS, /CONTINENTS, /HIRES, $
+        COLOR=cgcolor('Black'), GLINETHICK=2.2
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2
+
+    end_save, save_as
+    cs_eps2png, save_as
+
+END
+
+
+;--------------------------------------------------------------------
+PRO PLOT_SZA2D, sza2d, lat, lon, title, filename
+;--------------------------------------------------------------------
+
+    filepwd = !SAVE_DIR + filename
+    IF(is_file(filepwd+'.png')) THEN return
+    save_as = filepwd + '.eps'
+    start_save, save_as, size='A4', /LANDSCAPE
+    limit = [-90., -180., 90., 180.]
+
+    MAP_IMAGE, sza2d, lat, lon, LIMIT=limit, $
+               CTABLE=33, /FLIP_COLOURS, $
+               /BOX_AXES, /MAGNIFY, /GRID, $
+               MINI=0., MAXI=180., CHARSIZE=2.2, $
+               TITLE='SZA [deg]', $
+               FIGURE_TITLE=title
+    MAP_CONTINENTS, /CONTINENTS, /HIRES, $
+        COLOR=cgcolor('Black'), GLINETHICK=2.2
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2
+
+    end_save, save_as
+    cs_eps2png, save_as
+
+END
+
+
+;--------------------------------------------------------------------
 PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, fil, grd,$
                      temps=temps, fixed_reffs=creff
+;--------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
@@ -214,10 +279,12 @@ PRO PLOT_COT_HISTOS, cot_lay_inc, histo, means, fil, grd,$
 END
 
 
-
+;--------------------------------------------------------------------
 PRO PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2
+;--------------------------------------------------------------------
 
     filepwd = !SAVE_DIR + 'Reff_ec-earth_ver2.png'
+    IF(is_file(filepwd+'.png')) THEN return
     save_as = filepwd + '.eps'
     start_save, save_as, size='A4', /LANDSCAPE
 
@@ -239,39 +306,43 @@ PRO PLOT_REFF_T_DEPENDENCY, T, RTT, ZRAD, ZRAD2
 END
 
 
+;--------------------------------------------------------------------
 PRO PLOT_SOLAR_COT_CWP, tmp, grd, fil, void
+;--------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
     base = FSC_Base_Filename(fil)
     filepwd = !SAVE_DIR + base + '_solar_cot_cwp'
+    IF(is_file(filepwd+'.png')) THEN return
     save_as = filepwd + '.eps'
     start_save, save_as, size='A3', /LANDSCAPE
 
-    cs = 2.3
+    cs = 2.2
+    nlev = 6
     limit = [-90., -180., 90., 180.]
     
     MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        FORMAT=('(f3.1)'), $
+        FORMAT=('(f3.1)'), N_LEV=nlev, $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
         LIMIT=limit, TITLE='lwp_bin [kg/m^2]'
 
     MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        FORMAT=('(f3.1)'), $
+        FORMAT=('(f3.1)'), N_LEV=nlev, $
         MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
         LIMIT=limit, TITLE='iwp_bin [kg/m^2]'
 
     MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
-        LIMIT=limit, TITLE='cot_liq_bin '
+        N_LEV=nlev, LIMIT=limit, TITLE='cot_liq_bin '
 
     MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, $
         /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
         MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
-        LIMIT=limit, TITLE='cot_ice_bin'
+        N_LEV=nlev, LIMIT=limit, TITLE='cot_ice_bin'
 
     end_save, save_as
     cs_eps2png, save_as

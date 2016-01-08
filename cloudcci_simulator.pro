@@ -40,8 +40,8 @@
 ;       (1) cloud overlap
 ;
 ;*******************************************************************************
-PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
-                        fixed_reffs=fixed_reffs, help=help
+PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
+                        FIXED_REFFS=fixed_reffs, HELP=help
 ;*******************************************************************************
     clock = TIC('TOTAL')
 
@@ -54,14 +54,15 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
                " and modify the settings for your needs."
         PRINT, ""
         PRINT, " USAGE: CLOUDCCI_SIMULATOR"
+        PRINT, " USAGE: CLOUDCCI_SIMULATOR, /test, /log, /ver"
         PRINT, ""
         PRINT, " Optional Keywords:"
-        PRINT, " fixed_reffs    using constant eff. radii for COT calculation."
-        PRINT, " verbose        increase output verbosity."
-        PRINT, " logfile        creates journal logfile."
-        PRINT, " test           output based on the first day only."
-        PRINT, " map            creates some intermediate results."
-        PRINT, " help           prints this message."
+        PRINT, " FIXED_REFFS    using constant eff. radii for COT calculation."
+        PRINT, " VERBOSE        increase output verbosity."
+        PRINT, " LOGFILE        creates journal logfile."
+        PRINT, " TEST           output based on the first day only."
+        PRINT, " MAP            creates some intermediate results."
+        PRINT, " HELP           prints this message."
         PRINT, ""
         RETURN
     ENDIF
@@ -96,11 +97,11 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
     ENDIF
 
     IF KEYWORD_SET(fixed_reffs) THEN BEGIN 
-        mess = "** COT_lay using FIXED reffs [um]"
+        mess = "** CWP & COT based on FIXED reffs [um]"
         fmt = '(A, " ! ", "reff_water =", F5.1, "; reff_ice =", F5.1)'
         PRINT, FORMAT=fmt, mess, [reff.water, reff.ice]
     ENDIF ELSE BEGIN
-        mess = "** COT_lay using reffs(T,CWC) [um]"
+        mess = "** CWP & COT based on ERA-I: reffs(T,CWC) [um]"
         PRINT, FORMAT='(A, " ! ")', mess
     ENDELSE
 
@@ -150,6 +151,8 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
                         ; -- initialize grid and arrays for monthly mean output:
                         IF(counti EQ 0) THEN BEGIN
                             INIT_ERA_GRID, input, grid 
+                            READ_ERA_SSTFILE, pwd.SST, grid, sst, void, map=map
+                            lsm2d = INIT_LSM_ARRAY( grid, sst, void, map=map )
                             INIT_OUT_ARRAYS, grid, his, mean_era, cnts_era
                             INIT_OUT_ARRAYS, grid, his, mean_sat, cnts_sat
                         ENDIF
@@ -163,12 +166,15 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
                         CWC_INCLOUD, input, grid, cwc_inc
 
                         ; -- get LWP/IWP/LCOT/ICOT per layer
-                        CWP_COT_LAYERS, input.lwc, input.iwc, input, $
-                                        grid, reff, cwp_lay, cot_lay, $
-                                        fixed_reffs=fixed_reffs, verbose=verbose
-                        CWP_COT_LAYERS, cwc_inc.lwc, cwc_inc.iwc, input, $ 
-                                        grid, reff, cwp_lay_inc, cot_lay_inc, $
-                                        fixed_reffs=fixed_reffs, verbose=verbose
+                        CWP_COT_LAYERS, LWC=input.lwc, IWC=input.iwc, $
+                                        CWP=cwp_lay, COT=cot_lay, $
+                                        INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
+                                        FIXED_REFFS=fixed_reffs, VERBOSE=verbose
+
+                        CWP_COT_LAYERS, LWC=cwc_inc.lwc, IWC=cwc_inc.iwc, $
+                                        CWP=cwp_lay_inc, COT=cot_lay_inc, $
+                                        INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
+                                        FIXED_REFFS=fixed_reffs, VERBOSE=verbose
 
                         ; -- get cloud parameters using incloud COT threshold
                         SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
@@ -191,11 +197,11 @@ PRO CLOUDCCI_SIMULATOR, verbose=verbose, logfile=logfile, test=test, map=map, $
                         IF KEYWORD_SET(map) THEN BEGIN
                             pf = file1
                             PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
-                                             pf, grid, fixed_reffs=fixed_reffs
+                                             pf, grid, FIXED_REFFS=fixed_reffs
                             pf = file1
                             PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
                                              pf, grid, temps=tmp_sat, $
-                                             fixed_reffs=fixed_reffs
+                                             FIXED_REFFS=fixed_reffs
                         ENDIF
 
                         ; -- count number of files

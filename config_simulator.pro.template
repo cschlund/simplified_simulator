@@ -5,7 +5,7 @@
 ;-------------------------------------------------------------------
 
 PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
-                        histinfo, const_reffs
+                      histinfo, const_reffs
 
     ;-- model = 0.01, e.g. ERA = original input data
     cot_thv_era = 0.01 
@@ -26,6 +26,10 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
 ;     era_base = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/'
     era_base = '/data/cschlund/'
     era_path = era_base  + 'MARS_data/ERA_simulator/'
+
+    ; -- read sea surface temperature from ERA
+    CD, CURRENT=workdir
+    sstfile = workdir+'/aux/netcdf-era_interim_sst_0.5_0.5.nc'
 
     ;-- path for figs
     fig_path = '/data/cschlund/figs/simulator/'
@@ -121,7 +125,8 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
     io_paths = {io_paths, $
                 inp:era_path, $
                 out:out_path, $
-                fig:fig_path }
+                fig:fig_path, $
+                sst:sstfile }
 
     time_frame = {time_frame, $
                   yyyy:years_list, $
