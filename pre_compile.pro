@@ -1,0 +1,21 @@
+; simulator routines
+@/home/cschlund/Programme/idl/simplified_simulator/config_simulator.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/read_era_ncfile.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/read_era_sstfile.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/read_sim_ncdf.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/init_era_grid.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/init_out_arrays.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/init_lsm_array.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/init_sza_array.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/plot_inter_results.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/cwc_incloud.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/calc_cld_vars.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/search4cloud.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/solar_vars.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/scale_cot_cwp.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/sumup_vars.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/sumup_hist1d.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/sumup_hist2d.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/mean_vars.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/reff_t_dependency.pro
+@/home/cschlund/Programme/idl/simplified_simulator/subroutines/write_monthly_mean.pro
