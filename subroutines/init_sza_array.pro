@@ -24,7 +24,6 @@ FUNCTION INIT_SZA_ARRAY, fil, grd, map=map
 
     IF KEYWORD_SET(map)  THEN BEGIN
         tit ='Solar Zenith Angle for '+splt[3]+' UTC '+splt[4]
-        fil = base+'_sza'
         PLOT_SZA2D, sza2d, grd.lat2d, grd.lon2d, tit, fil
     ENDIF
 

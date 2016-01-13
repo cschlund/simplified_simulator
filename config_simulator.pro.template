@@ -1,38 +1,39 @@
 ;-------------------------------------------------------------------
 ; ** PURPOSE: configure cloud-cci simulator run
-;
-; ** OUT:io_paths, time_frame, cot_thresholds, histinfo
 ;-------------------------------------------------------------------
 
 PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
                       histinfo, const_reffs
 
-    ;-- model = 0.01, e.g. ERA = original input data
-    cot_thv_era = 0.01 
-    ;-- satellite sensitivity threshold
-    cot_thv_sat = 0.3
-    ;cot_thv_sat = 5.0
-    ;-- crit_str
-    crit_str = 'cot_thv_'+STRTRIM(STRING(cot_thv_sat, FORMAT='(F4.2)'),2)
+
+    ; ========================================================
+    ; === MODIFY paths and numbers below  ===
+    ; ========================================================
+
+    cot_thv_era = 0.01 ; ERA = original input data
+    cot_thv_sat = 0.3  ; satellite sensitivity threshold
+    cadd = STRTRIM(STRING(cot_thv_sat, FORMAT='(F4.2)'),2)
+    crit_string = 'cot_thv_' + cadd
+
+    ;-- ERA-Interim input files
+    ;era_base = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/'
+    era_base = '/data/cschlund/'
+    era_path = era_base  + 'MARS_data/ERA_simulator/'
+
+    ;-- path for figures
+    fig_path = '/data/cschlund/figs/simulator/'
 
     ;-- era simulator output directory
-    out_base = 'v3_further_devs/v3.10_cot_improvement/'
     pwd_base = '/data/cschlund/output/simplified_simulator/'
+    out_base = 'v3_further_devs/v3.11_add_hist1dref/'
+    ;out_base = 'v3_further_devs/v3.12_scops_like/'
     out_path = pwd_base + out_base
     validres = VALID_DIR( out_path )
     IF(validres EQ 0) THEN creatres = CREATE_DIR( out_path )
 
-    ;-- ERA-Interim input files
-;     era_base = '/cmsaf/cmsaf-cld1/mstengel/ERA_Interim/ERA_simulator/'
-    era_base = '/data/cschlund/'
-    era_path = era_base  + 'MARS_data/ERA_simulator/'
-
     ; -- read sea surface temperature from ERA
     CD, CURRENT=workdir
     sstfile = workdir+'/aux/netcdf-era_interim_sst_0.5_0.5.nc'
-
-    ;-- path for figs
-    fig_path = '/data/cschlund/figs/simulator/'
 
     ;-- Set list of years to be processed
     ;years_list = ['1979','1980',$
@@ -48,13 +49,22 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
     months_list = ['07']
     nmonths = N_ELEMENTS(months_list)
 
+
+    ; ========================================================
+    ; === DO NOT CHANGE UNLESS YOU KNOW WHAT YOU ARE DOING ===
+    ; ========================================================
+
+    ; === Cloud_cci like settings
+
     ; -- constant water droplet and ice crystal effective radius
     reff_water = 12. ;12 microns a priori in CC4CL
     reff_ice   = 30. ;30 microns a priori in CC4CL
 
-    ;-- Set cloud top pressure limits for 1D and 2D output, same as in Cloud_cci
+
+    ;-- Set cloud top pressure limits for 1D and 2D output
     phase = [0, 1] ; liquid, ice
     phase_dim = FIX(N_ELEMENTS(phase))
+
 
     ; -- hist1d_ctp [hPa] --
     ctp1d = [1., 90., 180., 245., 310., 375., 440., 500., 560., $
@@ -71,6 +81,7 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
 
     ctp1d_dim = FIX(N_ELEMENTS(ctp1d))
     ctp_bin1d_dim = FIX(N_ELEMENTS(ctp_bins)) 
+
 
     ; -- hist1d_cot [] --
     cot1d = [0., 0.3, 0.6, 1.3, 2.2, 3.6, 5.8, 9.4, $
@@ -121,50 +132,54 @@ PRO CONFIG_SIMULATOR, io_paths, time_frame, cot_thresholds, $
     cwp_bin1d_dim = FIX(N_ELEMENTS(cwp_bins)) 
 
 
+    ; -- hist1d_cer [microns] --
+    cer1d = [0., 3., 6., 9., 12., 15., 20., 25., 30., 40., 60., 80.]
+    cer2d = FLTARR(2,N_ELEMENTS(cer1d)-1)
+
+    FOR gu=0,N_ELEMENTS(cer2d[0,*])-1 DO BEGIN
+      cer2d[0,gu] = cer1d[gu]
+      cer2d[1,gu] = cer1d[gu+1]
+    ENDFOR 
+    cer_bins = cer1d[1:N_ELEMENTS(cer1d)-1] * 0.5 + $ 
+               cer1d[0:N_ELEMENTS(cer1d)-2] * 0.5
+
+    cer1d_dim = FIX(N_ELEMENTS(cer1d))
+    cer_bin1d_dim = FIX(N_ELEMENTS(cer_bins)) 
+
+
     ;-- create output structures
+
     io_paths = {io_paths, $
-                inp:era_path, $
-                out:out_path, $
-                fig:fig_path, $
-                sst:sstfile }
+                inp:era_path, out:out_path, $
+                fig:fig_path, sst:sstfile }
 
     time_frame = {time_frame, $
-                  yyyy:years_list, $
-                  mm:months_list, $
-                  ny:nyears, $
-                  nm:nmonths}
+                  yyyy:years_list, mm:months_list, $
+                  ny:nyears, nm:nmonths}
 
     cot_thresholds = {cot_thresholds, $
                       era:cot_thv_era, $
-                      sat:cot_thv_sat, $
-                      str:crit_str}
+                      sat:cot_thv_sat, str:crit_string}
 
     const_reffs = {effective_radii_microns, $
-                   water:reff_water, $
-                   ice:reff_ice}
+                   water:reff_water, ice:reff_ice}
 
     histinfo = { histograms, $ 
-                 phase:phase, $
-                 phase_dim:phase_dim, $
-                 ctp2d:ctp2d, $
-                 ctp1d:ctp1d, $
-                 ctp1d_dim:ctp1d_dim, $
-                 ctp_bin1d:ctp_bins, $
+                 phase:phase, phase_dim:phase_dim, $
+                 ctp2d:ctp2d, ctp1d:ctp1d, $
+                 ctp1d_dim:ctp1d_dim, ctp_bin1d:ctp_bins, $
                  ctp_bin1d_dim:ctp_bin1d_dim, $
-                 cot2d:cot2d, $
-                 cot1d:cot1d, $
-                 cot1d_dim:cot1d_dim, $
-                 cot_bin1d:cot_bins, $
+                 cot2d:cot2d, cot1d:cot1d, $
+                 cot1d_dim:cot1d_dim, cot_bin1d:cot_bins, $
                  cot_bin1d_dim:cot_bin1d_dim, $
-                 ctt2d:ctt2d, $
-                 ctt1d:ctt1d, $
-                 ctt1d_dim:ctt1d_dim, $
-                 ctt_bin1d:ctt_bins, $
+                 ctt2d:ctt2d, ctt1d:ctt1d, $
+                 ctt1d_dim:ctt1d_dim, ctt_bin1d:ctt_bins, $
                  ctt_bin1d_dim:ctt_bin1d_dim, $
-                 cwp2d:cwp2d, $
-                 cwp1d:cwp1d, $
-                 cwp1d_dim:cwp1d_dim, $
-                 cwp_bin1d:cwp_bins, $
-                 cwp_bin1d_dim:cwp_bin1d_dim }
+                 cwp2d:cwp2d, cwp1d:cwp1d, $
+                 cwp1d_dim:cwp1d_dim, cwp_bin1d:cwp_bins, $
+                 cwp_bin1d_dim:cwp_bin1d_dim , $
+                 cer2d:cer2d, cer1d:cer1d, $
+                 cer1d_dim:cer1d_dim, cer_bin1d:cer_bins, $
+                 cer_bin1d_dim:cer_bin1d_dim }
 
 END

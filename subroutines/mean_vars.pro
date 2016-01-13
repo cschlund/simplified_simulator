@@ -5,12 +5,13 @@
 ; in : means, counts
 ; out: means, counts
 ;
-; ** Structure FINAL_OUTPUT, 16 tags, length=537514560, data length=537514560:
+; ** Structure FINAL_OUTPUT, 20 tags, length=563506560, data length=563506560:
 ;    HIST2D_COT_CTP  LONG      Array[720, 361, 13, 15, 2]
 ;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
 ;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
 ;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
 ;    HIST1D_COT      LONG      Array[720, 361, 13, 2]
+;    HIST1D_CER      LONG      Array[720, 361, 13, 2]
 ;    CFC             FLOAT     Array[720, 361]
 ;    CPH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
@@ -22,8 +23,11 @@
 ;    COT             FLOAT     Array[720, 361]
 ;    COT_LIQ         FLOAT     Array[720, 361]
 ;    COT_ICE         FLOAT     Array[720, 361]
+;    CER             FLOAT     Array[720, 361]
+;    CER_LIQ         FLOAT     Array[720, 361]
+;    CER_ICE         FLOAT     Array[720, 361]
 ;
-; ** Structure FINAL_COUNTS, 8 tags, length=7277764, data length=7277764:
+; ** Structure FINAL_COUNTS, 11 tags, length=10396804, data length=10396804:
 ;    RAW             LONG                 0
 ;    CTP             LONG      Array[720, 361]
 ;    COT             LONG      Array[720, 361]
@@ -32,6 +36,9 @@
 ;    IWP             LONG      Array[720, 361]
 ;    COT_LIQ         LONG      Array[720, 361]
 ;    COT_ICE         LONG      Array[720, 361]
+;    CER             LONG      Array[720, 361]
+;    CER_LIQ         LONG      Array[720, 361]
+;    CER_ICE         LONG      Array[720, 361]
 ;
 ;-------------------------------------------------------------------
 
@@ -83,6 +90,20 @@ PRO MEAN_VARS, means, counts
         means.cot_ice[icot] = means.cot_ice[icot] / counts.cot_ice[icot]
 
 
+    ; -- cloud effective radius
+    tcer = WHERE(counts.cer GT 0, ntcer)
+    IF (ntcer GT 0) THEN $
+        means.cer[tcer] = means.cer[tcer] / counts.cer[tcer]
+
+    lcer = WHERE(counts.cer_liq GT 0, nlcer)
+    IF (nlcer GT 0) THEN $
+        means.cer_liq[lcer] = means.cer_liq[lcer] / counts.cer_liq[lcer]
+
+    icer = WHERE(counts.cer_ice GT 0, nicer)
+    IF (nicer GT 0) THEN $
+        means.cer_ice[icer] = means.cer_ice[icer] / counts.cer_ice[icer]
+
+
 
     ; -- fill_value for grid cells with no observations
 
@@ -112,6 +133,14 @@ PRO MEAN_VARS, means, counts
     icot0 = WHERE(counts.cot_ice EQ 0, nicot0)
     IF (nicot0 GT 0) THEN means.cot_ice[icot0] = -999.
 
+    tcer0 = WHERE(counts.cer EQ 0, ntcer0)
+    IF (ntcer0 GT 0) THEN means.cer[tcer0] = -999.
+
+    lcer0 = WHERE(counts.cer_liq EQ 0, nlcer0)
+    IF (nlcer0 GT 0) THEN means.cer_liq[lcer0] = -999.
+
+    icer0 = WHERE(counts.cer_ice EQ 0, nicer0)
+    IF (nicer0 GT 0) THEN means.cer_ice[icer0] = -999.
 
 
     ; HIST1D_CTP      LONG      Array[720, 361, 15, 2]
@@ -129,6 +158,10 @@ PRO MEAN_VARS, means, counts
     ; HIST1D_COT      LONG      Array[720, 361, 13, 2]
     h1cot = WHERE(means.hist1d_cot EQ 0, nh1cot)
     IF (nh1cot GT 0) THEN means.hist1d_cot[h1cot] = -999l
+
+    ; HIST1D_CER      LONG      Array[720, 361, 13, 2]
+    h1cer = WHERE(means.hist1d_cer EQ 0, nh1cer)
+    IF (nh1cer GT 0) THEN means.hist1d_cer[h1cer] = -999l
 
     ; HIST2D_COT_CTP      LONG      Array[720, 361, 13, 15, 2]
     h2 = WHERE(means.hist2d_cot_ctp EQ 0, nh2)

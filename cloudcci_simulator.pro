@@ -1,4 +1,5 @@
 @/home/cschlund/Programme/idl/vali_gui_rv/vali_pre_compile.pro
+@/home/cschlund/Programme/idl/simplified_simulator/pre_compile.pro
 ;+
 ; NAME:
 ;   CLOUDCCI_SIMULATOR
@@ -34,6 +35,7 @@
 ;   C. Schlundt, Oct 2015: implementation of 1D Histograms
 ;   C. Schlundt, Nov 2015: implementation of 2D Histogram COT-CTP
 ;   C. Schlundt, Jan 2016: implementation of ireff, lreff as func(T,IWC/LWC)
+;   C. Schlundt, Jan 2016: implementation of hist1d_ref
 ;   C. Schlundt, Jan 2016: quite a bunch of code improvements
 ;
 ; ToDo:
@@ -41,7 +43,7 @@
 ;
 ;*******************************************************************************
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
-                        FIXED_REFFS=fixed_reffs, HELP=help
+                        FIXED_REFFS=fixed_reffs, HPLOT=hplot, HELP=help
 ;*******************************************************************************
     clock = TIC('TOTAL')
 
@@ -62,6 +64,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
         PRINT, " LOGFILE        creates journal logfile."
         PRINT, " TEST           output based on the first day only."
         PRINT, " MAP            creates some intermediate results."
+        PRINT, " HPLOT          creates HISTOS_1D plots of final HIST results."
         PRINT, " HELP           prints this message."
         PRINT, ""
         RETURN
@@ -144,9 +147,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
                         ; -- returns structure containing the input variables
                         READ_ERA_NCFILE, file1, input
-
-                        IF KEYWORD_SET(verbose) THEN $
-                            PRINT, '** ',strcnt,'.LOADED: ', input.file 
+                        PRINT, '** ',strcnt,'.LOADED: ', input.file 
 
                         ; -- initialize grid and arrays for monthly mean output:
                         IF(counti EQ 0) THEN BEGIN
@@ -165,43 +166,47 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         ; -- lwc and iwc weighted by cc
                         CWC_INCLOUD, input, grid, cwc_inc
 
-                        ; -- get LWP/IWP/LCOT/ICOT per layer
-                        CWP_COT_LAYERS, LWC=input.lwc, IWC=input.iwc, $
-                                        CWP=cwp_lay, COT=cot_lay, $
-                                        INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
-                                        FIXED_REFFS=fixed_reffs, VERBOSE=verbose
+                        ;; -- grid mean per layer
+                        ;CALC_CLD_VARS, LWC=input.lwc, IWC=input.iwc, $
+                        ;               INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
+                        ;               FIXED_REFFS=fixed_reffs, VERBOSE=verbose, $
+                        ;               CWP=cwp_lay, COT=cot_lay, CER=cer_lay
 
-                        CWP_COT_LAYERS, LWC=cwc_inc.lwc, IWC=cwc_inc.iwc, $
-                                        CWP=cwp_lay_inc, COT=cot_lay_inc, $
-                                        INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
-                                        FIXED_REFFS=fixed_reffs, VERBOSE=verbose
+                        ; -- in-cloud per layer based on L(I)WC[z]/CC[z]
+                        CALC_CLD_VARS, LWC=cwc_inc.lwc, IWC=cwc_inc.iwc, $
+                                       INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
+                                       FIXED_REFFS=fixed_reffs, VERBOSE=verbose, $
+                                       CWP=cwp_lay_inc, COT=cot_lay_inc, $
+                                       CER=cer_lay_inc
 
-                        ; -- get cloud parameters using incloud COT threshold
-                        SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
-                                      'ori', thv.era, tmp_era
-                        SEARCH4CLOUD, input, grid, cwp_lay, cot_lay_inc, $
-                                      'sat', thv.sat, tmp_sat
+                        ; -- search for upper-most cloud layer
+                        SEARCH4CLOUD, INPUT=input, GRID=grid, CWP=cwp_lay_inc, $
+                                      COT=cot_lay_inc, CER=cer_lay_inc, $
+                                      FLAG='ori', THRESHOLD=thv.era, TEMP=tmp_era
+
+                        SEARCH4CLOUD, INPUT=input, GRID=grid, CWP=cwp_lay_inc, $
+                                      COT=cot_lay_inc, CER=cer_lay_inc, $
+                                      FLAG='sat', THRESHOLD=thv.sat, TEMP=tmp_sat
 
                         ; -- scale COT and thus CWP like in CC4CL for tmp_sat only
                         SCALE_COT_CWP, tmp_sat, grid
 
-                        ; -- sunlit region only for COT and CWP
+                        ; -- sunlit region only for COT & CWP & CER
                         pf = file1
-                        SOLAR_COT_CWP, tmp_sat, sza2d, grid, pf, map=map
+                        SOLAR_VARS, tmp_sat, sza2d, grid, pf, map=map
 
                         ; -- sum up cloud parameters
                         SUMUP_VARS, 'ori', mean_era, cnts_era, tmp_era, his
                         SUMUP_VARS, 'sat', mean_sat, cnts_sat, tmp_sat, his
 
-                        ; -- check intermediate results
+                        ; -- check intermediate results: current_time_slot
                         IF KEYWORD_SET(map) THEN BEGIN
-                            pf = file1
-                            PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
-                                             pf, grid, FIXED_REFFS=fixed_reffs
-                            pf = file1
-                            PLOT_COT_HISTOS, cot_lay_inc, his, mean_sat, $
-                                             pf, grid, temps=tmp_sat, $
-                                             FIXED_REFFS=fixed_reffs
+                            PLOT_INTER_HISTOS, VARNAME='cot', INTER=tmp_sat, $ 
+                                HISINFO=his, OFILE=file1, FIXED_REFFS=fixed_reffs
+                            PLOT_INTER_HISTOS, VARNAME='cer', INTER=tmp_sat, $ 
+                                HISINFO=his, OFILE=file1, FIXED_REFFS=fixed_reffs
+                            PLOT_HISTOS_1D, FINAL=mean_sat, HISINFO=his, $
+                                OFILE=file1, FIXED_REFFS=fixed_reffs
                         ENDIF
 
                         ; -- count number of files
@@ -210,8 +215,8 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
                         ; -- delete tmp arrays
                         UNDEFINE, sza2d, tmp_era, tmp_sat
-                        UNDEFINE, cwp_lay, cot_lay
-                        UNDEFINE, cwp_lay_inc, cot_lay_inc
+                        UNDEFINE, cwp_lay, cot_lay, cer_lay
+                        UNDEFINE, cwp_lay_inc, cot_lay_inc, cer_lay_inc
 
                     ENDIF ;end of IF(is_file(file1))
 
@@ -222,6 +227,13 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                 ; -- calculate averages
                 MEAN_VARS, mean_era, cnts_era
                 MEAN_VARS, mean_sat, cnts_sat
+
+                ; -- plot final hist1d results: ctp, cwp, cer, cot
+                IF KEYWORD_SET(hplot) THEN BEGIN 
+                    ofile = 'ERA_Interim_'+year+month
+                    PLOT_HISTOS_1D, FINAL=mean_sat, HISINFO=his, $
+                        OFILE=ofile, FIXED_REFFS=fixed_reffs
+                ENDIF
 
                 ; -- write output files
                 WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $

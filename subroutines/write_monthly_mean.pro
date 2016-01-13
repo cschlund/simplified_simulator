@@ -47,6 +47,8 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     dim_cot_bin1d = NCDF_DIMDEF(id, 'cot_bin1d_dim', hist.cot_bin1d_dim)
     dim_cwp1d = NCDF_DIMDEF(id, 'cwp1d_dim', hist.cwp1d_dim)
     dim_cwp_bin1d = NCDF_DIMDEF(id, 'cwp_bin1d_dim', hist.cwp_bin1d_dim)
+    dim_cer1d = NCDF_DIMDEF(id, 'ref1d_dim', hist.cer1d_dim)
+    dim_cer_bin1d = NCDF_DIMDEF(id, 'ref_bin1d_dim', hist.cer_bin1d_dim)
 
     ; -- time: monthly mean output
     vid  = NCDF_VARDEF(id, 'time', [time_id], /DOUBLE)
@@ -83,6 +85,22 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     vid  = NCDF_VARDEF(id, 'hist_ctp_bin', [dim_ctp_bin1d], /DOUBLE)
     NCDF_ATTPUT, id, 'hist_ctp_bin', 'long_name', 'ctp histogram bins'
     NCDF_ATTPUT, id, 'hist_ctp_bin', 'units', ' '
+
+
+    ; -- cloud effective radius 1d histogram ----------------------------------
+    vid  = NCDF_VARDEF(id, 'hist_ref1d_axis', [dim_cer1d], /FLOAT)
+    NCDF_ATTPUT, id, 'hist_ref1d_axis', 'long_name', 'histogram_ref1d'
+    NCDF_ATTPUT, id, 'hist_ref1d_axis', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'hist_ref_bin1d_axis', [dim_cer_bin1d], /FLOAT)
+    NCDF_ATTPUT, id, 'hist_ref_bin1d_axis', 'long_name', 'histogram_ref_bin1d'
+    NCDF_ATTPUT, id, 'hist_ref_bin1d_axis', 'units', ' '
+
+    vid  = NCDF_VARDEF(id, 'hist1d_ref', $
+        [dim_x_id, dim_y_id, dim_cer_bin1d, dim_phase, time_id], /LONG)
+    NCDF_ATTPUT, id, 'hist1d_ref', 'long_name', 'hist1d_ref'
+    NCDF_ATTPUT, id, 'hist1d_ref', 'units', 'counts'
+    NCDF_ATTPUT, id, 'hist1d_ref', '_FillValue', -999l, /LONG
 
 
     ; -- cloud top pressure 1d histogram --------------------------------------
@@ -295,6 +313,21 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_ATTPUT, id, 'lwp', 'long_name', 'cloud liquid water path'
     NCDF_ATTPUT, id, 'lwp', 'units', 'g/m^2'
 
+    vid  = NCDF_VARDEF(id, 'ref', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'ref', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'ref', 'long_name', 'cloud effective radius'
+    NCDF_ATTPUT, id, 'ref', 'units', 'micrometer'
+
+    vid  = NCDF_VARDEF(id, 'ref_liq', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'ref_liq', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'ref_liq', 'long_name', 'water effective radius'
+    NCDF_ATTPUT, id, 'ref_liq', 'units', 'micrometer'
+
+    vid  = NCDF_VARDEF(id, 'ref_ice', [dim_x_id,dim_y_id,time_id], /FLOAT)
+    NCDF_ATTPUT, id, 'ref_ice', '_FillValue', -999.
+    NCDF_ATTPUT, id, 'ref_ice', 'long_name', 'ice effective radius'
+    NCDF_ATTPUT, id, 'ref_ice', 'units', 'micrometer'
+
     vid  = NCDF_VARDEF(id, 'nobs_lwp', [dim_x_id,dim_y_id,time_id], /LONG)
     NCDF_ATTPUT, id, 'nobs_lwp', 'long_name', 'number of observations'
     NCDF_ATTPUT, id, 'nobs_lwp', 'units', ' '
@@ -337,6 +370,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'hist_cot_bin1d_axis', hist.cot_bin1d
     NCDF_VARPUT, id, 'hist1d_cot_ori',ave_era.hist1d_cot
     NCDF_VARPUT, id, 'hist1d_cot',ave_sat.hist1d_cot
+    NCDF_VARPUT, id, 'hist_ref1d_axis', hist.cer1d
+    NCDF_VARPUT, id, 'hist_ref_bin1d_axis', hist.cer_bin1d
+    NCDF_VARPUT, id, 'hist1d_ref',ave_sat.hist1d_cer
 
     ; -- based on thv.era: original model output
     NCDF_VARPUT, id, 'ctp_ori', ave_era.ctp
@@ -368,6 +404,9 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, thv, $
     NCDF_VARPUT, id, 'cot', ave_sat.cot
     NCDF_VARPUT, id, 'cot_liq', ave_sat.cot_liq
     NCDF_VARPUT, id, 'cot_ice', ave_sat.cot_ice
+    NCDF_VARPUT, id, 'ref', ave_sat.cer
+    NCDF_VARPUT, id, 'ref_liq', ave_sat.cer_liq
+    NCDF_VARPUT, id, 'ref_ice', ave_sat.cer_ice
     NCDF_VARPUT, id, 'lwp', ave_sat.lwp
     NCDF_VARPUT, id, 'iwp', ave_sat.iwp
     NCDF_VARPUT, id, 'nobs', cnt_sat.ctp

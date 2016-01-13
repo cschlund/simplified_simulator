@@ -300,15 +300,25 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
     cer_lay = {cloud_effective_radius, liq:lcer_lay, ice:icer_lay}
 
     IF KEYWORD_SET(const_reff) THEN BEGIN 
-        mess = "** CWP & COT per layer based on FIXED reffs [um]"
-        fmt3 = '(A, " ! ", "reff_water =", F5.1, "; reff_ice =", F5.1)'
-        PRINT, FORMAT=fmt3, mess, [reff.water, reff.ice]
-        PRINT, ''
+
+        IF KEYWORD_SET(ver) THEN BEGIN 
+            mess = "** CWP & COT per layer based on FIXED reffs [um]"
+            fmt3 = '(A, " ! ", "reff_water =", F5.1, "; reff_ice =", F5.1)'
+            PRINT, FORMAT=fmt3, mess, [reff.water, reff.ice]
+            PRINT, ''
+        ENDIF
+
         cot_lay = {cloud_optical_depth, liq:lcot_lay, ice:icot_lay}
+
     ENDIF ELSE BEGIN 
-        PRINT, "** CWP & COT per layer based on ERA-Interim parameterizations"
-        PRINT, ''
+
+        IF KEYWORD_SET(ver) THEN BEGIN 
+            PRINT, "** CWP & COT per layer based on ERA-Interim parameterizations"
+            PRINT, ''
+        ENDIF
+
         cot_lay = {cloud_optical_depth, liq:lcot_lay2, ice:icot_lay2}
+
     ENDELSE
 
 END

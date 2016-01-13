@@ -5,41 +5,7 @@
 ; in : flag, means, temps, counts, histo
 ; out: means, counts
 ;
-; flag ... either 'ori' or 'sat'
-;           this is required for the sumup total COT & CWP
-;           because for model (ori) : cot_liq+cot_ice & lwp+iwp
-;                   for simu. (sat) : cot_liq_bin+cot_ice_bin & 
-;                                     lwp_inc_bin+iwp_inc_bin
-;
-; ** Structure FINAL_OUTPUT, 16 tags, length=537514560, data length=537514560:
-;    HIST2D_COT_CTP  LONG      Array[720, 361, 13, 15, 2]
-;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
-;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
-;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
-;    HIST1D_COT      LONG      Array[720, 361, 13, 2]
-;    CFC             FLOAT     Array[720, 361]
-;    CPH             FLOAT     Array[720, 361]
-;    CTT             FLOAT     Array[720, 361]
-;    CTH             FLOAT     Array[720, 361]
-;    CTP             FLOAT     Array[720, 361]
-;    CWP             FLOAT     Array[720, 361]
-;    LWP             FLOAT     Array[720, 361]
-;    IWP             FLOAT     Array[720, 361]
-;    COT             FLOAT     Array[720, 361]
-;    COT_LIQ         FLOAT     Array[720, 361]
-;    COT_ICE         FLOAT     Array[720, 361]
-;
-; ** Structure FINAL_COUNTS, 8 tags, length=7277764, data length=7277764:
-;    RAW             LONG                 0
-;    CTP             LONG      Array[720, 361]
-;    COT             LONG      Array[720, 361]
-;    CWP             LONG      Array[720, 361]
-;    LWP             LONG      Array[720, 361]
-;    IWP             LONG      Array[720, 361]
-;    COT_LIQ         LONG      Array[720, 361]
-;    COT_ICE         LONG      Array[720, 361]
-;
-; ** Structure HISTOGRAMS, 22 tags, length=984, data length=966:
+; ** Structure HISTOGRAMS, 27 tags, length=1172, data length=1150:
 ;    PHASE           INT       Array[2]
 ;    PHASE_DIM       INT              2
 ;    CTP2D           FLOAT     Array[2, 15]
@@ -62,8 +28,54 @@
 ;    CWP1D_DIM       INT             15
 ;    CWP_BIN1D       FLOAT     Array[14]
 ;    CWP_BIN1D_DIM   INT             14
+;    CER2D           FLOAT     Array[2, 11]
+;    CER1D           FLOAT     Array[12]
+;    CER1D_DIM       INT             12
+;    CER_BIN1D       FLOAT     Array[11]
+;    CER_BIN1D_DIM   INT             11
 ;
-; ** Structure TEMP_ARRAYS, 19 tags, length=19753920, data length=19753920:
+; ** Structure FINAL_OUTPUT, 20 tags, length=563506560, data length=563506560:
+;    HIST2D_COT_CTP  LONG      Array[720, 361, 13, 15, 2]
+;    HIST1D_CTP      LONG      Array[720, 361, 15, 2]
+;    HIST1D_CTT      LONG      Array[720, 361, 16, 2]
+;    HIST1D_CWP      LONG      Array[720, 361, 14, 2]
+;    HIST1D_COT      LONG      Array[720, 361, 13, 2]
+;    HIST1D_CER      LONG      Array[720, 361, 13, 2]
+;    CFC             FLOAT     Array[720, 361]
+;    CPH             FLOAT     Array[720, 361]
+;    CTT             FLOAT     Array[720, 361]
+;    CTH             FLOAT     Array[720, 361]
+;    CTP             FLOAT     Array[720, 361]
+;    CWP             FLOAT     Array[720, 361]
+;    LWP             FLOAT     Array[720, 361]
+;    IWP             FLOAT     Array[720, 361]
+;    COT             FLOAT     Array[720, 361]
+;    COT_LIQ         FLOAT     Array[720, 361]
+;    COT_ICE         FLOAT     Array[720, 361]
+;    CER             FLOAT     Array[720, 361]
+;    CER_LIQ         FLOAT     Array[720, 361]
+;    CER_ICE         FLOAT     Array[720, 361]
+;
+; ** Structure FINAL_COUNTS, 11 tags, length=10396804, data length=10396804:
+;    RAW             LONG                 0
+;    CTP             LONG      Array[720, 361]
+;    COT             LONG      Array[720, 361]
+;    CWP             LONG      Array[720, 361]
+;    LWP             LONG      Array[720, 361]
+;    IWP             LONG      Array[720, 361]
+;    COT_LIQ         LONG      Array[720, 361]
+;    COT_ICE         LONG      Array[720, 361]
+;    CER             LONG      Array[720, 361]
+;    CER_LIQ         LONG      Array[720, 361]
+;    CER_ICE         LONG      Array[720, 361]
+;
+; flag ... either 'ori' or 'sat'
+;           this is required for the sumup total COT & CWP
+;           because for model (ori) : cot_liq+cot_ice & lwp+iwp
+;                   for simu. (sat) : cot_liq_bin+cot_ice_bin & 
+;                                     lwp_inc_bin+iwp_inc_bin
+;
+; ** Structure TEMP_ARRAYS, 22 tags, length=22872960, data length=22872960:
 ;    CTP             FLOAT     Array[720, 361]
 ;    CTH             FLOAT     Array[720, 361]
 ;    CTT             FLOAT     Array[720, 361]
@@ -73,6 +85,7 @@
 ;    CFC             FLOAT     Array[720, 361]
 ;    COT             FLOAT     Array[720, 361]
 ;    CWP             FLOAT     Array[720, 361]
+;    CER             FLOAT     Array[720, 361]
 ;    CFC_BIN         FLOAT     Array[720, 361]
 ;    CPH_BIN         FLOAT     Array[720, 361]
 ;    LWP_BIN         FLOAT     Array[720, 361]
@@ -83,6 +96,8 @@
 ;    COT_ICE         FLOAT     Array[720, 361]
 ;    COT_LIQ_BIN     FLOAT     Array[720, 361]
 ;    COT_ICE_BIN     FLOAT     Array[720, 361]
+;    CER_LIQ         FLOAT     Array[720, 361]
+;    CER_ICE         FLOAT     Array[720, 361]
 ;
 ;-------------------------------------------------------------------
 
@@ -195,12 +210,12 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         ;UNDEFINE, res
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+    ENDIF
 
 
     ; === PSEUDO-SATELLITE output ===
 
-    ENDIF ELSE BEGIN
+    IF ( flag EQ 'sat' ) THEN BEGIN
 
         ; no condition for cloud fraction [0;1]: clear or cloudy
         ; fillvalue = 0., thus counts = raw = number of files read
@@ -217,18 +232,34 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         counts.ctp[wo_ctp] = counts.ctp[wo_ctp] + 1l
 
 
+        ; -- TOTAL CER (liquid + ice)
+        temps.cer = temps.cer_liq + temps.cer_ice
+        wo_cer = WHERE(temps.cer GT 0., nwo_cer)
+        means.cer[wo_cer] = means.cer[wo_cer] + temps.cer[wo_cer]
+        counts.cer[wo_cer] = counts.cer[wo_cer] + 1l
+
+        ; -- CER_LIQ
+        wo_lcer = WHERE(temps.cer_liq GT 0., nwo_lcer)
+        means.cer_liq[wo_lcer] = means.cer_liq[wo_lcer] + temps.cer_liq[wo_lcer]
+        counts.cer_liq[wo_lcer] = counts.cer_liq[wo_lcer] + 1l
+
+        ; -- CER_ICE
+        wo_icer = WHERE(temps.cer_ice GT 0., nwo_icer)
+        means.cer_ice[wo_icer] = means.cer_ice[wo_icer] + temps.cer_ice[wo_icer]
+        counts.cer_ice[wo_icer] = counts.cer_ice[wo_icer] + 1l
+
+
+
         ; -- TOTAL COT (liquid + ice)
         temps.cot = temps.cot_liq_bin + temps.cot_ice_bin
         wo_cot = WHERE(temps.cot GT 0., nwo_cot)
         means.cot[wo_cot] = means.cot[wo_cot] + temps.cot[wo_cot]
         counts.cot[wo_cot] = counts.cot[wo_cot] + 1l
 
-
         ; -- COT_LIQ_BIN
         wo_lcot = WHERE(temps.cot_liq_bin GT 0., nwo_lcot)
         means.cot_liq[wo_lcot] = means.cot_liq[wo_lcot] + temps.cot_liq_bin[wo_lcot]
         counts.cot_liq[wo_lcot] = counts.cot_liq[wo_lcot] + 1l
-
 
         ; -- COT_ICE_BIN
         wo_icot = WHERE(temps.cot_ice_bin GT 0., nwo_icot)
@@ -244,7 +275,6 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
             counts.lwp[wo_lwp] = counts.lwp[wo_lwp] + 1l
         ENDIF
 
-
         ; -- iwp_inc_bin
         wo_iwp = WHERE(temps.cfc GT 0. AND temps.iwp_bin GT 0., nwo_iwp)
         IF (nwo_iwp GT 0) THEN BEGIN
@@ -252,7 +282,6 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
             means.iwp[wo_iwp] = means.iwp[wo_iwp] + temps.iwp_inc_bin[wo_iwp]
             counts.iwp[wo_iwp] = counts.iwp[wo_iwp] + 1l
         ENDIF
-
 
         ; -- TOTAL CWP (liquid + ice)
         temps.cwp = temps.lwp_inc_bin + temps.iwp_inc_bin
@@ -292,6 +321,16 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         means.hist1d_cot = means.hist1d_cot + res
         UNDEFINE, res 
 
+        ; -- hist1d_cer
+        res = SUMUP_HIST1D( bin_dim=histo.cer_bin1d_dim, $
+                            cph_dim=histo.phase_dim, $
+                            lim_bin=histo.cer2d, $
+                            var_tmp=temps.cer, $
+                            cfc_tmp=temps.cfc_bin, $
+                            cph_tmp=temps.cph_bin )
+        means.hist1d_cer = means.hist1d_cer + res
+        UNDEFINE, res 
+
         ; -- hist1d_cwp: bins [g/m2], temps [kg/m2]
         res = SUMUP_HIST1D( bin_dim=histo.cwp_bin1d_dim, $
                             cph_dim=histo.phase_dim, $
@@ -310,7 +349,7 @@ PRO SUMUP_VARS, flag, means, counts, temps, histo
         UNDEFINE, res
 
 
-    ENDELSE
+    ENDIF
 
 
 END
