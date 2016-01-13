@@ -202,7 +202,7 @@ END
 ;------------------------------------------------------------------------------
 PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
                    GRID=grd, LSM=lsm, REFF=reff, $
-                   FIXED_REFFS=const_reff, VERBOSE=ver, $
+                   CONSTANT_CER=const_reff, VERBOSE=ver, $
                    CWP=cwp_lay, COT=cot_lay, CER=cer_lay
 ;------------------------------------------------------------------------------
 

@@ -100,8 +100,8 @@ END
 
 
 ;--------------------------------------------------------------------
-PRO PLOT_HISTOS_1D, FINAL=final,  HISINFO=histo, OFILE=fil, $
-                    FIXED_REFFS=creff
+PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
+                    CONSTANT_CER=creff
 ;--------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
@@ -153,8 +153,8 @@ END
 
 
 ;--------------------------------------------------------------------
-PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HISINFO=histo, $
-                       OFILE=fil, FIXED_REFFS=creff
+PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
+                       OFILE=fil, CONSTANT_CER=creff
 ;--------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]

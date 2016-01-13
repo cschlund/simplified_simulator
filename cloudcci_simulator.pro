@@ -43,7 +43,7 @@
 ;
 ;*******************************************************************************
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
-                        FIXED_REFFS=fixed_reffs, HPLOT=hplot, HELP=help
+                        CONSTANT_CER=constant_cer, HPLOT=hplot, HELP=help
 ;*******************************************************************************
     clock = TIC('TOTAL')
 
@@ -59,7 +59,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
         PRINT, " USAGE: CLOUDCCI_SIMULATOR, /test, /log, /ver"
         PRINT, ""
         PRINT, " Optional Keywords:"
-        PRINT, " FIXED_REFFS    using constant eff. radii for COT calculation."
+        PRINT, " CONSTANT_CER   using constant eff. radii for COT calculation."
         PRINT, " VERBOSE        increase output verbosity."
         PRINT, " LOGFILE        creates journal logfile."
         PRINT, " TEST           output based on the first day only."
@@ -99,12 +99,12 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
         PRINT, FORMAT='(A, A)', '** STR-thv: ', thv.STR
     ENDIF
 
-    IF KEYWORD_SET(fixed_reffs) THEN BEGIN 
-        mess = "** CWP & COT based on FIXED reffs [um]"
-        fmt = '(A, " ! ", "reff_water =", F5.1, "; reff_ice =", F5.1)'
-        PRINT, FORMAT=fmt, mess, [reff.water, reff.ice]
+    IF KEYWORD_SET(constant_cer) THEN BEGIN 
+        mess = "** CWP & COT based on FIXED CER [um]"
+        fmt = '(A, " ! ", "cer_water =", F5.1, "; cer_ice =", F5.1)'
+        PRINT, FORMAT=fmt, mess, [cer_info.water, cer_info.ice]
     ENDIF ELSE BEGIN
-        mess = "** CWP & COT based on ERA-I: reffs(T,CWC) [um]"
+        mess = "** CWP & COT based on ERA-I: CER(T,CWC) [um]"
         PRINT, FORMAT='(A, " ! ")', mess
     ENDELSE
 
@@ -166,16 +166,10 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         ; -- lwc and iwc weighted by cc
                         CWC_INCLOUD, input, grid, cwc_inc
 
-                        ;; -- grid mean per layer
-                        ;CALC_CLD_VARS, LWC=input.lwc, IWC=input.iwc, $
-                        ;               INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
-                        ;               FIXED_REFFS=fixed_reffs, VERBOSE=verbose, $
-                        ;               CWP=cwp_lay, COT=cot_lay, CER=cer_lay
-
                         ; -- in-cloud per layer based on L(I)WC[z]/CC[z]
                         CALC_CLD_VARS, LWC=cwc_inc.lwc, IWC=cwc_inc.iwc, $
                                        INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
-                                       FIXED_REFFS=fixed_reffs, VERBOSE=verbose, $
+                                       CONSTANT_CER=constant_cer, VERBOSE=verbose, $
                                        CWP=cwp_lay_inc, COT=cot_lay_inc, $
                                        CER=cer_lay_inc
 
@@ -202,11 +196,11 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         ; -- check intermediate results: current_time_slot
                         IF KEYWORD_SET(map) THEN BEGIN
                             PLOT_INTER_HISTOS, VARNAME='cot', INTER=tmp_sat, $ 
-                                HISINFO=his, OFILE=file1, FIXED_REFFS=fixed_reffs
+                                HIST_INFO=his, OFILE=file1, CONSTANT_CER=constant_cer
                             PLOT_INTER_HISTOS, VARNAME='cer', INTER=tmp_sat, $ 
-                                HISINFO=his, OFILE=file1, FIXED_REFFS=fixed_reffs
-                            PLOT_HISTOS_1D, FINAL=mean_sat, HISINFO=his, $
-                                OFILE=file1, FIXED_REFFS=fixed_reffs
+                                HIST_INFO=his, OFILE=file1, CONSTANT_CER=constant_cer
+                            PLOT_HISTOS_1D, FINAL=mean_sat, HIST_INFO=his, $
+                                OFILE=file1, CONSTANT_CER=constant_cer
                         ENDIF
 
                         ; -- count number of files
@@ -231,8 +225,8 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                 ; -- plot final hist1d results: ctp, cwp, cer, cot
                 IF KEYWORD_SET(hplot) THEN BEGIN 
                     ofile = 'ERA_Interim_'+year+month
-                    PLOT_HISTOS_1D, FINAL=mean_sat, HISINFO=his, $
-                        OFILE=ofile, FIXED_REFFS=fixed_reffs
+                    PLOT_HISTOS_1D, FINAL=mean_sat, HIST_INFO=his, $
+                        OFILE=ofile, CONSTANT_CER=constant_cer
                 ENDIF
 
                 ; -- write output files
