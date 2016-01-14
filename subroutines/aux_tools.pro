@@ -1,6 +1,56 @@
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
+PRO SCALE_COT_CWP, data, grd
+;-----------------------------------------------------------------------------
+
+    maxcot = 100.
+    scale_liq = FLTARR(grd.XDIM,grd.YDIM) & scale_liq[*,*] = 1.
+    scale_ice = FLTARR(grd.XDIM,grd.YDIM) & scale_ice[*,*] = 1.
+
+    liq = WHERE( data.COT_LIQ GT maxcot, nliq )
+    ice = WHERE( data.COT_ICE GT maxcot, nice )
+
+    IF ( nliq GT 0 ) THEN BEGIN
+        scale_liq[liq]   = maxcot / data.COT_LIQ[liq]
+        data.LWP[liq]     = data.LWP[liq] * scale_liq[liq]
+        data.COT_LIQ[liq] = data.COT_LIQ[liq] * scale_liq[liq]
+    ENDIF
+
+    IF ( nice GT 0 ) THEN BEGIN
+        scale_ice[ice]   = maxcot / data.COT_ICE[ice]
+        data.IWP[ice]     = data.IWP[ice] * scale_ice[ice]
+        data.COT_ICE[ice] = data.COT_ICE[ice] * scale_ice[ice]
+    ENDIF
+
+END
+
+
+;-----------------------------------------------------------------------------
+PRO SOLAR_VARS, data, sza, grd, FLAG=flag, FILE=fil, MAP=map
+;-----------------------------------------------------------------------------
+
+    night = WHERE( sza GE 80., nnight, COMPLEMENT=day, NCOMPLEMENT=nday)
+
+    IF ( nnight GT 0 ) THEN BEGIN
+
+        data.LWP[night] = 0.
+        data.IWP[night] = 0.
+        data.COT_LIQ[night] = 0.
+        data.COT_ICE[night] = 0.
+        data.CER_LIQ[night] = 0.
+        data.CER_ICE[night] = 0.
+
+    ENDIF
+
+    IF KEYWORD_SET(map) AND KEYWORD_SET(fil) AND KEYWORD_SET(flag) THEN $ 
+        PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flag, $
+                         FILE=fil, VOID=night
+
+END
+
+
+;-----------------------------------------------------------------------------
 FUNCTION GET_DATE_UTC, basename
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
     splt = STRSPLIT(basename, /EXTRACT, '_')
     time = STRSPLIT(splt[4],/EXTRACT,'+')
     hour = FIX(time[0])
@@ -12,10 +62,10 @@ FUNCTION GET_DATE_UTC, basename
 END
 
 
-;-------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 PRO SPLIT_ERA_FILENAME, FILE=file, BASE=basename, DIR=dir, EXT=ext, $
     YEAR=year, MONTH=month, DAY=day, HOUR=hour, UTC=utc
-;-------------------------------------------------------------------
+;-----------------------------------------------------------------------------
     basename = FSC_Base_Filename(file, DIR=dir, EXT=ext)
     splt = STRSPLIT(basename, /EXTRACT, '_')
     time = STRSPLIT(splt[4],/EXTRACT,'+')
@@ -27,10 +77,249 @@ PRO SPLIT_ERA_FILENAME, FILE=file, BASE=basename, DIR=dir, EXT=ext, $
 END
 
 
-;--------------------------------------------------------------------
+;------------------------------------------------------------------------------
+FUNCTION SUMUP_HIST1D, bin_dim=bin1d_dim, cph_dim=phase_dim, lim_bin=bbins, $
+                       var_tmp=var, liq_tmp=liq, ice_tmp=ice, cfc_tmp=cfc, $
+                       cph_tmp=phase
+;------------------------------------------------------------------------------
+; -- NOTE --
+; simulator -> 0=ice,    1=liquid
+; cc4cl     -> 0=liquid, 1=ice
+;------------------------------------------------------------------------------
+
+    IF KEYWORD_SET(liq) AND KEYWORD_SET(ice)  $
+        AND ~KEYWORD_SET(phase) THEN BEGIN 
+
+        dims = SIZE(liq, /DIM)
+
+    ENDIF ELSE IF KEYWORD_SET(var) $
+        AND KEYWORD_SET(phase) THEN BEGIN
+
+        dims = SIZE(var, /DIM)
+
+    ENDIF
+
+    ; counts [lon,lat]
+    cnts = LONARR(dims[0],dims[1])
+    cnts[*,*] = 0l 
+
+    ; hist1d [lon,lat,bins,phase] = [720,361,15,2]
+    vmean = LONARR(dims[0],dims[1],bin1d_dim,phase_dim) 
+    vmean[*,*,*,*] = 0l
+
+    ; last bin
+    gu_last = bin1d_dim-1
+
+    FOR gu=0, gu_last DO BEGIN 
+
+        ; consider also last bin-border via GE & LE
+        IF ( gu EQ gu_last ) THEN BEGIN
+
+            IF KEYWORD_SET(liq) AND KEYWORD_SET(ice) $
+                AND ~KEYWORD_SET(phase) THEN BEGIN
+
+                wohi_ice = WHERE( ice GE bbins[0,gu] AND $ 
+                                  ice LE bbins[1,gu] AND $
+                                  cfc GT 0. , nwohi_ice )
+
+                wohi_liq = WHERE( liq GE bbins[0,gu] AND $ 
+                                  liq LE bbins[1,gu] AND $
+                                  cfc GT 0. , nwohi_liq )
+
+
+            ENDIF ELSE IF KEYWORD_SET(var) AND KEYWORD_SET(phase) THEN BEGIN
+
+                wohi_ice = WHERE( var GE bbins[0,gu] AND $ 
+                                  var LE bbins[1,gu] AND $
+                                  cfc EQ 1. AND phase EQ 0., $
+                                  nwohi_ice )
+
+                wohi_liq = WHERE( var GE bbins[0,gu] AND $ 
+                                  var LE bbins[1,gu] AND $
+                                  cfc EQ 1. AND phase EQ 1., $
+                                  nwohi_liq )
+
+            ENDIF
+
+        ; between GE & LT
+        ENDIF ELSE BEGIN
+
+            IF KEYWORD_SET(liq) AND KEYWORD_SET(ice) $
+                AND ~KEYWORD_SET(phase) THEN BEGIN
+
+                wohi_ice = WHERE( ice GE bbins[0,gu] AND $ 
+                                  ice LT bbins[1,gu] AND $
+                                  ice GT 0. AND $
+                                  cfc GT 0. , nwohi_ice )
+
+                wohi_liq = WHERE( liq GE bbins[0,gu] AND $ 
+                                  liq LT bbins[1,gu] AND $
+                                  liq GT 0. AND $
+                                  cfc GT 0. , nwohi_liq )
+
+
+            ENDIF ELSE IF KEYWORD_SET(var) AND KEYWORD_SET(phase) THEN BEGIN
+                
+                wohi_ice = WHERE( var GE bbins[0,gu] AND $ 
+                                  var LT bbins[1,gu] AND $
+                                  var GT 0. AND $
+                                  cfc EQ 1. AND phase EQ 0., $
+                                  nwohi_ice )
+
+                wohi_liq = WHERE( var GE bbins[0,gu] AND $ 
+                                  var LT bbins[1,gu] AND $
+                                  var GT 0. AND $
+                                  cfc EQ 1. AND phase EQ 1., $
+                                  nwohi_liq )
+
+            ENDIF
+
+        ENDELSE
+
+
+        IF ( nwohi_ice GT 0 ) THEN BEGIN
+            cnts[wohi_ice] = 1l
+            vmean[*,*,gu,1] = vmean[*,*,gu,1] + cnts
+            cnts[*,*] = 0l 
+        ENDIF
+
+
+        IF ( nwohi_liq GT 0 ) THEN BEGIN
+            cnts[wohi_liq] = 1l
+            vmean[*,*,gu,0] = vmean[*,*,gu,0] + cnts
+            cnts[*,*] = 0l 
+        ENDIF
+
+
+    ENDFOR
+
+    RETURN, vmean
+
+END
+
+
+;------------------------------------------------------------------------------
+FUNCTION SUMUP_HIST2D, hist, cot, ctp, cfc, cph
+;------------------------------------------------------------------------------
+; sum up 2d histograms: 
+; -- NOTE --
+; simulator -> 0=ice,    1=liquid
+; cc4cl     -> 0=liquid, 1=ice
+;------------------------------------------------------------------------------
+
+    dims = SIZE(cot, /DIM)
+
+    ; counts [lon,lat]
+    cnts = LONARR(dims[0],dims[1])
+    cnts[*,*] = 0l 
+
+    ; hist2d [lon,lat,cotbins,ctpbins,phase] = [720,361,13,15,2]
+    vmean = LONARR(dims[0], dims[1], hist.cot_bin1d_dim, $
+                   hist.ctp_bin1d_dim, hist.phase_dim) 
+    vmean[*,*,*,*] = 0l
+
+    ; last bins
+    ctp_last = hist.ctp_bin1d_dim-1
+    cot_last = hist.cot_bin1d_dim-1
+
+    FOR ictp=0, ctp_last DO BEGIN 
+        FOR jcot=0, cot_last DO BEGIN
+
+            ; consider also last COT & CTP bin-border via GE & LE
+            IF ( jcot EQ cot_last AND ictp EQ ctp_last) THEN BEGIN
+
+                wohi_ice = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LE hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LE hist.ctp2d[1,ictp] AND $
+                                  cfc EQ 1. AND cph EQ 0., nwohi_ice )
+
+                wohi_liq = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LE hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LE hist.ctp2d[1,ictp] AND $
+                                  cfc EQ 1. AND cph EQ 1., nwohi_liq )
+
+
+            ; consider also last COT bin-border via GE & LE
+            ENDIF ELSE IF ( jcot EQ cot_last ) THEN BEGIN
+
+                wohi_ice = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LE hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LT hist.ctp2d[1,ictp] AND $
+                                  cfc EQ 1. AND cph EQ 0., nwohi_ice )
+
+                wohi_liq = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LE hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LT hist.ctp2d[1,ictp] AND $
+                                  cfc EQ 1. AND cph EQ 1., nwohi_liq )
+
+
+            ; consider also last CTP bin-border via GE & LE
+            ENDIF ELSE IF ( ictp EQ ctp_last) THEN BEGIN
+
+
+                wohi_ice = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LT hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LE hist.ctp2d[1,ictp] AND $
+                                  cfc EQ 1. AND cph EQ 0., nwohi_ice )
+
+                wohi_liq = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LT hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LE hist.ctp2d[1,ictp] AND $
+                                  cfc EQ 1. AND cph EQ 1., nwohi_liq )
+
+
+            ; between GE & LT
+            ENDIF ELSE BEGIN
+
+                wohi_ice = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LT hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LT hist.ctp2d[1,ictp] AND $
+                                  cot GT 0. AND ctp GT 0. AND $
+                                  cfc EQ 1. AND cph EQ 0., nwohi_ice )
+
+                wohi_liq = WHERE( cot GE hist.cot2d[0,jcot] AND $ 
+                                  cot LT hist.cot2d[1,jcot] AND $
+                                  ctp GE hist.ctp2d[0,ictp] AND $
+                                  ctp LT hist.ctp2d[1,ictp] AND $
+                                  cot GT 0. AND ctp GT 0. AND $
+                                  cfc EQ 1. AND cph EQ 1., nwohi_liq )
+
+            ENDELSE
+
+            ; hist2d [lon,lat,cotbins,ctpbins,phase] = [720,361,13,15,2]
+
+            IF ( nwohi_ice GT 0 ) THEN BEGIN
+                cnts[wohi_ice] = 1l
+                vmean[*,*,jcot,ictp,1] = vmean[*,*,jcot,ictp,1] + cnts
+                cnts[*,*] = 0l 
+            ENDIF
+
+            IF ( nwohi_liq GT 0 ) THEN BEGIN
+                cnts[wohi_liq] = 1l
+                vmean[*,*,jcot,ictp,0] = vmean[*,*,jcot,ictp,0] + cnts
+                cnts[*,*] = 0l 
+            ENDIF
+
+        ENDFOR
+    ENDFOR
+
+    RETURN, vmean
+
+END
+
+
+;-----------------------------------------------------------------------------
 PRO PLOT_ERA_SST, FILENAME=filename, DATA=sst, $
                   LATITUDE=lat, LONGITUDE=lon, VOID=void_index
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
+    !EXCEPT=0
 
     filepwd = !SAVE_DIR + filename
 
@@ -60,10 +349,11 @@ PRO PLOT_ERA_SST, FILENAME=filename, DATA=sst, $
 END
 
 
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 PRO PLOT_LSM2D, FILENAME=filename, DATA=lsm, $
                 LATITUDE=lat, LONGITUDE=lon, TITLE=title
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
+    !EXCEPT=0
 
     filepwd = !SAVE_DIR + filename
 
@@ -96,10 +386,11 @@ PRO PLOT_LSM2D, FILENAME=filename, DATA=lsm, $
 END
 
 
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 PRO PLOT_SZA2D, FILENAME=filename, DATA=sza2d, $
                 LATITUDE=lat, LONGITUDE=lon, TITLE=title
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
+    !EXCEPT=0
 
     filepwd = !SAVE_DIR + filename + '_sza'
 
@@ -108,6 +399,7 @@ PRO PLOT_SZA2D, FILENAME=filename, DATA=sza2d, $
     save_as = filepwd + '.eps'
     start_save, save_as, size='A4', /LANDSCAPE
     limit = [-90., -180., 90., 180.]
+
 
     MAP_IMAGE, sza2d, lat, lon, LIMIT=limit, $
                CTABLE=33, /FLIP_COLOURS, $
@@ -127,10 +419,10 @@ PRO PLOT_SZA2D, FILENAME=filename, DATA=sza2d, $
 END
 
 
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
-                    CONSTANT_CER=creff
-;--------------------------------------------------------------------
+                    FLAG=flg, CONSTANT_CER=creff
+;-----------------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
@@ -138,7 +430,7 @@ PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
         ELSE addstr = ''
 
     basen = FSC_Base_Filename(fil)
-    obase = !SAVE_DIR + basen
+    obase = !SAVE_DIR + basen + '_' + flg
     ofil = obase + '_tmpHISTOS1D'+addstr
 
     IF (is_file(ofil+'.png')) THEN RETURN
@@ -180,10 +472,10 @@ PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
 END
 
 
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
-                       OFILE=fil, CONSTANT_CER=creff
-;--------------------------------------------------------------------
+                       OFILE=fil, FLAG=flg, CONSTANT_CER=creff
+;-----------------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
@@ -191,7 +483,7 @@ PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
         ELSE addstr = ''
 
     basen = FSC_Base_Filename(fil)
-    obase = !SAVE_DIR + basen
+    obase = !SAVE_DIR + basen + '_' + flg
     sname = SIZE(inter, /SNAME)
     cph_dim = histo.phase_dim
 
@@ -305,55 +597,59 @@ PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
 END
 
 
-;--------------------------------------------------------------------
-PRO PLOT_SOLAR_VARS, tmp, grd, fil, void
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
+PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void
+;-----------------------------------------------------------------------------
+    !EXCEPT=0
 
     !P.MULTI = [0,2,3]
 
     base = FSC_Base_Filename(fil)
-    filepwd = !SAVE_DIR + base + '_daytime'
-    IF(is_file(filepwd+'.png')) THEN return
+    filepwd = !SAVE_DIR + base + '_' + flg +'_daytime'
+
+    IF ( is_file(filepwd+'.png') ) THEN RETURN
+
     save_as = filepwd + '.eps'
     start_save, save_as, size='A3', /LANDSCAPE
 
-    cs = 2.0
-    nlev = 6
+    cs = 2 & cs_bar = 3.5 & nlev = 6
     limit = [-90., -180., 90., 180.]
     
-    MAP_IMAGE, tmp.lwp_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        FORMAT=('(f3.1)'), N_LEV=nlev, $
-        MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
-        LIMIT=limit, TITLE='lwp_bin [kg/m^2]'
+    MAP_IMAGE, data.LWP*1000., grd.LAT2D, grd.LON2D, $
+        /MAGNIFY, CHARS=cs_bar, FORMAT=('(f8.1)'), N_LEV=nlev, $
+        MINI=MIN(data.LWP*1000.), MAXI=MAX(data.LWP*1000.), $
+        VOID_INDEX=void, /RAINBOW, LIMIT=limit, TITLE='LWP [g/m2]'
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
-    MAP_IMAGE, tmp.iwp_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        FORMAT=('(f3.1)'), N_LEV=nlev, $
-        MINI=0., MAXI=1., VOID_INDEX=void, /RAINBOW, $
-        LIMIT=limit, TITLE='iwp_bin [kg/m^2]'
+    MAP_IMAGE, data.IWP*1000., grd.LAT2D, grd.LON2D, $
+        /MAGNIFY, CHARS=cs_bar, FORMAT=('(f8.1)'), N_LEV=nlev, $
+        MINI=MIN(data.IWP*1000.), MAXI=MAX(data.IWP*1000.), $
+        VOID_INDEX=void, /RAINBOW, LIMIT=limit, TITLE='IWP [g/m2]'
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
-    MAP_IMAGE, tmp.cer_liq, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        MINI=MIN(tmp.cer_liq), MAXI=MAX(tmp.cer_liq), $
-        VOID_INDEX=void, /RAINBOW, $
-        N_LEV=nlev, LIMIT=limit, TITLE='cer_liq [microns]'
+    MAP_IMAGE, data.CER_LIQ, grd.LAT2D, grd.LON2D, $
+        /MAGNIFY, CHARS=cs_bar, TITLE='CER_LIQ [microns]', $
+        MINI=MIN(data.CER_LIQ), MAXI=MAX(data.CER_LIQ), $
+        VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
-    MAP_IMAGE, tmp.cer_ice, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        MINI=MIN(tmp.cer_ice), MAXI=MAX(tmp.cer_ice), $
-        VOID_INDEX=void, /RAINBOW, $
-        N_LEV=nlev, LIMIT=limit, TITLE='cer_ice [microns]'
+    MAP_IMAGE, data.CER_ICE, grd.LAT2D, grd.LON2D, $
+        /MAGNIFY, CHARS=cs_bar, TITLE='CER_ICE [microns]', $
+        MINI=MIN(data.CER_ICE), MAXI=MAX(data.CER_ICE), $
+        VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
-    MAP_IMAGE, tmp.cot_liq_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
-        N_LEV=nlev, LIMIT=limit, TITLE='cot_liq_bin '
+    MAP_IMAGE, data.COT_LIQ, grd.LAT2D, grd.LON2D, $
+        /MAGNIFY, CHARS=cs_bar, TITLE='COT_LIQ', $
+        MINI=MIN(data.COT_LIQ), MAXI=MAX(data.COT_LIQ), $
+        VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
-    MAP_IMAGE, tmp.cot_ice_bin, grd.lat2d, grd.lon2d, $
-        /BOX_AXES, /MAGNIFY, /GRID, CHARSIZE=cs, $
-        MINI=0., MAXI=100., VOID_INDEX=void, /RAINBOW, $
-        N_LEV=nlev, LIMIT=limit, TITLE='cot_ice_bin'
+    MAP_IMAGE, data.COT_ICE, grd.LAT2D, grd.LON2D, $
+        /MAGNIFY, CHARS=cs_bar, TITLE='COT_ICE', $
+        MINI=MIN(data.COT_ICE), MAXI=MAX(data.COT_ICE), $
+        VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
+    MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
     end_save, save_as
     cs_eps2png, save_as
@@ -362,11 +658,11 @@ PRO PLOT_SOLAR_VARS, tmp, grd, fil, void
 END
 
 
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
 PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
                    CHARSIZE=cs, XTITLE=xtitle, YMAX=ymax, $
                    LEGEND_POSITION=lp
-;--------------------------------------------------------------------
+;-----------------------------------------------------------------------------
     IF NOT KEYWORD_SET(ymax) THEN ymax = 40
     IF NOT KEYWORD_SET(lp) THEN lp='tl'
 

@@ -5,8 +5,8 @@ PRO CS_EPS2PNG, epsfile
     pngfile = dir + filbase + '.png'
     SPAWN, 'convert -density 300 ' + epsfile + $
            ' -resize 50% -flatten ' + pngfile + ' >/dev/null 2>&1 '
-    PRINT, '** Image converted to: ' + pngfile
+    PRINT, 'Convert  Image: ' + pngfile
     SPAWN, 'rm -f ' + epsfile
-    PRINT, '** Image removed: ', epsfile
+    ;PRINT, '** Image removed: ', epsfile
 END
 

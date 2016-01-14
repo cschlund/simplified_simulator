@@ -36,15 +36,12 @@
 ;   C. Schlundt, Nov 2015: implementation of 2D Histogram COT-CTP
 ;   C. Schlundt, Jan 2016: implementation of ireff, lreff as func(T,IWC/LWC)
 ;   C. Schlundt, Jan 2016: implementation of hist1d_ref
-;   C. Schlundt, Jan 2016: quite a bunch of code improvements
+;   C. Schlundt, Jan 2016: clean up code
 ;
-; ToDo:
-;       (1) cloud overlap
-;
-;*******************************************************************************
+;******************************************************************************
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         CONSTANT_CER=constant_cer, HPLOT=hplot, HELP=help
-;*******************************************************************************
+;******************************************************************************
     clock = TIC('TOTAL')
 
     IF KEYWORD_SET(help) THEN BEGIN
@@ -70,33 +67,25 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
         RETURN
     ENDIF
 
-
     IF KEYWORD_SET(verbose) THEN PRINT, '** Import user setttings'
-    CONFIG_SIMULATOR, pwd, tim, thv, his, reff
 
+    CONFIG_SIMULATOR, PATHS=path, TIMES=tim, THRESHOLDS=thv, $
+                      HIST_INFO=his, CER_INFO=cer_info, TEST=test
 
-    DEFSYSV, '!SAVE_DIR', pwd.FIG
-
+    ;!EXCEPT=0 ; silence
+    !EXCEPT=2 ; detects errors/warnings
+    DEFSYSV, '!SAVE_DIR', path.FIG
 
     IF KEYWORD_SET(logfile) THEN $
-        JOURNAL, pwd.out + 'journal_' + thv.str + cgTimeStamp() + '.pro'
-
-
-    IF KEYWORD_SET(test) THEN BEGIN
-        pwd.inp = '/data/cschlund/MARS_data/ERA_simulator_testdata/'
-        pwd.out = pwd.out + 'testrun/'
-        validres = VALID_DIR( pwd.out)
-        IF(validres EQ 0) THEN creatres = CREATE_DIR( pwd.out )
-    ENDIF
+        JOURNAL, path.out + 'journal_' + thv.MAX_STR + cgTimeStamp() + '.pro'
 
 
     IF KEYWORD_SET(verbose) THEN BEGIN
-        PRINT, FORMAT='(A, A-100)', '** INP:     ', pwd.INP
-        PRINT, FORMAT='(A, A-100)', '** OUT:     ', pwd.OUT
-        PRINT, FORMAT='(A, A-100)', '** FIG:     ', pwd.FIG
-        PRINT, FORMAT='(A, F8.3)', '** ERA-thv: ', thv.ERA
-        PRINT, FORMAT='(A, F8.3)', '** SAT-thv: ', thv.SAT
-        PRINT, FORMAT='(A, A)', '** STR-thv: ', thv.STR
+        PRINT, FORMAT='(A, A-100)', '** INP:     ', path.INP
+        PRINT, FORMAT='(A, A-100)', '** OUT:     ', path.OUT
+        PRINT, FORMAT='(A, A-100)', '** FIG:     ', path.FIG
+        PRINT, FORMAT='(A, F8.3)',  '** MIN-thv: ', thv.MIN
+        PRINT, FORMAT='(A, F8.3)',  '** MAX-thv: ', thv.MAX
     ENDIF
 
     IF KEYWORD_SET(constant_cer) THEN BEGIN 
@@ -109,7 +98,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
     ENDELSE
 
 
-    ; -- loop over years and months
+    ; loop over years and months
     FOR ii1=0, tim.ny-1 DO BEGIN
         FOR jj1=0, tim.nm-1 DO BEGIN
 
@@ -118,20 +107,19 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
             mm_clock = TIC(year+'/'+month)
             counti = 0
 
-            ff = FINDFILE(pwd.inp+year+month+'/'+'*'+year+month+'*plev')
+            ff = FINDFILE(path.inp+year+month+'/'+'*'+year+month+'*plev')
 
             numff = N_ELEMENTS(ff)
             strff = STRTRIM(numff,2)
             strym = STRING(year) + '/' + STRING(month)
 
             PRINT, '** ', strff, ' ERA-Interim InputFiles for ', strym
-            PRINT, ''
 
             IF(N_ELEMENTS(ff) GT 1) THEN BEGIN
 
-                ;---------------------------------------------------------------
+                ;--------------------------------------------------------------
                 FOR fidx=0,N_ELEMENTS(ff)-1,1 DO BEGIN ;loop over files
-                ;---------------------------------------------------------------
+                ;--------------------------------------------------------------
 
                     file0 = ff[fidx]
                     file1 = file0+'.nc'
@@ -143,98 +131,109 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
                     IF(is_file(file1)) THEN BEGIN
 
-                        strcnt = STRTRIM(counti+1,2)
-
-                        ; -- returns structure containing the input variables
                         READ_ERA_NCFILE, file1, input
-                        PRINT, '** ',strcnt,'.LOADED: ', input.file 
 
-                        ; -- initialize grid and arrays for monthly mean output:
+                        PRINT, '** ',STRTRIM(counti+1,2),'. ',input.FILE
+
                         IF(counti EQ 0) THEN BEGIN
+
                             INIT_ERA_GRID, input, grid 
-                            READ_ERA_SSTFILE, pwd.SST, grid, sst, void, map=map
-                            lsm2d = INIT_LSM_ARRAY( grid, sst, void, map=map )
-                            INIT_OUT_ARRAYS, grid, his, mean_era, cnts_era
-                            INIT_OUT_ARRAYS, grid, his, mean_sat, cnts_sat
+                            READ_ERA_SSTFILE, path.SST, grid, sst, void, MAP=map
+                            lsm2d = INIT_LSM_ARRAY(grid, sst, void, MAP=map)
+
+                            ; cnt* = counters required for calc. the means
+                            ; *min = applying thv.MIN, e.g. 0.01
+                            ; *max = applying thv.MAX, e.g. 0.30
+                            INIT_OUT_ARRAYS, grid, his, arr_min, cnt_min
+                            INIT_OUT_ARRAYS, grid, his, arr_max, cnt_max
+
                         ENDIF
                         counti++
 
-                        ; -- initialize solar zenith angle 2D array
-                        pfil = file1
-                        sza2d = INIT_SZA_ARRAY( pfil, grid, map=map )
+                        ; initialize solar zenith angle 2D array
+                        sza2d = INIT_SZA_ARRAY(input, grid, MAP=map)
 
-                        ; -- lwc and iwc weighted by cc
-                        CWC_INCLOUD, input, grid, cwc_inc
+                        ; lwc and iwc weighted by cc
+                        incloud = CALC_INCLOUD_CWC( input, grid )
 
-                        ; -- in-cloud per layer based on L(I)WC[z]/CC[z]
-                        CALC_CLD_VARS, LWC=cwc_inc.lwc, IWC=cwc_inc.iwc, $
-                                       INPUT=input, GRID=grid, LSM=lsm2d, REFF=reff, $
-                                       CONSTANT_CER=constant_cer, VERBOSE=verbose, $
-                                       CWP=cwp_lay_inc, COT=cot_lay_inc, $
-                                       CER=cer_lay_inc
+                        ; calculate: CWP/COT/CER per layer based in incloud CWC
+                        CALC_CLD_VARS, incloud.LWC, incloud.IWC, $
+                                       input, grid, lsm2d, cer_info, $
+                                       cwp_lay, cot_lay, cer_lay, $
+                                       CONSTANT_CER=constant_cer, $
+                                       VERBOSE=verbose
 
-                        ; -- search for upper-most cloud layer
-                        SEARCH4CLOUD, INPUT=input, GRID=grid, CWP=cwp_lay_inc, $
-                                      COT=cot_lay_inc, CER=cer_lay_inc, $
-                                      FLAG='ori', THRESHOLD=thv.era, TEMP=tmp_era
+                        ; search for upper-most cloud layer for 
+                        ; cot_thv.MIN
+                        tmp_min = SEARCH4CLOUD( input, grid, cwp_lay, $
+                                                cot_lay, cer_lay, thv.MIN )
+                        ; cot_thv.MAX
+                        tmp_max = SEARCH4CLOUD( input, grid, cwp_lay, $
+                                                cot_lay, cer_lay, thv.MAX )
 
-                        SEARCH4CLOUD, INPUT=input, GRID=grid, CWP=cwp_lay_inc, $
-                                      COT=cot_lay_inc, CER=cer_lay_inc, $
-                                      FLAG='sat', THRESHOLD=thv.sat, TEMP=tmp_sat
+                        ; scale cot & cwp as it is done in Cloud_cci
+                        SCALE_COT_CWP, tmp_min, grid
+                        SCALE_COT_CWP, tmp_max, grid
 
-                        ; -- scale COT and thus CWP like in CC4CL for tmp_sat only
-                        SCALE_COT_CWP, tmp_sat, grid
+                        ; sunlit region only for COT & CWP & CER
+                        SOLAR_VARS, tmp_min, sza2d, grid, $
+                                    FLAG=thv.MIN_STR, FILE=file1, MAP=map
+                        SOLAR_VARS, tmp_max, sza2d, grid, $
+                                    FLAG=thv.MAX_STR, FILE=file1, MAP=map
 
-                        ; -- sunlit region only for COT & CWP & CER
-                        pf = file1
-                        SOLAR_VARS, tmp_sat, sza2d, grid, pf, map=map
+                        ; sum up cloud parameters
+                        SUMUP_VARS, arr_min, cnt_min, tmp_min, his
+                        SUMUP_VARS, arr_max, cnt_max, tmp_max, his
 
-                        ; -- sum up cloud parameters
-                        SUMUP_VARS, 'ori', mean_era, cnts_era, tmp_era, his
-                        SUMUP_VARS, 'sat', mean_sat, cnts_sat, tmp_sat, his
-
-                        ; -- check intermediate results: current_time_slot
+                        ; check intermediate results: current_time_slot
                         IF KEYWORD_SET(map) THEN BEGIN
-                            PLOT_INTER_HISTOS, VARNAME='cot', INTER=tmp_sat, $ 
-                                HIST_INFO=his, OFILE=file1, CONSTANT_CER=constant_cer
-                            PLOT_INTER_HISTOS, VARNAME='cer', INTER=tmp_sat, $ 
-                                HIST_INFO=his, OFILE=file1, CONSTANT_CER=constant_cer
-                            PLOT_HISTOS_1D, FINAL=mean_sat, HIST_INFO=his, $
-                                OFILE=file1, CONSTANT_CER=constant_cer
+                            ; COT: tmp_max
+                            PLOT_INTER_HISTOS, VARNAME='cot', INTER=tmp_max, $ 
+                                HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
+                                CONSTANT_CER=constant_cer
+                            ; CER: tmp_max
+                            PLOT_INTER_HISTOS, VARNAME='cer', INTER=tmp_max, $ 
+                                HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
+                                CONSTANT_CER=constant_cer
                         ENDIF
 
-                        ; -- count number of files
-                        cnts_era.raw++
-                        cnts_sat.raw++
+                        ; count number of files
+                        cnt_min.raw++
+                        cnt_max.raw++
 
-                        ; -- delete tmp arrays
-                        UNDEFINE, sza2d, tmp_era, tmp_sat
+                        ; delete tmp arrays
+                        UNDEFINE, sza2d, tmp_min, tmp_max
                         UNDEFINE, cwp_lay, cot_lay, cer_lay
-                        UNDEFINE, cwp_lay_inc, cot_lay_inc, cer_lay_inc
 
                     ENDIF ;end of IF(is_file(file1))
 
-                ;---------------------------------------------------------------
+                ;--------------------------------------------------------------
                 ENDFOR ;end of file loop
-                ;---------------------------------------------------------------
+                ;--------------------------------------------------------------
 
-                ; -- calculate averages
-                MEAN_VARS, mean_era, cnts_era
-                MEAN_VARS, mean_sat, cnts_sat
+                ; calculate averages
+                MEAN_VARS, arr_min, cnt_min
+                MEAN_VARS, arr_max, cnt_max
 
-                ; -- plot final hist1d results: ctp, cwp, cer, cot
+                ; plot final hist1d results: ctp, cwp, cer, cot
                 IF KEYWORD_SET(hplot) THEN BEGIN 
                     ofile = 'ERA_Interim_'+year+month
-                    PLOT_HISTOS_1D, FINAL=mean_sat, HIST_INFO=his, $
-                        OFILE=ofile, CONSTANT_CER=constant_cer
+                    PLOT_HISTOS_1D, FINAL=arr_min, HIST_INFO=his, $
+                                    FLAG=thv.MIN_STR, OFILE=ofile, $
+                                    CONSTANT_CER=constant_cer
+                    PLOT_HISTOS_1D, FINAL=arr_max, HIST_INFO=his, $
+                                    FLAG=thv.MAX_STR, OFILE=ofile, $
+                                    CONSTANT_CER=constant_cer
                 ENDIF
 
-                ; -- write output files
-                WRITE_MONTHLY_MEAN, pwd.out, year, month, grid, input, thv, $
-                                    his, mean_era, cnts_era, mean_sat, cnts_sat
+                ; write output files
+                WRITE_MONTHLY_MEAN, path.out, year, month, grid, input, his, $
+                                    thv.MIN_STR, thv.MIN, arr_min, cnt_min 
+                WRITE_MONTHLY_MEAN, path.out, year, month, grid, input, his, $
+                                    thv.MAX_STR, thv.MAX, arr_max, cnt_max 
 
                 ; delete final arrays before next cycle starts
-                UNDEFINE, mean_era, mean_sat, cnts_era, cnts_sat
+                UNDEFINE, arr_min, arr_max, cnt_min, cnt_max
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
 
@@ -248,6 +247,6 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
     TOC, clock
 
-;*******************************************************************************
+;******************************************************************************
 END ;end of program
-;*******************************************************************************
+;******************************************************************************

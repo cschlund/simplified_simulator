@@ -1,40 +1,9 @@
-;---------------------------------------------------------------
-; cwc_incloud: lwc and iwc weighting by means of cc at plevels
-;              i.e. cloud-cover weighted cloud water content
-;---------------------------------------------------------------
-;
-; in : inp, grd
-; out: cwc_inc
-;
-; IDL> help, inp
-; ** Structure <7523d8>, 10 tags, length=140365888, data length=140365888, refs=1:
-;    FILE            STRING    '/path/to/data/200807/ERA_Interim_an_20080701_00+00_plev.nc'
-;    PLEVEL          DOUBLE    Array[27]
-;    DPRES           DOUBLE    Array[26]
-;    LON             DOUBLE    Array[720]
-;    LAT             DOUBLE    Array[361]
-;    LWC             FLOAT     Array[720, 361, 27]
-;    IWC             FLOAT     Array[720, 361, 27]
-;    CC              FLOAT     Array[720, 361, 27]
-;    GEOP            FLOAT     Array[720, 361, 27]
-;    TEMP            FLOAT     Array[720, 361, 27]
-;
-; IDL> help, grd
-; ** Structure <752a58>, 5 tags, length=2079368, data length=2079366, refs=1:
-;    LON2D           FLOAT     Array[720, 361]
-;    LAT2D           FLOAT     Array[720, 361]
-;    XDIM            INT            720
-;    YDIM            INT            361
-;    ZDIM            INT             27
-;
-; IDL> help, cwc_inc ... incloud cloud water content
-; ** Structure <753788>, 2 tags, length=56142720, data length=56142720, refs=1:
-;    LWC             FLOAT     Array[720, 361, 27]
-;    IWC             FLOAT     Array[720, 361, 27]
-;
-;---------------------------------------------------------------
-
-PRO CWC_INCLOUD, inp, grd, cwc_inc
+;-----------------------------------------------------------------------------
+; IN : DATA, GRID
+; OUT: INC
+;-----------------------------------------------------------------------------
+FUNCTION CALC_INCLOUD_CWC, inp, grd
+;-----------------------------------------------------------------------------
 
     lwc_inc = FLTARR(grd.xdim,grd.ydim,grd.zdim) & lwc_inc[*,*,*] = 0.
     iwc_inc = FLTARR(grd.xdim,grd.ydim,grd.zdim) & iwc_inc[*,*,*] = 0.
@@ -67,6 +36,9 @@ PRO CWC_INCLOUD, inp, grd, cwc_inc
     ENDFOR
 
     ; output structure
-    cwc_inc = {incloud_cloud_water_path, lwc:lwc_inc, iwc:iwc_inc}
+    inc = { incloud_cloud_water_path, $
+            lwc:lwc_inc, iwc:iwc_inc }
+
+    RETURN, inc
 
 END

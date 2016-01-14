@@ -2,7 +2,7 @@
 ; IN  : FILE
 ; OUT : DATA
 ;-------------------------------------------------------------------
-PRO READ_ERA_NCFILE, FILE=file, DATA=data
+PRO READ_ERA_NCFILE, file, data
 ;-------------------------------------------------------------------
 
     fileID = NCDF_OPEN(file)
@@ -71,8 +71,7 @@ END
 ; IN : FILE, GRID
 ; OUT: DATA, VOID, MAP
 ;-------------------------------------------------------------------
-PRO READ_ERA_SSTFILE, FILE=file, GRID=grd, DATA=sst_scaled, $
-                      VOID=void, MAP=map
+PRO READ_ERA_SSTFILE, file, grd, sst_scaled, void, MAP=map
 ;-------------------------------------------------------------------
 
     fileID = NCDF_OPEN(file)
@@ -162,20 +161,3 @@ END
 	NCDF_CLOSE, fileID
 
  END
-
-
-;-------------------------------------------------------------------
-PRO SPLIT_ERA_FILENAME, FILE=file, BASE=basename, DIR=dir, EXT=ext, $
-    YEAR=year, MONTH=month, DAY=day, HOUR=hour, UTC=utc
-;-------------------------------------------------------------------
-
-    basename = FSC_Base_Filename(file, DIR=dir, EXT=ext)
-    splt = STRSPLIT(basename, /EXTRACT, '_')
-    time = STRSPLIT(splt[4],/EXTRACT,'+')
-    hour = time[0]
-    year = STRMID(splt[3],0,4)
-    month = STRMID(splt[3],4,2)
-    day = STRMID(splt[3],6,2)
-    utc = splt[4]
-
-END

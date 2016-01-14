@@ -1,67 +1,4 @@
 ;------------------------------------------------------------------------------
-;-- from bottom-up compute CWP, COT and CER for each atm. layer
-;   i.e. between 2 pressure levels
-;------------------------------------------------------------------------------
-;
-; ====== INPUT ======
-;
-; LWC ... liquid water content at each pressure level (grd.zdim)
-; LWC  FLOAT     = Array[720, 361, 27]
-;
-; IWC ... ice water content at each pressure level (grd.zdim)
-; IWC  FLOAT     = Array[720, 361, 27]
-;
-; INPUT ... original ERA-Interim reanalysis data from file
-; ** Structure ERA_INPUT, 10 tags, length=140365888, data length=140365888:
-;    FILE     STRING '/path/to/ERA_Interim_an_20080701_00+00_plev.nc'
-;    PLEVEL   DOUBLE    Array[27]
-;    DPRES    DOUBLE    Array[26]
-;    LON      DOUBLE    Array[720]
-;    LAT      DOUBLE    Array[361]
-;    LWC      FLOAT     Array[720, 361, 27]
-;    IWC      FLOAT     Array[720, 361, 27]
-;    CC       FLOAT     Array[720, 361, 27]
-;    GEOP     FLOAT     Array[720, 361, 27]
-;    TEMP     FLOAT     Array[720, 361, 27]
-; 
-; GRID ... ERA-I grid
-; ** Structure <752c68>, 5 tags, length=2079368, data length=2079366, refs=1:
-;    LON2D           FLOAT     Array[720, 361]
-;    LAT2D           FLOAT     Array[720, 361]
-;    XDIM            INT            720
-;    YDIM            INT            361
-;    ZDIM            INT             27
-;
-; LSM ... land/sea mask based on ERA-Interim SST: water=0, land=1
-; LSM  INT  = Array[720, 361]
-;
-; REFF ... cloudcci a priori eff. radii
-; ** Structure EFFECTIVE_RADII_MICRONS, 2 tags, length=8, data length=8:
-; WATER           FLOAT           12.0000
-; ICE             FLOAT           30.0000
-;
-;
-; ====== OUTPUT ======
-;
-; IDL> help, cwp_lay
-; ** Structure CLOUD_WATER_PATH, 2 tags, length=54063360, data length=54063360:
-;    LWP             FLOAT     Array[720, 361, 26]
-;    IWP             FLOAT     Array[720, 361, 26]
-;
-; IDL> help, cot_lay
-; ** Structure CLOUD_OPTICAL_DEPTH, 2 tags, length=54063360, data length=54063360:
-;    LIQ             FLOAT     Array[720, 361, 26]
-;    ICE             FLOAT     Array[720, 361, 26]
-;
-; IDL> help, cer_lay
-; ** Structure CLOUD_EFFECTIVE_RADIUS, 2 tags, length=54063360, data length=54063360:
-;    LIQ             FLOAT     Array[720, 361, 26]
-;    ICE             FLOAT     Array[720, 361, 26]
-; 
-;------------------------------------------------------------------------------
-
-
-;------------------------------------------------------------------------------
 FUNCTION GET_DENSITY_OF_AIR, air_temp, air_pres
 ;------------------------------------------------------------------------------
     ; --- https://en.wikipedia.org/wiki/Density_of_air
@@ -72,7 +9,6 @@ FUNCTION GET_DENSITY_OF_AIR, air_temp, air_pres
     ; The specific gas constant for dry air is 287.058 J/(kg·K) in SI units
     ; 1 J = 1 N m = 1 kg m^2 s^-2
     ; 1 Pa = 1 N m^-2 = 1 kg m^-1 s^-2
-
     R_SPECIFIC = 287.058
     RHO = air_pres / ( R_SPECIFIC * air_temp )
     RETURN, RHO
@@ -80,8 +16,8 @@ END
 
 
 ;------------------------------------------------------------------------------
-FUNCTION GET_LREFF, air_temperature, liquid_water_content, $
-                    air_pressure, lsmask, grid, VERBOSE=ver
+FUNCTION GET_LIQ_CER, air_temperature, liquid_water_content, air_pressure, $
+                      lsmask, grid, VERBOSE=ver
 ;------------------------------------------------------------------------------
 
     line = STRARR(60)
@@ -107,18 +43,18 @@ FUNCTION GET_LREFF, air_temperature, liquid_water_content, $
     ; The liquid water effective radius in ERA-Interim follows 
     ; Martin et al. (1994) and is defined
     ; ZRADLP = effective radius (microns)
-    ZRADLP = FLTARR(grid.xdim, grid.ydim) & ZRADLP[*,*] = 1.
+    ZRADLP = FLTARR(grid.XDIM, grid.YDIM) & ZRADLP[*,*] = 1.
 
     IF (nis GT 0) THEN BEGIN
 
         ; ZNTOT = cloud droplet number concentration 
         ; dependent on wind speed in ERAI parametrization
         ; fixed values used here
-        ZNTOT = FLTARR(grid.xdim, grid.ydim) & ZNTOT[*,*] = 0.
+        ZNTOT = FLTARR(grid.XDIM, grid.YDIM) & ZNTOT[*,*] = 0.
         ZNTOT[WHERE(lsmask EQ 0)] = 100. ; ocean
         ZNTOT[WHERE(lsmask EQ 1)] = 300. ; land
 
-        ZD = FLTARR(grid.xdim, grid.ydim) & ZD[*,*] = 0.
+        ZD = FLTARR(grid.XDIM, grid.YDIM) & ZD[*,*] = 0.
         ZD[WHERE(lsmask EQ 0)] = 0.33 ; ocean
         ZD[WHERE(lsmask EQ 1)] = 0.43 ; land
         
@@ -153,8 +89,8 @@ END
 
 
 ;------------------------------------------------------------------------------
-FUNCTION GET_IREFF, air_temperature, ice_water_content, $
-                    air_pressure, VERBOSE=ver
+FUNCTION GET_ICE_CER, air_temperature, ice_water_content, air_pressure, $
+                      VERBOSE=ver
 ;------------------------------------------------------------------------------
 
     ; convert iwc [kg/kg] -> [kg/m3] -> [g/m3]
@@ -199,11 +135,14 @@ FUNCTION GET_IREFF, air_temperature, ice_water_content, $
     RETURN, ZRADIP
 END
 
+
+
 ;------------------------------------------------------------------------------
-PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
-                   GRID=grd, LSM=lsm, REFF=reff, $
-                   CONSTANT_CER=const_reff, VERBOSE=ver, $
-                   CWP=cwp_lay, COT=cot_lay, CER=cer_lay
+; IN : LWC, IWC, DATA, GRID, LSM, CER_INFO, CONSTANT_CER, VERBOSE
+; OUT: CWP, COT, CER
+;------------------------------------------------------------------------------
+PRO CALC_CLD_VARS, lwc, iwc, inp, grd, lsm, reff, cwp_lay, cot_lay, cer_lay, $
+                   CONSTANT_CER=const_reff, VERBOSE=ver
 ;------------------------------------------------------------------------------
 
     fmt  = '(A25, " : ", F12.4)'
@@ -222,6 +161,7 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
     lcer_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
     icer_lay  = FLTARR(grd.xdim,grd.ydim,grd.zdim-1)
 
+
     FOR z=grd.zdim-2,0,-1 DO BEGIN
 
       ; cloud water content (lwc/iwc) between two pressure levels
@@ -232,12 +172,12 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
       pressure = inp.plevel[z]*0.5 + inp.plevel[z+1]*0.5 ;[Pa]
 
       ; effective radius [microns] -> ref*1.0E-6 [meters]
-      liq_ref = GET_LREFF(temperature, lwc_z, pressure, lsm, grd, VER=0)
-      ice_ref = GET_IREFF(temperature, iwc_z, pressure, VER=0)
+      liq_ref = GET_LIQ_CER(temperature, lwc_z, pressure, lsm, grd, VER=0)
+      ice_ref = GET_ICE_CER(temperature, iwc_z, pressure, VER=0)
 
       ; http://en.wikipedia.org/wiki/Liquid_water_path#cite_note-2
-      lwp_lay[*,*,z] = lwc_z*inp.dpres[z]/9.81 ;[kg/m2]
-      iwp_lay[*,*,z] = iwc_z*inp.dpres[z]/9.81 ;[kg/m2]
+      lwp_lay[*,*,z] = lwc_z * inp.dpres[z] / 9.81 ;[kg/m2]
+      iwp_lay[*,*,z] = iwc_z * inp.dpres[z] / 9.81 ;[kg/m2]
 
       ; COT computation: method of Han et al. (1994)
       ; CWP = (4 * COT * R_eff * rho) / (3 * Q_ext)
@@ -266,11 +206,13 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
       ; where lwp_lay is ZERO -> set REF=0.
       lwp0 = WHERE( lwp_lay[*,*,z] EQ 0., nlwp0 )
       IF (nlwp0 GT 0) THEN liq_ref[lwp0] = 0.
-      lcer_lay[*,*,z] = liq_ref
 
       ; where iwp_lay is ZERO -> set REF=0.
       iwp0 = WHERE( iwp_lay[*,*,z] EQ 0., niwp0 )
       IF (niwp0 GT 0) THEN ice_ref[iwp0] = 0.
+
+      ; assign: 2D @z
+      lcer_lay[*,*,z] = liq_ref
       icer_lay[*,*,z] = ice_ref
 
 
@@ -296,8 +238,8 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
     ENDFOR
 
     ; -- output structures
-    cwp_lay = {cloud_water_path, lwp:lwp_lay, iwp:iwp_lay}
-    cer_lay = {cloud_effective_radius, liq:lcer_lay, ice:icer_lay}
+    cwp_lay = { cloud_water_path, liq:lwp_lay, ice:iwp_lay }
+    cer_lay = { cloud_effective_radius, liq:lcer_lay, ice:icer_lay }
 
     IF KEYWORD_SET(const_reff) THEN BEGIN 
 
@@ -308,7 +250,7 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
             PRINT, ''
         ENDIF
 
-        cot_lay = {cloud_optical_depth, liq:lcot_lay, ice:icot_lay}
+        cot_lay = { cloud_optical_depth_fixed, liq:lcot_lay, ice:icot_lay }
 
     ENDIF ELSE BEGIN 
 
@@ -317,8 +259,10 @@ PRO CALC_CLD_VARS, LWC=lwc, IWC=iwc, INPUT=inp, $
             PRINT, ''
         ENDIF
 
-        cot_lay = {cloud_optical_depth, liq:lcot_lay2, ice:icot_lay2}
+        cot_lay = { cloud_optical_depth, liq:lcot_lay2, ice:icot_lay2 }
 
     ENDELSE
 
 END
+
+

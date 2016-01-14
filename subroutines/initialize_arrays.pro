@@ -1,5 +1,5 @@
 ;---------------------------------------------------------------
-FUNCTION INIT_LSM_ARRAY, GRID=grd, DATA=sst, VOID=void, MAP=map 
+FUNCTION INIT_LSM_ARRAY, grd, sst, void, MAP=map 
 ;---------------------------------------------------------------
 
     lsm2d = INTARR(grd.xdim,grd.ydim)
@@ -27,7 +27,7 @@ END
 
 
 ;-----------------------------------------------------------------------------
-FUNCTION INIT_SZA_ARRAY, DATA=data, GRID=grd, MAP=map 
+FUNCTION INIT_SZA_ARRAY, data, grd, MAP=map 
 ;-----------------------------------------------------------------------------
 
     jul_day = DOY(data.YEAR, data.MONTH, data.DAY)
@@ -48,7 +48,6 @@ FUNCTION INIT_SZA_ARRAY, DATA=data, GRID=grd, MAP=map
 
     ENDIF
 
-    stop
     RETURN, sza2d
 
 END
@@ -58,7 +57,7 @@ END
 ; IN  : DATA
 ; OUT : GRID
 ;-------------------------------------------------------------------
-PRO INIT_ERA_GRID, DATA=data, GRID=grid
+PRO INIT_ERA_GRID, data, grid
 ;-------------------------------------------------------------------
 
     ; set x,y,z dimensions using liquid water content variable
@@ -85,8 +84,7 @@ END
 ; IN : GRIS, HIST_INFO
 ; OUT: ARRAYS, COUNTS
 ;-------------------------------------------------------------------
-PRO INIT_OUT_ARRAYS, GRID=grid, HIST_INFO=hist, $
-                     ARRAYS=arrays, COUNTS=counts
+PRO INIT_OUT_ARRAYS, grid, hist, arrays, counts
 ;-------------------------------------------------------------------
 
     ; cloud fraction
