@@ -444,24 +444,24 @@ PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
     ; start plotting
     save_as = ofil + '.eps'
     start_save, save_as, size=[45,30]
-    cs = 2.1
+    cs = 2.0
 
     ; -- final.HIST1D_COT: CCI binsizes ---
     CREATE_1DHIST, RESULT=final.HIST1D_CTP, VARNAME='ctp', $
         VARSTRING='H1D_CTP', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=50, LEGEND_POSITION='tr'
+        YMAX=40, LEGEND_POSITION='top'
 
     CREATE_1DHIST, RESULT=final.HIST1D_CWP, VARNAME='cwp', $
         VARSTRING='H1D_CWP', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=50
+        YMAX=40
 
     CREATE_1DHIST, RESULT=final.HIST1D_CER, VARNAME='ref', $
         VARSTRING='H1D_CER', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=50, LEGEND_POSITION='tr'
+        YMAX=60, LEGEND_POSITION='tr'
 
     CREATE_1DHIST, RESULT=final.HIST1D_COT, VARNAME='cot', $
         VARSTRING='H1D_COT', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=50
+        YMAX=40
 
     ; end plotting
     end_save, save_as
@@ -485,22 +485,37 @@ PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
     basen = FSC_Base_Filename(fil)
     obase = !SAVE_DIR + basen + '_' + flg
     sname = SIZE(inter, /SNAME)
-    cph_dim = histo.phase_dim
+    cph_dim = histo.PHASE_DIM
 
     CASE var of
-        'cot' : BEGIN
-            maxvalue = 100.
-            bin_dim = histo.cot_bin1d_dim
-            lim_bin = histo.cot2d
-            cci_str = 'cot'
-            ymax = 30
+        'ctp' : BEGIN
+            maxvalue = 1100.
+            bin_dim = histo.CTP_BIN1D_DIM
+            lim_bin = histo.CTP2D
+            cci_str = 'ctp'
+            ymax = 40
+            legpos = "tr" ;top-left
+            END
+        'cwp' : BEGIN
+            maxvalue = 10E5
+            bin_dim = histo.CWP_BIN1D_DIM
+            lim_bin = histo.CWP2D
+            cci_str = 'cwp'
+            ymax = 40
             legpos = "tl" ;top-left
             END
-
+        'cot' : BEGIN
+            maxvalue = 100.
+            bin_dim = histo.COT_BIN1D_DIM
+            lim_bin = histo.COT2D
+            cci_str = 'cot'
+            ymax = 40
+            legpos = "tl" ;top-left
+            END
         'cer' : BEGIN
             maxvalue = 80.
-            bin_dim = histo.cer_bin1d_dim
-            lim_bin = histo.cer2d
+            bin_dim = histo.CER_BIN1D_DIM
+            lim_bin = histo.CER2D
             cci_str = 'ref'
             ymax = 60
             legpos = "tr" ;top-right
@@ -517,6 +532,18 @@ PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
             ENDIF ELSE IF (var EQ 'cer') THEN BEGIN 
                 aliq = inter.CER_LIQ 
                 aice = inter.CER_ICE 
+            ENDIF ELSE IF (var EQ 'cwp') THEN BEGIN 
+                aliq = inter.LWP 
+                aice = inter.IWP 
+            ENDIF ELSE IF (var EQ 'ctp') THEN BEGIN 
+                dims = SIZE(inter.CPH, /DIM)
+                aliq = FLTARR(dims[0],dims[1]) & aliq[*,*] = -999
+                aice = FLTARR(dims[0],dims[1]) & aice[*,*] = -999
+                ; cc4cl -> 0=liquid, 1=ice
+                liq = WHERE(inter.CPH EQ 1)
+                ice = WHERE(inter.CPH EQ 0)
+                aliq[liq] = inter.CTP[liq] 
+                aice[ice] = inter.CTP[ice]
             ENDIF ELSE BEGIN
                 PRINT, 'VARNAME not yet defined here.'
                 RETURN 
@@ -540,7 +567,7 @@ PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
     start_save, save_as, size=[45,30]
 
     ; get total COT and set CFC
-    all  = aliq + aice
+    all  = (aliq>0) + (aice>0) ; consider fill_values
     dims = SIZE(aliq, /DIM)
     acfc = FLTARR(dims[0],dims[1])
     acfc[*,*] = 1.
@@ -666,9 +693,9 @@ PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
     IF NOT KEYWORD_SET(ymax) THEN ymax = 40
     IF NOT KEYWORD_SET(lp) THEN lp='tl'
 
-    bild_all = TOTAL(res, 4)
     bild_liq = reform(res[*,*,*,0])
     bild_ice = reform(res[*,*,*,1])
+    bild_all = ( bild_liq>0 ) + ( bild_ice>0 ) ;consider fill_values!
 
     bild = get_1d_rel_hist_from_1d_hist( bild_all, $
         'hist1d_'+vn, algo='era-i', $;limit=limit, $
@@ -696,17 +723,13 @@ PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
     oplot,bild1,psym=-2, col=cgcolor('Red'), THICK=thick
     oplot,bild2,psym=-4, col=cgcolor('royal blue'), THICK=thick
 
-    ;vs='cot_lay_inc' OR vs='temps'
     allstr  = vs+'.TOTAL'
     aliqstr = vs+'.LIQ'
     aicestr = vs+'.ICE'
 
     legend, [allstr,aliqstr,aicestr], thick=REPLICATE(thick,3), $
-        spos=lp, charsize=cs, color=[cgcolor("Black"),$
+        spos=lp, charsize=2.3, color=[cgcolor("Black"),$
         cgcolor("Red"),cgcolor("royal blue")]
-
-    ;PRINT, '** MINMAX(bild): ', allstr+'/'+aliqstr+'/'+aicestr
-    ;PRINT, MINMAX(bild), MINMAX(bild1), MINMAX(bild2)
 
 END
 

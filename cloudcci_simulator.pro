@@ -187,6 +187,14 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
                         ; check intermediate results: current_time_slot
                         IF KEYWORD_SET(map) THEN BEGIN
+                            ;; CTP: tmp_max
+                            ;PLOT_INTER_HISTOS, VARNAME='ctp', INTER=tmp_max, $ 
+                            ;    HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
+                            ;    CONSTANT_CER=constant_cer
+                            ;; CWP: tmp_max
+                            ;PLOT_INTER_HISTOS, VARNAME='cwp', INTER=tmp_max, $ 
+                            ;    HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
+                            ;    CONSTANT_CER=constant_cer
                             ; COT: tmp_max
                             PLOT_INTER_HISTOS, VARNAME='cot', INTER=tmp_max, $ 
                                 HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
