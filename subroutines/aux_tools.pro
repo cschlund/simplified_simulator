@@ -420,22 +420,20 @@ END
 
 
 ;-----------------------------------------------------------------------------
-PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
-                    FLAG=flg, CONSTANT_CER=creff
+PRO PLOT_HISTOS_1D, data, filename, flag, CONSTANT_CER=creff, RATIO=ratio
 ;-----------------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
-    IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' $
-        ELSE addstr = ''
+    IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' ELSE addstr = ''
 
-    basen = FSC_Base_Filename(fil)
-    obase = !SAVE_DIR + basen + '_' + flg
+    basen = FSC_Base_Filename(filename)
+    obase = !SAVE_DIR + basen + '_' + flag
     ofil = obase + '_tmpHISTOS1D'+addstr
 
     IF (is_file(ofil+'.png')) THEN RETURN
 
-    IF (fil.EndsWith('.nc') EQ 1) THEN BEGIN
+    IF (filename.EndsWith('.nc') EQ 1) THEN BEGIN
         datutc = GET_DATE_UTC(basen)
     ENDIF ELSE BEGIN
         datutc = ' for '+STRMID(basen, STRLEN(basen)-6, 6)
@@ -446,22 +444,21 @@ PRO PLOT_HISTOS_1D, FINAL=final,  HIST_INFO=histo, OFILE=fil, $
     start_save, save_as, size=[45,30]
     cs = 2.0
 
-    ; -- final.HIST1D_COT: CCI binsizes ---
-    CREATE_1DHIST, RESULT=final.HIST1D_CTP, VARNAME='ctp', $
+    CREATE_1DHIST, RESULT=data.HIST1D_CTP, VARNAME='ctp', $
         VARSTRING='H1D_CTP', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=40, LEGEND_POSITION='top'
+        YMAX=40, LEGEND_POSITION='top', RATIO=ratio
 
-    CREATE_1DHIST, RESULT=final.HIST1D_CWP, VARNAME='cwp', $
+    CREATE_1DHIST, RESULT=data.HIST1D_CWP, VARNAME='cwp', $
         VARSTRING='H1D_CWP', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=40
+        YMAX=40, RATIO=ratio
 
-    CREATE_1DHIST, RESULT=final.HIST1D_CER, VARNAME='ref', $
+    CREATE_1DHIST, RESULT=data.HIST1D_CER, VARNAME='ref', $
         VARSTRING='H1D_CER', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=60, LEGEND_POSITION='tr'
+        YMAX=60, LEGEND_POSITION='tr', RATIO=ratio
 
-    CREATE_1DHIST, RESULT=final.HIST1D_COT, VARNAME='cot', $
+    CREATE_1DHIST, RESULT=data.HIST1D_COT, VARNAME='cot', $
         VARSTRING='H1D_COT', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=40
+        YMAX=40, RATIO=ratio
 
     ; end plotting
     end_save, save_as
@@ -473,92 +470,31 @@ END
 
 
 ;-----------------------------------------------------------------------------
-PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
-                       OFILE=fil, FLAG=flg, CONSTANT_CER=creff
+PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
+                       CONSTANT_CER=creff, RATIO=ratio
 ;-----------------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
-    IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' $
-        ELSE addstr = ''
+    IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' ELSE addstr = ''
+    IF KEYWORD_SET(ratio) THEN addstr = addstr + '_ratio'
 
-    basen = FSC_Base_Filename(fil)
-    obase = !SAVE_DIR + basen + '_' + flg
-    sname = SIZE(inter, /SNAME)
+    basen = FSC_Base_Filename(filename)
+    obase = !SAVE_DIR + basen + '_' + flag
+    sname = SIZE(data, /SNAME)
     cph_dim = histo.PHASE_DIM
-
-    CASE var of
-        'ctp' : BEGIN
-            maxvalue = 1100.
-            bin_dim = histo.CTP_BIN1D_DIM
-            lim_bin = histo.CTP2D
-            cci_str = 'ctp'
-            ymax = 40
-            legpos = "tr" ;top-left
-            END
-        'cwp' : BEGIN
-            maxvalue = 10E5
-            bin_dim = histo.CWP_BIN1D_DIM
-            lim_bin = histo.CWP2D
-            cci_str = 'cwp'
-            ymax = 40
-            legpos = "tl" ;top-left
-            END
-        'cot' : BEGIN
-            maxvalue = 100.
-            bin_dim = histo.COT_BIN1D_DIM
-            lim_bin = histo.COT2D
-            cci_str = 'cot'
-            ymax = 40
-            legpos = "tl" ;top-left
-            END
-        'cer' : BEGIN
-            maxvalue = 80.
-            bin_dim = histo.CER_BIN1D_DIM
-            lim_bin = histo.CER2D
-            cci_str = 'ref'
-            ymax = 60
-            legpos = "tr" ;top-right
-            END
-    ENDCASE
-
-
-    CASE sname of
-        'TEMP_ARRAYS' : BEGIN
-            ofil = obase + '_'+var+'2Dtmp'+addstr
-            IF (var EQ 'cot') THEN BEGIN 
-                aliq = inter.COT_LIQ 
-                aice = inter.COT_ICE 
-            ENDIF ELSE IF (var EQ 'cer') THEN BEGIN 
-                aliq = inter.CER_LIQ 
-                aice = inter.CER_ICE 
-            ENDIF ELSE IF (var EQ 'cwp') THEN BEGIN 
-                aliq = inter.LWP 
-                aice = inter.IWP 
-            ENDIF ELSE IF (var EQ 'ctp') THEN BEGIN 
-                dims = SIZE(inter.CPH, /DIM)
-                aliq = FLTARR(dims[0],dims[1]) & aliq[*,*] = -999
-                aice = FLTARR(dims[0],dims[1]) & aice[*,*] = -999
-                ; cc4cl -> 0=liquid, 1=ice
-                liq = WHERE(inter.CPH EQ 1)
-                ice = WHERE(inter.CPH EQ 0)
-                aliq[liq] = inter.CTP[liq] 
-                aice[ice] = inter.CTP[ice]
-            ENDIF ELSE BEGIN
-                PRINT, 'VARNAME not yet defined here.'
-                RETURN 
-            ENDELSE
-            as = ' (2D - upper most clouds; CFC==1) '
-            varstring = 'temps'
-            END
-        ELSE : BEGIN
-            PRINT, 'SNAME has an illegal value.'
-            RETURN 
-            END
-    ENDCASE
-
+    ofil = obase + '_'+varname+'2Dtmp'+addstr
 
     IF(is_file(ofil+'.png')) THEN RETURN
+
+    astr = ' (2D - upper most clouds; CFC==1) '
+    varstring = 'temps'
+
+    ; collect data and hist settings
+    GET_ALIQ_AICE, data, sname, varname, aliq, aice
+
+    GET_HIST_DETAILS, histo, varname, maxvalue, minvalue, $
+                      bin_dim, lim_bin, cci_str, ymax, legpos, binsize
 
     datutc = GET_DATE_UTC(basen)
 
@@ -580,40 +516,39 @@ PRO PLOT_INTER_HISTOS, INTER=inter, VARNAME=var, HIST_INFO=histo, $
     i3=WHERE( all GT maxvalue, ni3)
     IF (ni3 GT 0) THEN all[i3] = maxvalue
 
-    ; VARNAME EQ 0. set to fillvalue
-    i1=WHERE( aliq EQ 0.,ni1)
-    IF (ni1 GT 0) THEN aliq[i1] = -999.
-    i2=WHERE( aice EQ 0.,ni2)
-    IF (ni2 GT 0) THEN aice[i2] = -999.
-    i3=WHERE( all EQ 0.,ni3)
-    IF (ni3 GT 0) THEN all[i3] = -999.
+    cs = 2.0
+    lg = 'tr'
 
-    cs = 2.1
+    ; -- HIST1D: equal binsizes ---
+    cgHistoplot, aliq, binsize=binsize, /FILL, $
+        POLYCOLOR='red', mininput=minvalue, maxinput=maxvalue, $
+        charsize=cs, histdata=cghist_liq, $
+        xtitle=varstring+'.'+STRUPCASE(varname)+'_LIQ'+astr
+    legend, ['binsize='+STRTRIM(STRING(binsize,FORMAT='(I)'),2)], $
+        thick=4., spos=lg, charsize=cs, color=[cgcolor("red")]
 
-    ; -- inter.HIST1D: equal binsizes ---
-    cgHistoplot, aliq, binsize=1, /FILL, POLYCOLOR='red', $
-        mininput=0, maxinput=maxvalue, charsize=cs, $
-        xtitle=varstring+'.'+STRUPCASE(var)+'_LIQ'+as, $
-        histdata=cghist_liq
+    cgHistoplot, aice, binsize=binsize, /FILL, $
+        POLYCOLOR='royal blue', histdata=cghist_ice, $
+        mininput=minvalue, maxinput=maxvalue, charsize=cs, $
+        xtitle=varstring+'.'+STRUPCASE(varname)+'_ICE'+astr
+    legend, ['binsize='+STRTRIM(STRING(binsize,FORMAT='(I)'),2)], $
+        thick=4., spos=lg, charsize=cs, color=[cgcolor("royal blue")]
 
-    cgHistoplot, aice, binsize=1, /FILL, POLYCOLOR='royal blue', $
-        mininput=0, maxinput=maxvalue, charsize=cs, $
-        xtitle=varstring+'.'+STRUPCASE(var)+'_ICE'+as, $
-        histdata=cghist_ice
-
-    cgHistoplot, all, binsize=1, /FILL, POLYCOLOR='black', $
-        mininput=0, maxinput=maxvalue, charsize=cs, $
-        xtitle=varstring+'.'+STRUPCASE(var)+'_TOTAL'+as, $
-        histdata=cghist_liq
+    cgHistoplot, all, binsize=binsize, /FILL, $
+        POLYCOLOR='black', histdata=cghist_all, $
+        mininput=minvalue, maxinput=maxvalue, charsize=cs, $
+        xtitle=varstring+'.'+STRUPCASE(varname)+'_TOTAL'+astr
+    legend, ['binsize='+STRTRIM(STRING(binsize,FORMAT='(I)'),2)], $
+        thick=4., spos=lg, charsize=cs, color=[cgcolor("black")]
     
-    ; -- inter.HIST1D: cloud_cci binsizes ---
+    ; -- HIST1D: cloud_cci binsizes ---
     res = SUMUP_HIST1D( bin_dim=bin_dim, lim_bin=lim_bin, $
                         cph_dim=cph_dim, cfc_tmp=acfc, $
                         liq_tmp=aliq,    ice_tmp=aice )
 
     CREATE_1DHIST, RESULT=res, VARNAME=cci_str, YMAX=ymax, $
         VARSTRING=varstring, CHARSIZE=cs, XTITLE=datutc, $
-        LEGEND_POSITION=legpos
+        LEGEND_POSITION=legpos, RATIO=ratio
 
     ; end plotting
     end_save, save_as
@@ -688,30 +623,42 @@ END
 ;-----------------------------------------------------------------------------
 PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
                    CHARSIZE=cs, XTITLE=xtitle, YMAX=ymax, $
-                   LEGEND_POSITION=lp
+                   LEGEND_POSITION=lp, RATIO=ratio
 ;-----------------------------------------------------------------------------
     IF NOT KEYWORD_SET(ymax) THEN ymax = 40
     IF NOT KEYWORD_SET(lp) THEN lp='tl'
+    IF KEYWORD_SET(ratio) THEN ymax = 100
 
     bild_liq = reform(res[*,*,*,0])
     bild_ice = reform(res[*,*,*,1])
     bild_all = ( bild_liq>0 ) + ( bild_ice>0 ) ;consider fill_values!
 
     bild = get_1d_rel_hist_from_1d_hist( bild_all, $
-        'hist1d_'+vn, algo='era-i', $;limit=limit, $
+        'hist1d_'+vn, algo='era-i',  $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
+
     bild1 = get_1d_rel_hist_from_1d_hist( bild_liq, $
-        'hist1d_'+vn+'_liq', algo='era-i', $;limit=limit, $
+        'hist1d_'+vn+'_liq', algo='era-i', $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
+
     bild2 = get_1d_rel_hist_from_1d_hist( bild_ice, $
-        'hist1d_'+vn+'_ice', algo='era-i', $;limit=limit, $
+        'hist1d_'+vn+'_ice', algo='era-i', $
         land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
         xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
         found=found1)
+
+    IF KEYWORD_SET(ratio) THEN BEGIN
+        bild3 = get_1d_rel_hist_from_1d_hist( res, $
+            'hist1d_'+vn+'_ratio', algo='era-i', $
+            land=land, sea=sea, arctic=arctic, antarctic=antarctic,$ 
+            xtickname=xtickname, ytitle = ytitle, hist_name=data_name, $
+            found=found1)
+    ENDIF
+
     plot,[0,0],[1,1],yr=[0,ymax],xr=[0,n_elements(bild)-1],$
         xticks=n_elements(xtickname)-1,xtickname=xtickname, $ 
         xtitle=data_name+xtitle,ytitle=ytitle,xminor=2, $
@@ -722,15 +669,141 @@ PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
     oplot,bild, psym=-1, col=cgcolor('Black'), THICK=thick
     oplot,bild1,psym=-2, col=cgcolor('Red'), THICK=thick
     oplot,bild2,psym=-4, col=cgcolor('royal blue'), THICK=thick
+    IF KEYWORD_SET(ratio) THEN $
+        oplot,bild3,psym=-6, col=cgcolor('forest green'), THICK=thick
 
     allstr  = vs+'.TOTAL'
     aliqstr = vs+'.LIQ'
     aicestr = vs+'.ICE'
+    ratiostr = vs+'.RATIO'
+    labels = [allstr,aliqstr,aicestr]
+    IF KEYWORD_SET(ratio) THEN labels = [labels, ratiostr]
+    colors = [cgcolor("Black"),cgcolor("Red"),cgcolor("royal blue")]
+    IF KEYWORD_SET(ratio) THEN colors = [colors, cgcolor("forest green")]
+    nlabels = N_ELEMENTS(labels)
 
-    legend, [allstr,aliqstr,aicestr], thick=REPLICATE(thick,3), $
-        spos=lp, charsize=2.3, color=[cgcolor("Black"),$
-        cgcolor("Red"),cgcolor("royal blue")]
+    legend, labels, thick=REPLICATE(thick,nlabels), spos=lp, $
+            charsize=2.3, color=colors
 
 END
 
 
+;-----------------------------------------------------------------------------
+PRO GET_ALIQ_AICE, data, sname, varname, aliq, aice
+;-----------------------------------------------------------------------------
+
+    CASE sname of
+
+        'TEMP_ARRAYS' : BEGIN
+
+            IF (varname EQ 'cot') THEN BEGIN 
+                aliq = data.COT_LIQ 
+                aice = data.COT_ICE 
+
+            ENDIF ELSE IF (varname EQ 'cer') THEN BEGIN 
+                aliq = data.CER_LIQ 
+                aice = data.CER_ICE 
+
+            ENDIF ELSE IF (varname EQ 'cwp') THEN BEGIN 
+                aliq = data.LWP*1000. ;g/m2
+                aice = data.IWP*1000. ;g/m2
+
+            ENDIF ELSE IF (varname EQ 'ctp') THEN BEGIN 
+                dims = SIZE(data.CPH, /DIM)
+                aliq = FLTARR(dims[0],dims[1]) & aliq[*,*] = -999
+                aice = FLTARR(dims[0],dims[1]) & aice[*,*] = -999
+                ice = WHERE((data.CTP GT 10.) AND (data.CTH GT 0.)  $
+                        AND (data.CPH EQ 0))
+                liq = WHERE((data.CTP GT 10.) AND (data.CTH GT 0.)  $
+                        AND (data.CPH EQ 1))
+                aliq[liq] = data.CTP[liq] 
+                aice[ice] = data.CTP[ice]
+
+            ENDIF ELSE IF (varname EQ 'ctt') THEN BEGIN 
+                dims = SIZE(data.CPH, /DIM)
+                aliq = FLTARR(dims[0],dims[1]) & aliq[*,*] = -999
+                aice = FLTARR(dims[0],dims[1]) & aice[*,*] = -999
+                ice = WHERE((data.CTP GT 10.) AND (data.CTH GT 0.)  $
+                        AND (data.CPH EQ 0))
+                liq = WHERE((data.CTP GT 10.) AND (data.CTH GT 0.)  $
+                        AND (data.CPH EQ 1))
+                aliq[liq] = data.CTT[liq] 
+                aice[ice] = data.CTT[ice]
+
+            ENDIF ELSE BEGIN
+                PRINT, 'VARNAME not yet defined here.'
+                RETURN 
+
+            ENDELSE
+            END
+
+        ELSE : BEGIN
+            PRINT, 'SNAME has an illegal value. Must be TEMP_ARRAYS!'
+            RETURN 
+            END
+
+    ENDCASE
+
+END
+
+
+;-----------------------------------------------------------------------------
+PRO GET_HIST_DETAILS, histo, varname, $
+                      maxvalue, minvalue, bin_dim, lim_bin, $
+                      cci_str, ymax, legpos, binsize
+;-----------------------------------------------------------------------------
+
+    CASE varname of
+        'ctt' : BEGIN
+            maxvalue = 350.
+            minvalue = 200.
+            bin_dim = histo.CTT_BIN1D_DIM
+            lim_bin = histo.CTT2D
+            cci_str = 'ctt'
+            ymax = 40
+            legpos = "tl" 
+            binsize = 5
+            END
+        'ctp' : BEGIN
+            maxvalue = 1100.
+            minvalue = 1.
+            bin_dim = histo.CTP_BIN1D_DIM
+            lim_bin = histo.CTP2D
+            cci_str = 'ctp'
+            ymax = 40
+            legpos = "top"
+            binsize = 50
+            END
+        'cwp' : BEGIN
+            maxvalue = 2000.
+            minvalue = 0.0001
+            bin_dim = histo.CWP_BIN1D_DIM
+            lim_bin = histo.CWP2D
+            cci_str = 'cwp'
+            ymax = 40
+            legpos = "tl"
+            binsize = 50
+            END
+        'cot' : BEGIN
+            maxvalue = 100.
+            minvalue = 0.0001
+            bin_dim = histo.COT_BIN1D_DIM
+            lim_bin = histo.COT2D
+            cci_str = 'cot'
+            ymax = 40
+            legpos = "tl"
+            binsize = 1
+            END
+        'cer' : BEGIN
+            maxvalue = 80.
+            minvalue = 0.0001
+            bin_dim = histo.CER_BIN1D_DIM
+            lim_bin = histo.CER2D
+            cci_str = 'ref'
+            ymax = 60
+            legpos = "tr" 
+            binsize = 1
+            END
+    ENDCASE
+
+END

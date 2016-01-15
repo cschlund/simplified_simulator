@@ -40,6 +40,9 @@
 ;
 ;******************************************************************************
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
+                        SYEAR=syear, EYEAR=eyear, $
+                        SMONTH=smonth, EMONTH=emonth, $
+                        RATIO=ratio, $
                         CONSTANT_CER=constant_cer, HPLOT=hplot, HELP=help
 ;******************************************************************************
     clock = TIC('TOTAL')
@@ -49,19 +52,26 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
         PRINT, " *** THIS PROGRAM READS ERA-INTERIM REANALYSIS FILES AND",$
                " SIMULATES CLOUD_CCI CLOUD PARAMETERS ***"
         PRINT, ""
-        PRINT, " Please, first copy the cfg template to config_simulator.pro",$
-               " and modify the settings for your needs."
+        PRINT, " Please, first copy the ""config_simulator.pro.template"" to",$
+               " ""config_simulator.pro"" and modify the settings for your needs."
         PRINT, ""
-        PRINT, " USAGE: CLOUDCCI_SIMULATOR"
-        PRINT, " USAGE: CLOUDCCI_SIMULATOR, /test, /log, /ver"
+        PRINT, " USAGE: "
+        PRINT, " CLOUDCCI_SIMULATOR, /test, /log, /ver, /map, /hplot"
+        PRINT, " CLOUDCCI_SIMULATOR, sy=2008, sm=7"
+        PRINT, " CLOUDCCI_SIMULATOR, sy=1979, ey=2014, sm=1, em=12"
         PRINT, ""
         PRINT, " Optional Keywords:"
+        PRINT, " SYEAR          start year, which should be processed."
+        PRINT, " EYEAR          end year."
+        PRINT, " SMONTH         start month."
+        PRINT, " EMONTH         end month."
         PRINT, " CONSTANT_CER   using constant eff. radii for COT calculation."
         PRINT, " VERBOSE        increase output verbosity."
         PRINT, " LOGFILE        creates journal logfile."
         PRINT, " TEST           output based on the first day only."
         PRINT, " MAP            creates some intermediate results."
         PRINT, " HPLOT          creates HISTOS_1D plots of final HIST results."
+        PRINT, " RATIO          adds liquid cloud fraction to HIST1D plot."
         PRINT, " HELP           prints this message."
         PRINT, ""
         RETURN
@@ -69,7 +79,9 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
     IF KEYWORD_SET(verbose) THEN PRINT, '** Import user setttings'
 
-    CONFIG_SIMULATOR, PATHS=path, TIMES=tim, THRESHOLDS=thv, $
+    CONFIG_SIMULATOR, PATHS=path, TIMES=times, THRESHOLDS=thv, $
+                      SYEAR=syear, EYEAR=eyear, $
+                      SMONTH=smonth, EMONTH=emonth, $
                       HIST_INFO=his, CER_INFO=cer_info, TEST=test
 
     ;!EXCEPT=0 ; silence
@@ -99,11 +111,11 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
 
     ; loop over years and months
-    FOR ii1=0, tim.ny-1 DO BEGIN
-        FOR jj1=0, tim.nm-1 DO BEGIN
+    FOR ii1=0, times.NY-1 DO BEGIN
+        FOR jj1=0, times.NM-1 DO BEGIN
 
-            year  = tim.yyyy[ii1]
-            month = tim.mm[jj1]
+            year  = times.YEARS[ii1]
+            month = times.MONTHS[jj1]
             mm_clock = TIC(year+'/'+month)
             counti = 0
 
@@ -187,22 +199,13 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
 
                         ; check intermediate results: current_time_slot
                         IF KEYWORD_SET(map) THEN BEGIN
-                            ;; CTP: tmp_max
-                            ;PLOT_INTER_HISTOS, VARNAME='ctp', INTER=tmp_max, $ 
-                            ;    HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
-                            ;    CONSTANT_CER=constant_cer
-                            ;; CWP: tmp_max
-                            ;PLOT_INTER_HISTOS, VARNAME='cwp', INTER=tmp_max, $ 
-                            ;    HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
-                            ;    CONSTANT_CER=constant_cer
-                            ; COT: tmp_max
-                            PLOT_INTER_HISTOS, VARNAME='cot', INTER=tmp_max, $ 
-                                HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
-                                CONSTANT_CER=constant_cer
-                            ; CER: tmp_max
-                            PLOT_INTER_HISTOS, VARNAME='cer', INTER=tmp_max, $ 
-                                HIST_INFO=his, OFILE=file1, FLAG=thv.MAX_STR, $ 
-                                CONSTANT_CER=constant_cer
+                            varnames = ['ctt','cwp','ctp','cot','cer']
+                            FOR v=0, N_ELEMENTS(varnames)-1 DO BEGIN
+                                PLOT_INTER_HISTOS, tmp_max, varnames[v], $
+                                                   his, file1, thv.MAX_STR, $ 
+                                                   CONSTANT_CER=constant_cer,$
+                                                   RATIO=ratio
+                            ENDFOR
                         ENDIF
 
                         ; count number of files
@@ -226,12 +229,10 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                 ; plot final hist1d results: ctp, cwp, cer, cot
                 IF KEYWORD_SET(hplot) THEN BEGIN 
                     ofile = 'ERA_Interim_'+year+month
-                    PLOT_HISTOS_1D, FINAL=arr_min, HIST_INFO=his, $
-                                    FLAG=thv.MIN_STR, OFILE=ofile, $
-                                    CONSTANT_CER=constant_cer
-                    PLOT_HISTOS_1D, FINAL=arr_max, HIST_INFO=his, $
-                                    FLAG=thv.MAX_STR, OFILE=ofile, $
-                                    CONSTANT_CER=constant_cer
+                    PLOT_HISTOS_1D, arr_min, ofile, thv.MIN_STR, $
+                                    CONSTANT_CER=constant_cer, RATIO=ratio
+                    PLOT_HISTOS_1D, arr_max, ofile, thv.MAX_STR, $
+                                    CONSTANT_CER=constant_cer, RATIO=ratio
                 ENDIF
 
                 ; write output files
