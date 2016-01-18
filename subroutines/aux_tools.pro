@@ -537,7 +537,7 @@ PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
     cgHistoplot, all, binsize=binsize, /FILL, $
         POLYCOLOR='black', histdata=cghist_all, $
         mininput=minvalue, maxinput=maxvalue, charsize=cs, $
-        xtitle=varstring+'.'+STRUPCASE(varname)+'_TOTAL'+astr
+        xtitle=varstring+'.'+STRUPCASE(varname)+astr
     legend, ['binsize='+STRTRIM(STRING(binsize,FORMAT='(I)'),2)], $
         thick=4., spos=lg, charsize=cs, color=[cgcolor("black")]
     
@@ -574,7 +574,7 @@ PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void
     save_as = filepwd + '.eps'
     start_save, save_as, size='A4', /LANDSCAPE
 
-    cs = 2 & cs_bar = 2 & nlev = 6
+    cs = 1.5 & cs_bar = 2 & nlev = 6
     limit = [-90., -180., 90., 180.]
     
     MAP_IMAGE, data.LWP*1000., grd.LAT2D, grd.LON2D, $
@@ -603,7 +603,7 @@ PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void
 
     MAP_IMAGE, data.COT_LIQ, grd.LAT2D, grd.LON2D, $
         /MAGNIFY, CHARS=cs_bar, TITLE='COT_LIQ', $
-        MINI=0., MAXI=60., $
+        MINI=0., MAXI=30., $
         ;MINI=MIN(data.COT_LIQ), MAXI=MAX(data.COT_LIQ), $
         VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
     MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
@@ -674,7 +674,7 @@ PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
     IF KEYWORD_SET(ratio) THEN $
         oplot,bild3,psym=-6, col=cgcolor('forest green'), THICK=thick
 
-    allstr  = vs+'.TOTAL'
+    allstr  = vs
     aliqstr = vs+'.LIQ'
     aicestr = vs+'.ICE'
     ratiostr = vs+'.RATIO'
