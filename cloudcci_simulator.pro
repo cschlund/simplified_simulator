@@ -43,7 +43,7 @@
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         SYEAR=syear, EYEAR=eyear, $
                         SMONTH=smonth, EMONTH=emonth, $
-                        RATIO=ratio, $
+                        RATIO=ratio, AUXMAP=auxmap, $
                         CONSTANT_CER=constant_cer, HPLOT=hplot, HELP=help
 ;******************************************************************************
     clock = TIC('TOTAL')
@@ -71,6 +71,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
         PRINT, " LOGFILE        creates journal logfile."
         PRINT, " TEST           output based on the first day only."
         PRINT, " MAP            creates some intermediate results."
+        PRINT, " AUXMAP         creates maps showing auxiliary data."
         PRINT, " HPLOT          creates HISTOS_1D plots of final HIST results."
         PRINT, " RATIO          adds liquid cloud fraction to HIST1D plot."
         PRINT, " HELP           prints this message."
@@ -151,8 +152,8 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         IF(counti EQ 0) THEN BEGIN
 
                             INIT_ERA_GRID, input, grid 
-                            READ_ERA_SSTFILE, path.SST, grid, sst, void, MAP=map
-                            lsm2d = INIT_LSM_ARRAY(grid, sst, void, MAP=map)
+                            READ_ERA_SSTFILE, path.SST, grid, sst, void, MAP=auxmap
+                            lsm2d = INIT_LSM_ARRAY(grid, sst, void, MAP=auxmap)
 
                             ; cnt* = counters required for calc. the means
                             ; *min = applying thv.MIN, e.g. 0.01
@@ -164,7 +165,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         counti++
 
                         ; initialize solar zenith angle 2D array
-                        sza2d = INIT_SZA_ARRAY(input, grid, MAP=map)
+                        sza2d = INIT_SZA_ARRAY(input, grid, MAP=auxmap)
 
                         ; lwc and iwc weighted by cc
                         incloud = CALC_INCLOUD_CWC( input, grid )
