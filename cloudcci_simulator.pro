@@ -37,6 +37,7 @@
 ;   C. Schlundt, Jan 2016: implementation of ireff, lreff as func(T,IWC/LWC)
 ;   C. Schlundt, Jan 2016: implementation of hist1d_ref
 ;   C. Schlundt, Jan 2016: clean up code
+;   C. Schlundt, Jan 2016: scops-like method for COT2d & CWP2d
 ;
 ;******************************************************************************
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $

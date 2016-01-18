@@ -1,121 +1,175 @@
 ;------------------------------------------------------------------------------
+; scops-like method in order to collect COT and CWP
+; OUT: COT_TMP, CWP_TMP
+;------------------------------------------------------------------------------
+PRO SCOPS, erainp, cotinp, cwpinp, cot_idx, zlev, cot_tmp, cwp_tmp
+
+    FOR iii=0, N_ELEMENTS(cot_idx)-2,1 DO BEGIN 
+    
+        ; get indices where cot_threshold exceeded
+        inds = ARRAY_INDICES( cot_tmp, cot_idx[iii] )
+    
+        ; get total cot profile
+        cot_prof_total = 0. > ( REFORM( $ 
+            cotinp.LIQ[inds[0], inds[1], zlev:*] + $ 
+            cotinp.ICE[inds[0], inds[1], zlev:*] ) )
+
+        ; get total cwp profile
+        cwp_prof_total = 0. > ( REFORM( $ 
+            cwpinp.LIQ[inds[0], inds[1], zlev:*] + $ 
+            cwpinp.ICE[inds[0], inds[1], zlev:*] ) )
+    
+        ; get cloud fraction profile, i.e. layer resolved
+        cfc_profile = erainp.CC[inds[0], inds[1], $
+                                0:N_ELEMENTS(erainp.CC[0,0,*])-2] * 0.5 $
+                    + erainp.CC[inds[0], inds[1], $
+                                1:N_ELEMENTS(erainp.CC[0,0,*])-1] * 0.5
+        cfc_profile = 0. > REFORM( cfc_profile[zlev:*] )
+    
+        nlev = N_ELEMENTS( cfc_profile )
+        ncol = 20
+
+        ; initiale total cot & cwp matrix
+        matrix_cot_total = FLTARR( ncol, nlev ) * 0.
+        matrix_cwp_total = FLTARR( ncol, nlev ) * 0.
+    
+            FOR jjj=0, nlev-1 DO BEGIN
+    
+                ; ROUND OFF(subcolumns * cfc)
+                nfilledboxes = FLOOR( ncol * cfc_profile[jjj] )
+    
+                IF(nfilledboxes GT 0) THEN BEGIN
+                    
+                    IF(ncol NE nfilledboxes) THEN BEGIN 
+                        ; result  = cgRandomIndices(length, number)
+                        ; indices = cgRandomIndices(100, 10, SEED=seed)
+                        ; To select 10 random indices from a list of 100.
+                        ; The seed for the random number generator. 
+                        ; Select NFILLEDBOXES random indices from a list of NCOL.
+                        xidx = cgRandomIndices( ncol, nfilledboxes, SEED=seed )
+                    ENDIF ELSE BEGIN 
+                        xidx = ROUND( FINDGEN(ncol) )
+                    ENDELSE
+    
+                    matrix_cot_total[xidx,jjj] = cot_prof_total[jjj]
+                    matrix_cwp_total[xidx,jjj] = cwp_prof_total[jjj]
+    
+                ENDIF
+
+            ENDFOR
+
+        ;IF ( iii EQ 500 ) THEN BEGIN
+        ;    PRINT, cfc_profile
+        ;    view2d, ROTATE(matrix_cot_total,7), /COOL, /COLOR
+        ;    PRINT, TOTAL(matrix_cot_total,2)
+        ;    PRINT, MEAN(TOTAL(matrix_cot_total,2))
+        ;    view2d, ROTATE(matrix_cwp_total,7), /COOL, /COLOR
+        ;    PRINT, TOTAL(matrix_cwp_total,2)
+        ;    PRINT, MEAN(TOTAL(matrix_cwp_total,2))
+        ;ENDIF
+
+        cot_tmp[cot_idx[iii]] = MEAN( TOTAL( matrix_cot_total, 2 ) )
+        cwp_tmp[cot_idx[iii]] = MEAN( TOTAL( matrix_cwp_total, 2 ) )
+
+    ENDFOR
+
+END
+
+
+;------------------------------------------------------------------------------
 ; IN : DATA, GRID, CWP, COT, CER, THRESHOLD
 ; OUT: TEMP
+; search bottom-up, where is a cloud using COT threshold value
 ;------------------------------------------------------------------------------
 FUNCTION SEARCH4CLOUD, inp, grd, cwp, cot, cer, thv
 ;------------------------------------------------------------------------------
-; search bottom-up, where is a cloud using COT threshold value
-;------------------------------------------------------------------------------
 
-    ; -- fill_value
+    ; fill_value
     fillvalue = -999.
 
-    ; *_bin ... based on binary decision of the phase=cph_tmp_bin
     ; 2D arrays containing the upper-most cloud information
-
     ; cloud top pressure
-    ctp_tmp = FLTARR(grd.XDIM,grd.YDIM) & ctp_tmp[*,*] = fillvalue
+    ctp_tmp = FLTARR(grd.XDIM,grd.YDIM)      & ctp_tmp[*,*] = fillvalue
     ; cloud top height
-    cth_tmp = FLTARR(grd.XDIM,grd.YDIM) & cth_tmp[*,*] = fillvalue
+    cth_tmp = FLTARR(grd.XDIM,grd.YDIM)      & cth_tmp[*,*] = fillvalue
     ; cloud top temperature
-    ctt_tmp = FLTARR(grd.XDIM,grd.YDIM) & ctt_tmp[*,*] = fillvalue
-    ; cloud phase
-    cph_tmp = FLTARR(grd.XDIM,grd.YDIM) & cph_tmp[*,*] = fillvalue
-    cph_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & cph_tmp_bin[*,*] = fillvalue
-    ; cloud fraction
-    cfc_tmp = FLTARR(grd.XDIM,grd.YDIM) & cfc_tmp[*,*] = 0.
-    cfc_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & cfc_tmp_bin[*,*] = 0.
+    ctt_tmp = FLTARR(grd.XDIM,grd.YDIM)      & ctt_tmp[*,*] = fillvalue
+    ; binary cloud phase
+    cph_tmp_bin = FLTARR(grd.XDIM,grd.YDIM)  & cph_tmp_bin[*,*] = fillvalue
+    ; binary cloud fraction
+    cfc_tmp_bin = FLTARR(grd.XDIM,grd.YDIM)  & cfc_tmp_bin[*,*] = 0.
     ; liquid and ice water path
-    lwp_tmp = FLTARR(grd.XDIM,grd.YDIM) & lwp_tmp[*,*] = 0.
-    iwp_tmp = FLTARR(grd.XDIM,grd.YDIM) & iwp_tmp[*,*] = 0.
-    lwp_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & lwp_tmp_bin[*,*] = 0.
-    iwp_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & iwp_tmp_bin[*,*] = 0.
+    cwp_tmp = FLTARR(grd.XDIM,grd.YDIM)      & cwp_tmp[*,*] = 0.
+    lwp_tmp_bin = FLTARR(grd.XDIM,grd.YDIM)  & lwp_tmp_bin[*,*] = 0.
+    iwp_tmp_bin = FLTARR(grd.XDIM,grd.YDIM)  & iwp_tmp_bin[*,*] = 0.
     ; liquid and ice cloud optical thickness
-    lcot_tmp = FLTARR(grd.XDIM,grd.YDIM) & lcot_tmp[*,*] = 0.
-    icot_tmp = FLTARR(grd.XDIM,grd.YDIM) & icot_tmp[*,*] = 0.
+    cot_tmp = FLTARR(grd.XDIM,grd.YDIM)      & cot_tmp[*,*] = 0.
     lcot_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & lcot_tmp_bin[*,*] = 0.
     icot_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & icot_tmp_bin[*,*] = 0.
     ; liquid and ice cloud effective radius
-    lcer_tmp = FLTARR(grd.XDIM,grd.YDIM) & lcer_tmp[*,*] = 0.
-    icer_tmp = FLTARR(grd.XDIM,grd.YDIM) & icer_tmp[*,*] = 0.
+    lcer_tmp = FLTARR(grd.XDIM,grd.YDIM)     & lcer_tmp[*,*] = 0.
+    icer_tmp = FLTARR(grd.XDIM,grd.YDIM)     & icer_tmp[*,*] = 0.
     lcer_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & lcer_tmp_bin[*,*] = 0.
     icer_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & icer_tmp_bin[*,*] = 0.
 
 
     FOR z=grd.ZDIM-2,1,-1 DO BEGIN
 
-      cnt = 0
-      total_cot = total((cot.LIQ + cot.ICE)[*,*,0:z],3)
-      where_cot = where(total_cot GT thv, cnt)
+        cnt = 0
+        total_cot = TOTAL( (cot.LIQ + cot.ICE)[*,*,0:z], 3 )
+        true = WHERE( total_cot GT thv, cnt )
 
-      IF(cnt GT 0) THEN BEGIN
+        IF ( cnt GT 0 ) THEN BEGIN
 
-        geop_tmp    = reform(inp.GEOP[*,*,z])/9.81
-        temp_tmp    = reform(inp.TEMP[*,*,z])
-        lwp_lay_tmp = reform(cwp.LIQ[*,*,z])
-        iwp_lay_tmp = reform(cwp.ICE[*,*,z])
+            ctp_tmp[true]  = inp.plevel[z] / 100.
+            cth_tmp[true]  = (inp.GEOP[*,*,z])[true] / 9.81
+            ctt_tmp[true]  = (inp.TEMP[*,*,z])[true]
+            lcer_tmp[true] = (cer.LIQ[*,*,z])[true]
+            icer_tmp[true] = (cer.ICE[*,*,z])[true]
 
-        ctp_tmp[where_cot] = inp.plevel[z]/100.
-        cth_tmp[where_cot] = geop_tmp[where_cot]
-        ctt_tmp[where_cot] = temp_tmp[where_cot]
+            ; binary cloud top phase
+            lwp_lay_tmp = REFORM(cwp.LIQ[*,*,z])
+            iwp_lay_tmp = REFORM(cwp.ICE[*,*,z])
+            lisum = lwp_lay_tmp[true] + iwp_lay_tmp[true]
+            good = WHERE( lisum GT 0., ngood )
+            IF (ngood GT 0) THEN BEGIN
+                cph_tmp_bin[true[good]] = ROUND( ( 0.0 > $
+                    ( lwp_lay_tmp[true[good]] / ( lwp_lay_tmp[true[good]] $
+                    + iwp_lay_tmp[true[good]] ) ) < 1.0 ) )
+            ENDIF
 
-        lcer_tmp[where_cot] = (cer.LIQ[*,*,z])[where_cot]
-        icer_tmp[where_cot] = (cer.ICE[*,*,z])[where_cot]
+            ; layer between two levels
+            IF(z LT grd.ZDIM-2) THEN BEGIN
 
-        ; cloud top phase
-        lisum = lwp_lay_tmp[where_cot] + iwp_lay_tmp[where_cot]
-        good = WHERE( lisum GT 0., ngood )
+                ; binary cloud fraction
+                cfc_tmp_bin[true] = ROUND( ( 0. > ( $
+                    ( MAX(inp.CC[*,*,z:*], DIMENSION=3))[true] ) < 1.0 ) )
 
-        IF (ngood GT 0) THEN BEGIN
+                ; collect LIQ & ICE COT and CWP
+                SCOPS, inp, cot, cwp, true, z, cot_tmp, cwp_tmp
 
-            cph_tmp[where_cot[good]] = ( 0.0 > $
-                ( lwp_lay_tmp[where_cot[good]] / $
-                ( lwp_lay_tmp[where_cot[good]] + $
-                iwp_lay_tmp[where_cot[good]] ) ) < 1.0 )
+            ; lowest layer, to be checked
+            ENDIF ELSE BEGIN
+
+                ; total CWP
+                cwp_tmp[true] = (cwp.LIQ[*,*,z] + cwp.ICE[*,*,z])[true]
+
+                ; total COT
+                cot_tmp[true] = (cot.LIQ[*,*,z] + cot.ICE[*,*,z])[true]
+
+                ; binary cloud fraction
+                cfc_tmp_bin[true] = ROUND( ( 0. > $
+                    ( (inp.CC[*,*,z])[true] ) < 1.0 ) )
+
+            ENDELSE
 
         ENDIF
 
-        ; cloud top phase via binary decision
-        cph_tmp_bin[where_cot] = ROUND( cph_tmp[where_cot] )
-
-
-        ; layer between two levels
-        IF(z LT grd.ZDIM-2) THEN BEGIN
-
-          lwp_tmp[where_cot] = (total(cwp.LIQ[*,*,z:*],3))[where_cot]
-          iwp_tmp[where_cot] = (total(cwp.ICE[*,*,z:*],3))[where_cot]
-
-          lcot_tmp[where_cot] = (total(cot.LIQ[*,*,z:*],3))[where_cot]
-          icot_tmp[where_cot] = (total(cot.ICE[*,*,z:*],3))[where_cot]
-
-          ; normal cloud fraction
-          cfc_tmp[where_cot] = ( 0. > ( $
-              (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0)
-
-          ; binary cloud fraction
-          cfc_tmp_bin[where_cot] = ROUND( ( 0. > ( $
-              (max(inp.cc[*,*,z:*],dimension=3))[where_cot] ) < 1.0) )
-
-        ; lowest layer, to be checked
-        ENDIF ELSE BEGIN
-
-          lwp_tmp[where_cot] = (cwp.LIQ[*,*,z])[where_cot]
-          iwp_tmp[where_cot] = (cwp.ICE[*,*,z])[where_cot]
-          
-          lcot_tmp[where_cot] = (cot.LIQ[*,*,z])[where_cot]
-          icot_tmp[where_cot] = (cot.ICE[*,*,z])[where_cot]
-
-          ; normal cloud fraction
-          cfc_tmp[where_cot] = ( 0. > ( $
-              (inp.cc[*,*,z])[where_cot] ) < 1.0 )
-
-          ; binary cloud fraction
-          cfc_tmp_bin[where_cot] = ROUND( ( 0. > ( $
-              (inp.cc[*,*,z])[where_cot] ) < 1.0 ) )
-
-        ENDELSE
-
-      ENDIF
+        PRINT, '** PLEVEL         : ', z
+        PRINT, '** COT_TMP        : ', MINMAX(cot_tmp[true])
+        PRINT, '** CWP_TMP [kg/m2]: ', MINMAX(cwp_tmp[true])
+        PRINT, '** CFC_TMP_BIN    : ', MINMAX(cfc_tmp_bin[true])
+        PRINT, '** CPH_TMP_BIN    : ', MINMAX(cph_tmp_bin[true])
 
     ENDFOR
 
@@ -127,10 +181,10 @@ FUNCTION SEARCH4CLOUD, inp, grd, cwp, cot, cer, thv
     ; TOP = liquid
     IF (nliq GT 0) THEN BEGIN
         ; CWP
-        lwp_tmp_bin[wo_liq]  = lwp_tmp[wo_liq] + iwp_tmp[wo_liq]
+        lwp_tmp_bin[wo_liq]  = cwp_tmp[wo_liq]
         iwp_tmp_bin[wo_liq]  = 0.
         ; COT
-        lcot_tmp_bin[wo_liq] = lcot_tmp[wo_liq] + icot_tmp[wo_liq] 
+        lcot_tmp_bin[wo_liq] = cot_tmp[wo_liq] 
         icot_tmp_bin[wo_liq] = 0.
         ; CER
         lcer_tmp_bin[wo_liq] = lcer_tmp[wo_liq]
@@ -141,10 +195,10 @@ FUNCTION SEARCH4CLOUD, inp, grd, cwp, cot, cer, thv
     IF (nice GT 0) THEN BEGIN
         ; CWP
         lwp_tmp_bin[wo_ice]  = 0.
-        iwp_tmp_bin[wo_ice]  = lwp_tmp[wo_ice] + iwp_tmp[wo_ice]
+        iwp_tmp_bin[wo_ice]  = cwp_tmp[wo_ice]
         ; COT
         lcot_tmp_bin[wo_ice] = 0.
-        icot_tmp_bin[wo_ice] = lcot_tmp[wo_ice] + icot_tmp[wo_ice]
+        icot_tmp_bin[wo_ice] = cot_tmp[wo_ice]
         ; CER
         lcer_tmp_bin[wo_ice] = 0.
         icer_tmp_bin[wo_ice] = icer_tmp[wo_ice]

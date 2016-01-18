@@ -572,9 +572,9 @@ PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void
     IF ( is_file(filepwd+'.png') ) THEN RETURN
 
     save_as = filepwd + '.eps'
-    start_save, save_as, size='A3', /LANDSCAPE
+    start_save, save_as, size='A4', /LANDSCAPE
 
-    cs = 2 & cs_bar = 3.5 & nlev = 6
+    cs = 2 & cs_bar = 2 & nlev = 6
     limit = [-90., -180., 90., 180.]
     
     MAP_IMAGE, data.LWP*1000., grd.LAT2D, grd.LON2D, $
@@ -603,13 +603,15 @@ PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void
 
     MAP_IMAGE, data.COT_LIQ, grd.LAT2D, grd.LON2D, $
         /MAGNIFY, CHARS=cs_bar, TITLE='COT_LIQ', $
-        MINI=MIN(data.COT_LIQ), MAXI=MAX(data.COT_LIQ), $
+        MINI=0., MAXI=60., $
+        ;MINI=MIN(data.COT_LIQ), MAXI=MAX(data.COT_LIQ), $
         VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
     MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
     MAP_IMAGE, data.COT_ICE, grd.LAT2D, grd.LON2D, $
         /MAGNIFY, CHARS=cs_bar, TITLE='COT_ICE', $
-        MINI=MIN(data.COT_ICE), MAXI=MAX(data.COT_ICE), $
+        MINI=0., MAXI=60., $
+        ;MINI=MIN(data.COT_ICE), MAXI=MAX(data.COT_ICE), $
         VOID_INDEX=void, /RAINBOW, N_LEV=nlev, LIMIT=limit
     MAP_GRID, COLOR=cgcolor('Black'), MLINETHICK=2.2, /BOX_AXES, CHARS=cs
 
