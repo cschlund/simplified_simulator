@@ -450,7 +450,7 @@ PRO PLOT_HISTOS_1D, data, filename, flag, CONSTANT_CER=creff, RATIO=ratio
 
     CREATE_1DHIST, RESULT=data.HIST1D_CWP, VARNAME='cwp', $
         VARSTRING='H1D_CWP', CHARSIZE=cs, XTITLE=datutc, $
-        YMAX=40, RATIO=ratio
+        YMAX=40, RATIO=ratio, LEGEND_POSITION='tr'
 
     CREATE_1DHIST, RESULT=data.HIST1D_CER, VARNAME='ref', $
         VARSTRING='H1D_CER', CHARSIZE=cs, XTITLE=datutc, $
