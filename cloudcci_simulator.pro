@@ -182,12 +182,14 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                                        VERBOSE=verbose
 
                         ; search for upper-most cloud layer for 
-                        ; cot_thv.MIN
-                        tmp_min = SEARCH4CLOUD( input, grid, cwp_lay, $
-                                                cot_lay, cer_lay, thv.MIN )
                         ; cot_thv.MAX
-                        tmp_max = SEARCH4CLOUD( input, grid, cwp_lay, $
-                                                cot_lay, cer_lay, thv.MAX )
+                        tmp_max = SEARCH4CLOUD( input, grid, thv.scops, $
+                                                cwp_lay, cot_lay, cer_lay, $
+                                                thv.MAX )
+                        ; cot_thv.MIN
+                        tmp_min = SEARCH4CLOUD( input, grid, thv.scops, $
+                                                cwp_lay, cot_lay, cer_lay, $
+                                                thv.MIN )
 
                         ; scale cot & cwp as it is done in Cloud_cci
                         SCALE_COT_CWP, tmp_min, grid
