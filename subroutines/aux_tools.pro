@@ -25,7 +25,7 @@ END
 
 
 ;-----------------------------------------------------------------------------
-PRO SOLAR_VARS, data, sza, grd, FLAG=flag, FILE=fil, MAP=map
+PRO SOLAR_VARS, data, sza, grd, FLAG=flag, FILE=fil, MAP=map, SCOPS=type
 ;-----------------------------------------------------------------------------
 
     night = WHERE( sza GE 80., nnight, COMPLEMENT=day, NCOMPLEMENT=nday)
@@ -43,7 +43,7 @@ PRO SOLAR_VARS, data, sza, grd, FLAG=flag, FILE=fil, MAP=map
 
     IF KEYWORD_SET(map) AND KEYWORD_SET(fil) AND KEYWORD_SET(flag) THEN $ 
         PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flag, $
-                         FILE=fil, VOID=night
+                         FILE=fil, VOID=night, SCOPS=type
 
 END
 
@@ -420,15 +420,18 @@ END
 
 
 ;-----------------------------------------------------------------------------
-PRO PLOT_HISTOS_1D, data, filename, flag, CONSTANT_CER=creff, RATIO=ratio
+PRO PLOT_HISTOS_1D, data, filename, flag, scops_type, $
+                    CONSTANT_CER=creff, RATIO=ratio
 ;-----------------------------------------------------------------------------
 
     !P.MULTI = [0,2,2]
 
     IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' ELSE addstr = ''
+    IF (scops_type EQ 1) THEN st = 'random' ELSE st='max/random'
 
+    ststr = STRTRIM(STRING(scops_type),2)
     basen = FSC_Base_Filename(filename)
-    obase = !SAVE_DIR + basen + '_' + flag
+    obase = !SAVE_DIR + basen + '_' + flag + '_scops' + ststr
     ofil = obase + '_tmpHISTOS1D'+addstr
 
     IF (is_file(ofil+'.png')) THEN RETURN
@@ -460,6 +463,8 @@ PRO PLOT_HISTOS_1D, data, filename, flag, CONSTANT_CER=creff, RATIO=ratio
         VARSTRING='H1D_COT', CHARSIZE=cs, XTITLE=datutc, $
         YMAX=40, RATIO=ratio
 
+    cgText, 0.52, 0.49, Alignment=0.5, /Normal, 'SCOPS.type='+st, chars=cs
+
     ; end plotting
     end_save, save_as
     cs_eps2png, save_as
@@ -470,7 +475,7 @@ END
 
 
 ;-----------------------------------------------------------------------------
-PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
+PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, scops_type, $
                        CONSTANT_CER=creff, RATIO=ratio
 ;-----------------------------------------------------------------------------
 
@@ -478,9 +483,11 @@ PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
 
     IF KEYWORD_SET(creff) THEN addstr = '_fixed_reffs' ELSE addstr = ''
     IF KEYWORD_SET(ratio) THEN addstr = addstr + '_ratio'
+    IF (scops_type EQ 1) THEN st = 'random' ELSE st='max/random'
 
+    ststr = STRTRIM(STRING(scops_type),2)
     basen = FSC_Base_Filename(filename)
-    obase = !SAVE_DIR + basen + '_' + flag
+    obase = !SAVE_DIR + basen + '_' + flag + '_scops' + ststr
     sname = SIZE(data, /SNAME)
     cph_dim = histo.PHASE_DIM
     ofil = obase + '_'+varname+'2Dtmp'+addstr
@@ -501,6 +508,8 @@ PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
     ; start plotting
     save_as = ofil + '.eps'
     start_save, save_as, size=[45,30]
+    cs = 2.0
+    lg = 'tr'
 
     ; get total COT and set CFC
     all  = (aliq>0) + (aice>0) ; consider fill_values
@@ -516,8 +525,6 @@ PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
     i3=WHERE( all GT maxvalue, ni3)
     IF (ni3 GT 0) THEN all[i3] = maxvalue
 
-    cs = 2.0
-    lg = 'tr'
 
     ; -- HIST1D: equal binsizes ---
     cgHistoplot, aliq, binsize=binsize, /FILL, $
@@ -550,6 +557,8 @@ PRO PLOT_INTER_HISTOS, data, varname, histo, filename, flag, $
         VARSTRING=varstring, CHARSIZE=cs, XTITLE=datutc, $
         LEGEND_POSITION=legpos, RATIO=ratio
 
+    cgText, 0.52, 0.49, Alignment=0.5, /Normal, 'SCOPS.type='+st, chars=cs
+
     ; end plotting
     end_save, save_as
     cs_eps2png, save_as
@@ -560,14 +569,16 @@ END
 
 
 ;-----------------------------------------------------------------------------
-PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void
+PRO PLOT_SOLAR_VARS, DATA=data, GRID=grd, FLAG=flg, FILE=fil, VOID=void,$
+                     SCOPS=type
 ;-----------------------------------------------------------------------------
     !EXCEPT=0
 
     !P.MULTI = [0,2,3]
 
+    ststr = STRTRIM(STRING(type),2)
     base = FSC_Base_Filename(fil)
-    filepwd = !SAVE_DIR + base + '_' + flg +'_daytime'
+    filepwd = !SAVE_DIR + base + '_' + flg + '_scops'+ ststr + '_daytime'
 
     IF ( is_file(filepwd+'.png') ) THEN RETURN
 
@@ -685,7 +696,7 @@ PRO CREATE_1DHIST, RESULT=res, VARNAME=vn, VARSTRING=vs, $
     nlabels = N_ELEMENTS(labels)
 
     legend, labels, thick=REPLICATE(thick,nlabels), spos=lp, $
-            charsize=2.3, color=colors
+            charsize=cs, color=colors
 
 END
 

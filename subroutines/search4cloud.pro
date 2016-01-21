@@ -1,82 +1,4 @@
 ;------------------------------------------------------------------------------
-; scops-like method in order to collect COT & CWP & CFC
-; overlap type: 1=random, 2=max/random
-;
-; IN & OUT: COT_TMP, CWP_TMP, CFC_TMP
-;------------------------------------------------------------------------------
-PRO SCOPS, type, erainp, cotinp, cwpinp, cot_idx, zlev_tmp, $
-           cot_tmp, cwp_tmp, cfc_tmp
-
-    ; loop over indices where COT exceeded threshold
-    FOR si=0, N_ELEMENTS(cot_idx)-2,1 DO BEGIN 
-    
-        ; get indices where cot_threshold exceeded
-        inds = ARRAY_INDICES( cot_tmp, cot_idx[si] )
-        zlev = zlev_tmp[inds[0],inds[1]]
-    
-        ; get total cot profile
-        cot_prof_total = 0. > ( REFORM( $ 
-            cotinp.LIQ[inds[0], inds[1], zlev:*] + $ 
-            cotinp.ICE[inds[0], inds[1], zlev:*] ) )
-
-        ; get total cwp profile
-        cwp_prof_total = 0. > ( REFORM( $ 
-            cwpinp.LIQ[inds[0], inds[1], zlev:*] + $ 
-            cwpinp.ICE[inds[0], inds[1], zlev:*] ) )
-    
-        ; get cloud fraction profile, i.e. layer resolved
-        cfc_profile = erainp.CC[inds[0], inds[1], $
-                                0:N_ELEMENTS(erainp.CC[0,0,*])-2] * 0.5 $
-                    + erainp.CC[inds[0], inds[1], $
-                                1:N_ELEMENTS(erainp.CC[0,0,*])-1] * 0.5
-        cfc_profile = 0. > REFORM( cfc_profile[zlev:*] )
-    
-        nlev = N_ELEMENTS( cfc_profile ) ; number of zlevels
-        ncol = 20 ; number of subcolumns
-
-        ; initiale total cot & cwp matrix
-        matrix_cot = FLTARR( ncol, nlev ) * 0.
-        matrix_cwp = FLTARR( ncol, nlev ) * 0.
-        matrix_cfc = FLTARR( ncol, nlev ) * 0.
-    
-            FOR jjj=0, nlev-1 DO BEGIN
-
-                nfilledboxes = FLOOR( ncol * cfc_profile[jjj] )
-
-                IF(nfilledboxes GT 0) THEN BEGIN
-
-                    IF(ncol NE nfilledboxes) THEN BEGIN 
-                        ; result  = cgRandomIndices(length, number)
-                        ; indices = cgRandomIndices(100, 10, SEED=seed)
-                        ; To select 10 random indices from a list of 100.
-                        ; The seed for the random number generator. 
-                        ; Select NFILLEDBOXES random indices from a list of NCOL.
-                        xidx = cgRandomIndices( ncol, nfilledboxes, SEED=seed )
-                    ENDIF ELSE BEGIN 
-                        xidx = ROUND( FINDGEN(ncol) )
-                    ENDELSE
-
-                    matrix_cot[xidx,jjj] = cot_prof_total[jjj]
-                    matrix_cwp[xidx,jjj] = cwp_prof_total[jjj]
-                    matrix_cfc[xidx,jjj] = 1.
-
-                ENDIF
-
-            ENDFOR
-
-        ; 1.) TOTAL over individual subcolumns: res = ncol values
-        ; 2.) MEAN over ncol values: res = 1 value
-        cot_tmp[cot_idx[si]] = MEAN( TOTAL( matrix_cot, 2 ) )
-        cwp_tmp[cot_idx[si]] = MEAN( TOTAL( matrix_cwp, 2 ) )
-        ; 3.) ROUND cloud fraction: either 0 or 1 (binary cloud mask)
-        cfc_tmp[cot_idx[si]] = ROUND(MEAN(0.>(TOTAL(matrix_cfc,2))<1.0))
-
-    ENDFOR
-
-END
-
-
-;------------------------------------------------------------------------------
 ; IN : DATA, GRID, CWP, COT, CER, THRESHOLD
 ; OUT: TEMP
 ; search bottom-up, where is a cloud using COT threshold value
@@ -106,56 +28,70 @@ FUNCTION SEARCH4CLOUD, inp, grd, scops_type, cwp, cot, cer, thv
     icer_tmp_bin = FLTARR(grd.XDIM,grd.YDIM) & icer_tmp_bin[*,*] = 0.
 
 
-    ; collect z-levels, where COT threshold is exceeded
-    lev_tmp = INTARR(grd.XDIM,grd.YDIM) & lev_tmp[*,*] = FIX(fillvalue)
-    FOR z=grd.ZDIM-2,1,-1 DO BEGIN
-        cnt = 0
-        total_cot = TOTAL( (cot.LIQ + cot.ICE)[*,*,0:z], 3 )
-        total_idx = WHERE( total_cot GT thv, cnt )
-        IF ( cnt GT 0 ) THEN BEGIN
-            lev_tmp[total_idx] = z
-        ENDIF
-    ENDFOR
+    ; loop over individual grid cells
+    FOR xi=0, grd.xdim-1, 1 DO BEGIN ;longitude
+        FOR yi=0, grd.ydim-1, 1 DO BEGIN ;latitude
 
-    ; collect cth, ctp, ctt, cph, cer; elapsed time ~ 3 seconds
-    true = WHERE(lev_tmp GT 0, cnt_true)
-    IF (cnt_true GT 0) THEN BEGIN
-        ; loop over individual grid cells :-(
-        FOR ttt=0, N_ELEMENTS(true)-1 DO BEGIN 
+            cot_prof_total = 0. > (REFORM(cot.LIQ[xi,yi,*]+cot.ICE[xi,yi,*]))
+            cwp_prof_total = 0. > (REFORM(cwp.LIQ[xi,yi,*]+cwp.ICE[xi,yi,*]))
+            cfc_lay_prof = inp.CC[xi,yi,0:N_ELEMENTS(inp.CC[0,0,*])-2]*0.5 + $
+                           inp.CC[xi,yi,1:N_ELEMENTS(inp.CC[0,0,*])-1]*0.5
+            cfc_lay_prof = 0. > REFORM(cfc_lay_prof[*])
+            nlev = N_ELEMENTS(cfc_lay_prof)
+            ncol = 20
+            
+            matrix_cot = FLTARR(ncol,nlev)*0.
+            matrix_cwp = FLTARR(ncol,nlev)*0.
+            matrix_cfc = FLTARR(ncol,nlev)*0.
+            
+            first = -1
+            lastcloud = -1
 
-            ai = ARRAY_INDICES( lev_tmp, true[ttt] )
-            z  = lev_tmp[ai[0],ai[1]]
+            FOR zi=0, nlev-1 DO BEGIN
 
-            ctp_tmp[true[ttt]]  = inp.plevel[z] / 100.
-            cth_tmp[true[ttt]]  = inp.GEOP[ai[0],ai[1],z] / 9.81
-            ctt_tmp[true[ttt]]  = inp.TEMP[ai[0],ai[1],z]
-            lcer_tmp[true[ttt]] = cer.LIQ[ai[0],ai[1],z]
-            icer_tmp[true[ttt]] = cer.ICE[ai[0],ai[1],z]
+                nfb = FLOOR(ncol * cfc_lay_prof[zi]) ;nfilledboxes
 
-            lwp_lay = cwp.LIQ[ai[0],ai[1],z]
-            iwp_lay = cwp.ICE[ai[0],ai[1],z]
-            cwp_lay = lwp_lay + iwp_lay
-            IF (cwp_lay GT 0.) THEN cph_tmp_bin[true[ttt]] = $
-                ROUND((0.0>( lwp_lay / ( lwp_lay + iwp_lay ))<1.0))
+                IF (nfb GT 0 AND TOTAL(cot_prof_total[0:zi]) GT thv) THEN BEGIN
+
+                    IF (first EQ -1) THEN BEGIN
+                        first = 0
+                        ctp_tmp[xi,yi]  = inp.PLEVEL[zi]/100.
+                        cth_tmp[xi,yi]  = inp.GEOP[xi,yi,zi]/9.81
+                        ctt_tmp[xi,yi]  = inp.TEMP[xi,yi,zi]
+                        lcer_tmp[xi,yi] = cer.LIQ[xi,yi,zi]
+                        icer_tmp[xi,yi] = cer.ICE[xi,yi,zi]
+                        lwp_lay = cwp.LIQ[xi,yi,zi]
+                        iwp_lay = cwp.ICE[xi,yi,zi]
+                        cwp_lay = lwp_lay+iwp_lay
+                        IF (cwp_lay GT 0.) THEN cph_tmp_bin[xi,yi] = 0. > $
+                            ROUND((0.0 > (lwp_lay/(cwp_lay) ) < 1.0)) < 1.0
+                    ENDIF
+                    
+                    IF (lastcloud NE (zi-1) OR scops_type EQ 1) THEN BEGIN
+                        x = LINDGEN(ncol)
+                        y = RANDOMU(dseed, ncol)
+                        ci = x[SORT(y)]
+                    ENDIF
+                    
+                    matrix_cot[ci[0:nfb-1],zi] = cot_prof_total[zi]
+                    matrix_cwp[ci[0:nfb-1],zi] = cwp_prof_total[zi]
+                    matrix_cfc[ci[0:nfb-1],zi] = 1.0
+                    lastcloud = zi
+                ENDIF
+            ENDFOR
+            
+            ; 1.) TOTAL over individual subcolumns: result = ncol values
+            ; 2.) MEAN over ncol values: result = 1 value
+            cot_tmp[xi,yi] = MEAN( TOTAL( matrix_cot, 2 ) )
+            cwp_tmp[xi,yi] = MEAN( TOTAL( matrix_cwp, 2 ) )
+
+            ; 3.) ROUND cloud fraction: either 0 or 1 (binary cloud mask)
+            cfc_tmp_bin[xi,yi] = 0. > ROUND( $
+                MEAN( 0. > (TOTAL(matrix_cfc,2) ) < 1.0) ) < 1.0
 
         ENDFOR
-    ENDIF
+    ENDFOR
 
-    ; bottom layer
-    z0 = grd.ZDIM-2
-    bottom = WHERE(lev_tmp EQ z0, cnt_bottom)
-    IF (cnt_bottom GT 0) THEN BEGIN
-        cfc_tmp_bin[bottom] = ROUND((0.>((inp.CC[*,*,z0])[bottom])<1.0))
-        cwp_tmp[bottom] = (cwp.LIQ[*,*,z0] + cwp.ICE[*,*,z0])[bottom]
-        cot_tmp[bottom] = (cot.LIQ[*,*,z0] + cot.ICE[*,*,z0])[bottom]
-    ENDIF
-
-    ; upper layers via scops; elapsed time ~ 21 seconds
-    upper = WHERE(lev_tmp LT z0 AND lev_tmp GT 0, cnt_upper)
-    IF (cnt_upper GT 0) THEN BEGIN 
-        SCOPS, scops_type, inp, cot, cwp, upper, lev_tmp, $
-               cot_tmp, cwp_tmp, cfc_tmp_bin
-    ENDIF
 
     ; cloud top based on binary phase
     wo_liq = WHERE(cph_tmp_bin EQ 1., nliq)

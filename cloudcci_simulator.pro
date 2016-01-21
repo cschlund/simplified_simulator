@@ -38,10 +38,10 @@
 ;   C. Schlundt, Jan 2016: implementation of hist1d_ref
 ;   C. Schlundt, Jan 2016: clean up code
 ;   C. Schlundt, Jan 2016: scops-like method for COT, CWP, CFC (random overlap)
+;   C. Schlundt, Jan 2016: speedup of search4cloud.pro
+;   C. Schlundt, Jan 2016: scops type in config file: 1=random, 2=max/random
 ;
-;   ToDO: (a) speed up scops: current version takes about 16 hours for 1 month
-;         (b) scops max/random overlap
-;         (c) output variable names: change to new Cloud_cci names
+;   ToDO: (a) output variable names: change to new Cloud_cci names
 ;
 ;******************************************************************************
 PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
@@ -50,7 +50,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         RATIO=ratio, AUXMAP=auxmap, $
                         CONSTANT_CER=constant_cer, HPLOT=hplot, HELP=help
 ;******************************************************************************
-    clock = TIC('TOTAL')
+    STT = SYSTIME(1)
 
     IF KEYWORD_SET(help) THEN BEGIN
         PRINT, ""
@@ -97,14 +97,12 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
     IF KEYWORD_SET(logfile) THEN $
         JOURNAL, path.out + 'journal_' + thv.MAX_STR + cgTimeStamp() + '.pro'
 
-
-    IF KEYWORD_SET(verbose) THEN BEGIN
-        PRINT, FORMAT='(A, A-100)', '** INP:     ', path.INP
-        PRINT, FORMAT='(A, A-100)', '** OUT:     ', path.OUT
-        PRINT, FORMAT='(A, A-100)', '** FIG:     ', path.FIG
-        PRINT, FORMAT='(A, F8.3)',  '** MIN-thv: ', thv.MIN
-        PRINT, FORMAT='(A, F8.3)',  '** MAX-thv: ', thv.MAX
-    ENDIF
+    PRINT, FORMAT='(A, A-100)', '** INP:     ', path.INP
+    PRINT, FORMAT='(A, A-100)', '** OUT:     ', path.OUT
+    PRINT, FORMAT='(A, A-100)', '** FIG:     ', path.FIG
+    PRINT, FORMAT='(A, F8.3)',  '** MIN-thv: ', thv.MIN
+    PRINT, FORMAT='(A, F8.3)',  '** MAX-thv: ', thv.MAX
+    PRINT, FORMAT='(A, A-100)', '** SCOPS:   ', thv.SCOPS
 
     IF KEYWORD_SET(constant_cer) THEN BEGIN 
         mess = "** CWP & COT based on FIXED CER [um]"
@@ -120,9 +118,9 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
     FOR ii1=0, times.NY-1 DO BEGIN
         FOR jj1=0, times.NM-1 DO BEGIN
 
+            SMM = SYSTIME(1)
             year  = times.YEARS[ii1]
             month = times.MONTHS[jj1]
-            mm_clock = TIC(year+'/'+month)
             counti = 0
 
             ff = FINDFILE(path.inp+year+month+'/'+'*'+year+month+'*plev')
@@ -181,13 +179,11 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                                        CONSTANT_CER=constant_cer, $
                                        VERBOSE=verbose
 
-                        ; search for upper-most cloud layer for 
-                        ; cot_thv.MAX
-                        tmp_max = SEARCH4CLOUD( input, grid, thv.scops, $
+                        ; search for upper-most cloud layer for, ~15 seconds
+                        tmp_max = SEARCH4CLOUD( input, grid, thv.SCOPS, $
                                                 cwp_lay, cot_lay, cer_lay, $
                                                 thv.MAX )
-                        ; cot_thv.MIN
-                        tmp_min = SEARCH4CLOUD( input, grid, thv.scops, $
+                        tmp_min = SEARCH4CLOUD( input, grid, thv.SCOPS, $
                                                 cwp_lay, cot_lay, cer_lay, $
                                                 thv.MIN )
 
@@ -196,9 +192,9 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         SCALE_COT_CWP, tmp_max, grid
 
                         ; sunlit region only for COT & CWP & CER
-                        SOLAR_VARS, tmp_min, sza2d, grid, $
+                        SOLAR_VARS, tmp_min, sza2d, grid, SCOPS=thv.SCOPS, $
                                     FLAG=thv.MIN_STR, FILE=file1, MAP=map
-                        SOLAR_VARS, tmp_max, sza2d, grid, $
+                        SOLAR_VARS, tmp_max, sza2d, grid, SCOPS=thv.SCOPS, $
                                     FLAG=thv.MAX_STR, FILE=file1, MAP=map
 
                         ; sum up cloud parameters
@@ -209,10 +205,9 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                         IF KEYWORD_SET(map) THEN BEGIN
                             varnames = ['ctt','cwp','ctp','cot','cer']
                             FOR v=0, N_ELEMENTS(varnames)-1 DO BEGIN
-                                PLOT_INTER_HISTOS, tmp_max, varnames[v], $
-                                                   his, file1, thv.MAX_STR, $ 
-                                                   CONSTANT_CER=constant_cer,$
-                                                   RATIO=ratio
+                                PLOT_INTER_HISTOS, tmp_max, varnames[v], his,$
+                                    file1, thv.MAX_STR, thv.SCOPS, $
+                                    CONSTANT_CER=constant_cer, RATIO=ratio
                             ENDFOR
                         ENDIF
 
@@ -237,24 +232,24 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
                 ; plot final hist1d results: ctp, cwp, cer, cot
                 IF KEYWORD_SET(hplot) THEN BEGIN 
                     ofile = 'ERA_Interim_'+year+month
-                    PLOT_HISTOS_1D, arr_min, ofile, thv.MIN_STR, $
+                    PLOT_HISTOS_1D, arr_min, ofile, thv.MIN_STR, thv.SCOPS, $
                                     CONSTANT_CER=constant_cer, RATIO=ratio
-                    PLOT_HISTOS_1D, arr_max, ofile, thv.MAX_STR, $
+                    PLOT_HISTOS_1D, arr_max, ofile, thv.MAX_STR, thv.SCOPS, $
                                     CONSTANT_CER=constant_cer, RATIO=ratio
                 ENDIF
 
                 ; write output files
-                WRITE_MONTHLY_MEAN, path.out, year, month, grid, input, his, $
-                                    thv.MIN_STR, thv.MIN, arr_min, cnt_min 
-                WRITE_MONTHLY_MEAN, path.out, year, month, grid, input, his, $
-                                    thv.MAX_STR, thv.MAX, arr_max, cnt_max 
+                WRITE_MONTHLY_MEAN, path.out, year, month, grid, input, his, $ 
+                    thv.MIN_STR, thv.MIN, arr_min, cnt_min, thv.SCOPS
+                WRITE_MONTHLY_MEAN, path.out, year, month, grid, input, his, $ 
+                    thv.MAX_STR, thv.MAX, arr_max, cnt_max, thv.SCOPS
 
                 ; delete final arrays before next cycle starts
                 UNDEFINE, arr_min, arr_max, cnt_min, cnt_max
 
             ENDIF ;end of IF(N_ELEMENTS(ff) GT 1)
 
-           TOC, mm_clock
+           PRINT, "** Elapsed Time: ", (SYSTIME(1)-SMM)/60., " minutes"
 
         ENDFOR ;end of month loop
     ENDFOR ;end of year loop
@@ -262,7 +257,7 @@ PRO CLOUDCCI_SIMULATOR, VERBOSE=verbose, LOGFILE=logfile, TEST=test, MAP=map, $
     ; End journaling:
     IF KEYWORD_SET(logfile) THEN JOURNAL
 
-    TOC, clock
+    PRINT, "** TOTAL Elapsed Time: ", (SYSTIME(1)-STT)/60., " minutes"
 
 ;******************************************************************************
 END ;end of program

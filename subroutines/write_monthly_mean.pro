@@ -2,7 +2,7 @@
 ;-- write netcdf histograms & monthly mean (average) output
 ;-----------------------------------------------------------------------------
 PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, hist, $
-                        thv_str, thv_val, means, counts
+                        thv_str, thv_val, means, counts, scops_type
 ;-----------------------------------------------------------------------------
 
     dim_time   = 1
@@ -18,7 +18,10 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, hist, $
     tbo[1,0]   = tttt2-tref
     itime      = tttt-tref
 
-    file_out = 'SimpSimu_MM'+year+month+'_'+thv_str+'.nc'
+    IF (scops_type EQ 1) THEN st = 'random' ELSE st='max/random'
+    ststr = STRTRIM(STRING(scops_type),2)
+
+    file_out = 'SimpSimu_MM'+year+month+'_'+thv_str+'_scops'+ststr+'.nc'
     clobber  = 1
 
     lon = inp.lon ;degrees_east
@@ -32,6 +35,7 @@ PRO WRITE_MONTHLY_MEAN, path_out, year, month, grd, inp, hist, $
     NCDF_ATTPUT, id, /GLOBAL, "TIME_COVERAGE_RESOLUTION", "P1M"
     NCDF_ATTPUT, id, /GLOBAL, "cot_thv", thv_val
     NCDF_ATTPUT, id, /GLOBAL, "number_of_files", counts.RAW
+    NCDF_ATTPUT, id, /GLOBAL, "scops_type", scops_type 
 
     ; -- dimensions
     dim_x_id  = NCDF_DIMDEF(id, 'lon', grd.xdim)
